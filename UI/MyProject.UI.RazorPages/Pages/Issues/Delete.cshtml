@@ -1,0 +1,171 @@
+@page "{id:guid}"
+@model MyProject.UI.RazorPages.Pages.Issues.DeleteModel
+@{
+    ViewData["Title"] = "Delete Issue";
+}
+
+<div class="row">
+    <div class="col-md-8">
+        <h2>Delete Issue</h2>
+        
+        <div class="alert alert-warning">
+            <h4 class="alert-heading">Are you sure you want to delete this issue?</h4>
+            <p>This action cannot be undone. All issue data will be permanently removed.</p>
+            @if (Model.Issue?.ImpactOnScheduleDays.HasValue == true || Model.Issue?.ImpactOnBudgetUsd.HasValue == true)
+            {
+                <p><strong>Warning:</strong> This issue has recorded impacts that will be lost.</p>
+            }
+        </div>
+
+        @if (Model.Issue != null)
+        {
+            <div class="card">
+                <div class="card-header">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h4>@Model.Issue.IssueName</h4>
+                        <div>
+                            <span class="badge @(Model.Issue.Status == "Closed" ? "bg-success" : 
+                                                 Model.Issue.Status == "In Progress" ? "bg-warning" : 
+                                                 Model.Issue.Status == "On Hold" ? "bg-secondary" : "bg-danger") fs-6 me-2">
+                                @Model.Issue.Status
+                            </span>
+                            <span class="badge @(Model.Issue.Priority == "Critical" ? "bg-danger" : 
+                                                 Model.Issue.Priority == "High" ? "bg-warning" : 
+                                                 Model.Issue.Priority == "Low" ? "bg-info" : "bg-primary") fs-6 me-2">
+                                @Model.Issue.Priority Priority
+                            </span>
+                            <span class="badge @(Model.Issue.Severity == "Critical" ? "bg-danger" : 
+                                                 Model.Issue.Severity == "High" ? "bg-warning" : 
+                                                 Model.Issue.Severity == "Low" ? "bg-info" : "bg-secondary") fs-6">
+                                @Model.Issue.Severity Severity
+                            </span>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <dl class="row">
+                                <dt class="col-sm-4">Issue Type:</dt>
+                                <dd class="col-sm-8">@(Model.Issue.IssueType ?? "Not specified")</dd>
+
+                                <dt class="col-sm-4">Project:</dt>
+                                <dd class="col-sm-8">@(Model.Issue.Project?.ProjectName ?? "Not assigned")</dd>
+
+                                <dt class="col-sm-4">Related Task:</dt>
+                                <dd class="col-sm-8">@(Model.Issue.Task?.TaskName ?? "None")</dd>
+
+                                <dt class="col-sm-4">Assigned To:</dt>
+                                <dd class="col-sm-8">@(Model.Issue.AssignedToUserId?.ToString() ?? "Unassigned")</dd>
+
+                                <dt class="col-sm-4">Opened Date:</dt>
+                                <dd class="col-sm-8">@Model.Issue.OpenedDate.ToString("MMM dd, yyyy")</dd>
+
+                                <dt class="col-sm-4">Closed Date:</dt>
+                                <dd class="col-sm-8">@(Model.Issue.ClosedDate?.ToString("MMM dd, yyyy") ?? "Not closed")</dd>
+                            </dl>
+                        </div>
+                        <div class="col-md-6">
+                            <dl class="row">
+                                <dt class="col-sm-4">Schedule Impact:</dt>
+                                <dd class="col-sm-8">
+                                    @if (Model.Issue.ImpactOnScheduleDays.HasValue)
+                                    {
+                                        <span class="text-@(Model.Issue.ImpactOnScheduleDays > 5 ? "danger" : Model.Issue.ImpactOnScheduleDays > 2 ? "warning" : "success")">
+                                            @Model.Issue.ImpactOnScheduleDays days
+                                        </span>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-muted">Not assessed</span>
+                                    }
+                                </dd>
+
+                                <dt class="col-sm-4">Budget Impact:</dt>
+                                <dd class="col-sm-8">
+                                    @if (Model.Issue.ImpactOnBudgetUsd.HasValue)
+                                    {
+                                        <span class="text-@(Model.Issue.ImpactOnBudgetUsd > 10000 ? "danger" : Model.Issue.ImpactOnBudgetUsd > 1000 ? "warning" : "success")">
+                                            @Model.Issue.ImpactOnBudgetUsd.Value.ToString("C")
+                                        </span>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-muted">Not assessed</span>
+                                    }
+                                </dd>
+
+                                <dt class="col-sm-4">Created:</dt>
+                                <dd class="col-sm-8">@Model.Issue.CreatedAt.ToString("MMM dd, yyyy")</dd>
+
+                                <dt class="col-sm-4">Updated:</dt>
+                                <dd class="col-sm-8">@Model.Issue.UpdatedAt.ToString("MMM dd, yyyy")</dd>
+
+                                <dt class="col-sm-4">Issue ID:</dt>
+                                <dd class="col-sm-8"><code>@Model.Issue.IssueId</code></dd>
+
+                                <dt class="col-sm-4">Days Open:</dt>
+                                <dd class="col-sm-8">
+                                    @{
+                                        var endDate = Model.Issue.ClosedDate ?? DateOnly.FromDateTime(DateTime.Today);
+                                        var daysOpen = endDate.DayNumber - Model.Issue.OpenedDate.DayNumber;
+                                    }
+                                    @daysOpen days
+                                </dd>
+                            </dl>
+                        </div>
+                    </div>
+                    
+                    <div class="mt-3">
+                        <strong>Description:</strong>
+                        <p>@Model.Issue.IssueDescription</p>
+                    </div>
+                    
+                    @if (!string.IsNullOrEmpty(Model.Issue.RootCause))
+                    {
+                        <div class="mt-3">
+                            <strong>Root Cause:</strong>
+                            <p>@Model.Issue.RootCause</p>
+                        </div>
+                    }
+
+                    @if (!string.IsNullOrEmpty(Model.Issue.ResolutionSteps))
+                    {
+                        <div class="mt-3">
+                            <strong>Resolution Steps:</strong>
+                            <p>@Model.Issue.ResolutionSteps</p>
+                        </div>
+                    }
+
+                    @if (!string.IsNullOrEmpty(Model.Issue.ImpactOnScope) || !string.IsNullOrEmpty(Model.Issue.ImpactOnQuality))
+                    {
+                        <div class="mt-3">
+                            <strong>Additional Impact Information:</strong>
+                            @if (!string.IsNullOrEmpty(Model.Issue.ImpactOnScope))
+                            {
+                                <p><strong>Scope:</strong> @Model.Issue.ImpactOnScope</p>
+                            }
+                            @if (!string.IsNullOrEmpty(Model.Issue.ImpactOnQuality))
+                            {
+                                <p><strong>Quality:</strong> @Model.Issue.ImpactOnQuality</p>
+                            }
+                        </div>
+                    }
+                </div>
+            </div>
+
+            <div class="mt-4">
+                <form method="post">
+                    <button type="submit" class="btn btn-danger">
+                        <i class="fas fa-trash"></i> Delete Issue
+                    </button>
+                    <a asp-page="./Index" class="btn btn-secondary">Cancel</a>
+                </form>
+            </div>
+        }
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://kit.fontawesome.com/your-fontawesome-kit.js" crossorigin="anonymous"></script>
+}

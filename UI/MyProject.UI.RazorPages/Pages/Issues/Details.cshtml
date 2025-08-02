@@ -1,0 +1,290 @@
+@page "{id:guid}"
+@model MyProject.UI.RazorPages.Pages.Issues.DetailsModel
+@{
+    ViewData["Title"] = "Issue Details";
+}
+
+<div class="row">
+    <div class="col-md-10">
+        @if (Model.Issue != null)
+        {
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h2>@Model.Issue.IssueName</h2>
+                <div class="btn-group" role="group">
+                    <a asp-page="./Edit" asp-route-id="@Model.Issue.IssueId" class="btn btn-outline-warning">
+                        <i class="fas fa-edit"></i> Edit
+                    </a>
+                    <a asp-page="./Delete" asp-route-id="@Model.Issue.IssueId" class="btn btn-outline-danger">
+                        <i class="fas fa-trash"></i> Delete
+                    </a>
+                    <a asp-page="./Index" class="btn btn-outline-secondary">
+                        <i class="fas fa-list"></i> Back to List
+                    </a>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h4 class="mb-0">Issue Information</h4>
+                        <div>
+                            <span class="badge @(Model.Issue.Status == "Closed" ? "bg-success" : 
+                                                 Model.Issue.Status == "In Progress" ? "bg-warning" : 
+                                                 Model.Issue.Status == "On Hold" ? "bg-secondary" : "bg-danger") fs-6 me-2">
+                                @Model.Issue.Status
+                            </span>
+                            <span class="badge @(Model.Issue.Priority == "Critical" ? "bg-danger" : 
+                                                 Model.Issue.Priority == "High" ? "bg-warning" : 
+                                                 Model.Issue.Priority == "Low" ? "bg-info" : "bg-primary") fs-6 me-2">
+                                @Model.Issue.Priority Priority
+                            </span>
+                            <span class="badge @(Model.Issue.Severity == "Critical" ? "bg-danger" : 
+                                                 Model.Issue.Severity == "High" ? "bg-warning" : 
+                                                 Model.Issue.Severity == "Low" ? "bg-info" : "bg-secondary") fs-6">
+                                @Model.Issue.Severity Severity
+                            </span>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <dl class="row">
+                                <dt class="col-sm-4">Issue Type:</dt>
+                                <dd class="col-sm-8">@(Model.Issue.IssueType ?? "Not specified")</dd>
+
+                                <dt class="col-sm-4">Project:</dt>
+                                <dd class="col-sm-8">@(Model.Issue.Project?.ProjectName ?? "Not assigned")</dd>
+
+                                <dt class="col-sm-4">Related Task:</dt>
+                                <dd class="col-sm-8">@(Model.Issue.Task?.TaskName ?? "None")</dd>
+
+                                <dt class="col-sm-4">Assigned To:</dt>
+                                <dd class="col-sm-8">@(Model.Issue.AssignedToUserId?.ToString() ?? "Unassigned")</dd>
+
+                                <dt class="col-sm-4">Opened Date:</dt>
+                                <dd class="col-sm-8">@Model.Issue.OpenedDate.ToString("MMM dd, yyyy")</dd>
+
+                                <dt class="col-sm-4">Closed Date:</dt>
+                                <dd class="col-sm-8">@(Model.Issue.ClosedDate?.ToString("MMM dd, yyyy") ?? "Not closed")</dd>
+                            </dl>
+                        </div>
+                        <div class="col-md-6">
+                            <dl class="row">
+                                <dt class="col-sm-4">Duration:</dt>
+                                <dd class="col-sm-8">
+                                    @if (Model.Issue.ClosedDate.HasValue)
+                                    {
+                                        var duration = Model.Issue.ClosedDate.Value.DayNumber - Model.Issue.OpenedDate.DayNumber;
+                                        <span class="text-@(duration > 30 ? "danger" : duration > 7 ? "warning" : "success")">
+                                            @duration days
+                                        </span>
+                                    }
+                                    else
+                                    {
+                                        var daysOpen = DateOnly.FromDateTime(DateTime.Today).DayNumber - Model.Issue.OpenedDate.DayNumber;
+                                        <span class="text-@(daysOpen > 30 ? "danger" : daysOpen > 7 ? "warning" : "info")">
+                                            @daysOpen days open
+                                        </span>
+                                    }
+                                </dd>
+
+                                <dt class="col-sm-4">Schedule Impact:</dt>
+                                <dd class="col-sm-8">
+                                    @if (Model.Issue.ImpactOnScheduleDays.HasValue)
+                                    {
+                                        <span class="text-@(Model.Issue.ImpactOnScheduleDays > 5 ? "danger" : Model.Issue.ImpactOnScheduleDays > 2 ? "warning" : "success")">
+                                            @Model.Issue.ImpactOnScheduleDays days
+                                        </span>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-muted">Not assessed</span>
+                                    }
+                                </dd>
+
+                                <dt class="col-sm-4">Budget Impact:</dt>
+                                <dd class="col-sm-8">
+                                    @if (Model.Issue.ImpactOnBudgetUsd.HasValue)
+                                    {
+                                        <span class="text-@(Model.Issue.ImpactOnBudgetUsd > 10000 ? "danger" : Model.Issue.ImpactOnBudgetUsd > 1000 ? "warning" : "success")">
+                                            @Model.Issue.ImpactOnBudgetUsd.Value.ToString("C")
+                                        </span>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-muted">Not assessed</span>
+                                    }
+                                </dd>
+
+                                <dt class="col-sm-4">Created:</dt>
+                                <dd class="col-sm-8">@Model.Issue.CreatedAt.ToString("MMM dd, yyyy HH:mm")</dd>
+
+                                <dt class="col-sm-4">Updated:</dt>
+                                <dd class="col-sm-8">@Model.Issue.UpdatedAt.ToString("MMM dd, yyyy HH:mm")</dd>
+                            </dl>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card mt-3">
+                <div class="card-header">
+                    <h5 class="mb-0">Description</h5>
+                </div>
+                <div class="card-body">
+                    <p>@Model.Issue.IssueDescription</p>
+                </div>
+            </div>
+
+            @if (!string.IsNullOrEmpty(Model.Issue.RootCause))
+            {
+                <div class="card mt-3">
+                    <div class="card-header">
+                        <h5 class="mb-0">Root Cause Analysis</h5>
+                    </div>
+                    <div class="card-body">
+                        <p>@Model.Issue.RootCause</p>
+                    </div>
+                </div>
+            }
+
+            @if (Model.Issue.ImpactOnScheduleDays.HasValue || Model.Issue.ImpactOnBudgetUsd.HasValue || 
+                 !string.IsNullOrEmpty(Model.Issue.ImpactOnScope) || !string.IsNullOrEmpty(Model.Issue.ImpactOnQuality))
+            {
+                <div class="card mt-3">
+                    <div class="card-header">
+                        <h5 class="mb-0">Impact Assessment</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                @if (Model.Issue.ImpactOnScheduleDays.HasValue)
+                                {
+                                    <div class="mb-3">
+                                        <strong>Schedule Impact:</strong>
+                                        <div class="progress mt-1" style="height: 20px;">
+                                            @{
+                                                var scheduleImpact = Math.Min(100, (Model.Issue.ImpactOnScheduleDays.Value / 30.0) * 100);
+                                            }
+                                            <div class="progress-bar @(scheduleImpact > 50 ? "bg-danger" : scheduleImpact > 20 ? "bg-warning" : "bg-success")" 
+                                                 role="progressbar" 
+                                                 style="width: @scheduleImpact%">
+                                                @Model.Issue.ImpactOnScheduleDays days
+                                            </div>
+                                        </div>
+                                    </div>
+                                }
+
+                                @if (Model.Issue.ImpactOnBudgetUsd.HasValue)
+                                {
+                                    <div class="mb-3">
+                                        <strong>Budget Impact:</strong>
+                                        <div class="alert alert-@(Model.Issue.ImpactOnBudgetUsd > 10000 ? "danger" : Model.Issue.ImpactOnBudgetUsd > 1000 ? "warning" : "info") py-2 mt-1">
+                                            @Model.Issue.ImpactOnBudgetUsd.Value.ToString("C")
+                                        </div>
+                                    </div>
+                                }
+                            </div>
+                            <div class="col-md-6">
+                                @if (!string.IsNullOrEmpty(Model.Issue.ImpactOnScope))
+                                {
+                                    <div class="mb-3">
+                                        <strong>Scope Impact:</strong>
+                                        <p class="mt-1">@Model.Issue.ImpactOnScope</p>
+                                    </div>
+                                }
+
+                                @if (!string.IsNullOrEmpty(Model.Issue.ImpactOnQuality))
+                                {
+                                    <div class="mb-3">
+                                        <strong>Quality Impact:</strong>
+                                        <p class="mt-1">@Model.Issue.ImpactOnQuality</p>
+                                    </div>
+                                }
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+
+            @if (!string.IsNullOrEmpty(Model.Issue.ResolutionSteps))
+            {
+                <div class="card mt-3">
+                    <div class="card-header">
+                        <h5 class="mb-0">Resolution Steps</h5>
+                    </div>
+                    <div class="card-body">
+                        <p>@Model.Issue.ResolutionSteps</p>
+                    </div>
+                </div>
+            }
+
+            <div class="card mt-3">
+                <div class="card-header">
+                    <h5 class="mb-0">Metadata</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <dl class="row">
+                                <dt class="col-sm-4">Issue ID:</dt>
+                                <dd class="col-sm-8"><code>@Model.Issue.IssueId</code></dd>
+
+                                <dt class="col-sm-4">Project ID:</dt>
+                                <dd class="col-sm-8"><code>@Model.Issue.ProjectId</code></dd>
+
+                                <dt class="col-sm-4">Task ID:</dt>
+                                <dd class="col-sm-8">
+                                    @if (Model.Issue.TaskId.HasValue)
+                                    {
+                                        <code>@Model.Issue.TaskId</code>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-muted">Not linked to task</span>
+                                    }
+                                </dd>
+                            </dl>
+                        </div>
+                        <div class="col-md-6">
+                            <dl class="row">
+                                <dt class="col-sm-4">Assigned User ID:</dt>
+                                <dd class="col-sm-8">@(Model.Issue.AssignedToUserId?.ToString() ?? "Unassigned")</dd>
+
+                                <dt class="col-sm-4">Days Open:</dt>
+                                <dd class="col-sm-8">
+                                    @{
+                                        var endDate = Model.Issue.ClosedDate ?? DateOnly.FromDateTime(DateTime.Today);
+                                        var daysOpen = endDate.DayNumber - Model.Issue.OpenedDate.DayNumber;
+                                    }
+                                    @daysOpen days
+                                </dd>
+
+                                <dt class="col-sm-4">Status:</dt>
+                                <dd class="col-sm-8">
+                                    @if (Model.Issue.Status == "Closed")
+                                    {
+                                        <span class="text-success"><i class="fas fa-check-circle"></i> Resolved</span>
+                                    }
+                                    else if (Model.Issue.Status == "In Progress")
+                                    {
+                                        <span class="text-warning"><i class="fas fa-spinner fa-spin"></i> Active</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-danger"><i class="fas fa-exclamation-circle"></i> Open</span>
+                                    }
+                                </dd>
+                            </dl>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://kit.fontawesome.com/your-fontawesome-kit.js" crossorigin="anonymous"></script>
+}

@@ -1,0 +1,181 @@
+@page "{id:guid}"
+@model MyProject.UI.RazorPages.Pages.Issues.EditModel
+@{
+    ViewData["Title"] = "Edit Issue";
+}
+
+<div class="row">
+    <div class="col-md-10">
+        <h2>Edit Issue</h2>
+        
+        <form method="post">
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="form-group mb-3">
+                        <label asp-for="Issue.IssueName" class="form-label"></label>
+                        <input asp-for="Issue.IssueName" class="form-control" />
+                        <span asp-validation-for="Issue.IssueName" class="text-danger"></span>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="form-group mb-3">
+                        <label asp-for="Issue.IssueType" class="form-label"></label>
+                        <select asp-for="Issue.IssueType" class="form-select">
+                            <option value="">Select Issue Type</option>
+                            <option value="Bug">Bug</option>
+                            <option value="Enhancement">Enhancement</option>
+                            <option value="Feature Request">Feature Request</option>
+                            <option value="Performance">Performance</option>
+                            <option value="Security">Security</option>
+                            <option value="Documentation">Documentation</option>
+                            <option value="Configuration">Configuration</option>
+                            <option value="Data Issue">Data Issue</option>
+                            <option value="Infrastructure">Infrastructure</option>
+                            <option value="Integration">Integration</option>
+                            <option value="User Interface">User Interface</option>
+                            <option value="Other">Other</option>
+                        </select>
+                        <span asp-validation-for="Issue.IssueType" class="text-danger"></span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-group mb-3">
+                <label asp-for="Issue.TaskId" class="form-label">Related Task (Optional)</label>
+                <select asp-for="Issue.TaskId" asp-items="Model.Tasks" class="form-select">
+                    <option value="">No Related Task</option>
+                </select>
+                <span asp-validation-for="Issue.TaskId" class="text-danger"></span>
+            </div>
+
+            <div class="form-group mb-3">
+                <label asp-for="Issue.IssueDescription" class="form-label"></label>
+                <textarea asp-for="Issue.IssueDescription" class="form-control" rows="4"></textarea>
+                <span asp-validation-for="Issue.IssueDescription" class="text-danger"></span>
+            </div>
+
+            <div class="row">
+                <div class="col-md-4">
+                    <div class="form-group mb-3">
+                        <label asp-for="Issue.Status" class="form-label"></label>
+                        <select asp-for="Issue.Status" class="form-select">
+                            <option value="Open">Open</option>
+                            <option value="In Progress">In Progress</option>
+                            <option value="On Hold">On Hold</option>
+                            <option value="Resolved">Resolved</option>
+                            <option value="Closed">Closed</option>
+                            <option value="Reopened">Reopened</option>
+                        </select>
+                        <span asp-validation-for="Issue.Status" class="text-danger"></span>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="form-group mb-3">
+                        <label asp-for="Issue.Priority" class="form-label"></label>
+                        <select asp-for="Issue.Priority" class="form-select">
+                            <option value="Low">Low</option>
+                            <option value="Normal">Normal</option>
+                            <option value="High">High</option>
+                            <option value="Critical">Critical</option>
+                        </select>
+                        <span asp-validation-for="Issue.Priority" class="text-danger"></span>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="form-group mb-3">
+                        <label asp-for="Issue.Severity" class="form-label"></label>
+                        <select asp-for="Issue.Severity" class="form-select">
+                            <option value="Low">Low</option>
+                            <option value="Medium">Medium</option>
+                            <option value="High">High</option>
+                            <option value="Critical">Critical</option>
+                        </select>
+                        <span asp-validation-for="Issue.Severity" class="text-danger"></span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="form-group mb-3">
+                        <label asp-for="Issue.OpenedDate" class="form-label"></label>
+                        <input asp-for="Issue.OpenedDate" class="form-control" type="date" />
+                        <span asp-validation-for="Issue.OpenedDate" class="text-danger"></span>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="form-group mb-3">
+                        <label asp-for="Issue.ClosedDate" class="form-label"></label>
+                        <input asp-for="Issue.ClosedDate" class="form-control" type="date" />
+                        <span asp-validation-for="Issue.ClosedDate" class="text-danger"></span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-group mb-3">
+                <label asp-for="Issue.AssignedToUserId" class="form-label">Assigned To (User ID)</label>
+                <input asp-for="Issue.AssignedToUserId" class="form-control" />
+                <span asp-validation-for="Issue.AssignedToUserId" class="text-danger"></span>
+            </div>
+
+            <div class="form-group mb-3">
+                <label asp-for="Issue.RootCause" class="form-label"></label>
+                <textarea asp-for="Issue.RootCause" class="form-control" rows="3"></textarea>
+                <span asp-validation-for="Issue.RootCause" class="text-danger"></span>
+            </div>
+
+            <div class="card mt-4">
+                <div class="card-header">
+                    <h5 class="mb-0">Impact Assessment</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group mb-3">
+                                <label asp-for="Issue.ImpactOnScheduleDays" class="form-label"></label>
+                                <input asp-for="Issue.ImpactOnScheduleDays" class="form-control" type="number" min="0" />
+                                <span asp-validation-for="Issue.ImpactOnScheduleDays" class="text-danger"></span>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group mb-3">
+                                <label asp-for="Issue.ImpactOnBudgetUsd" class="form-label"></label>
+                                <input asp-for="Issue.ImpactOnBudgetUsd" class="form-control" type="number" step="0.01" min="0" />
+                                <span asp-validation-for="Issue.ImpactOnBudgetUsd" class="text-danger"></span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-group mb-3">
+                        <label asp-for="Issue.ImpactOnScope" class="form-label"></label>
+                        <textarea asp-for="Issue.ImpactOnScope" class="form-control" rows="2"></textarea>
+                        <span asp-validation-for="Issue.ImpactOnScope" class="text-danger"></span>
+                    </div>
+
+                    <div class="form-group mb-3">
+                        <label asp-for="Issue.ImpactOnQuality" class="form-label"></label>
+                        <textarea asp-for="Issue.ImpactOnQuality" class="form-control" rows="2"></textarea>
+                        <span asp-validation-for="Issue.ImpactOnQuality" class="text-danger"></span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-group mt-4 mb-3">
+                <label asp-for="Issue.ResolutionSteps" class="form-label"></label>
+                <textarea asp-for="Issue.ResolutionSteps" class="form-control" rows="4"></textarea>
+                <span asp-validation-for="Issue.ResolutionSteps" class="text-danger"></span>
+            </div>
+
+            <div class="form-group">
+                <button type="submit" class="btn btn-primary">Update Issue</button>
+                <a asp-page="./Details" asp-route-id="@Model.IssueId" class="btn btn-secondary">Cancel</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}
