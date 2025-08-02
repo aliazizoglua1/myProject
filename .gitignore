@@ -1,0 +1,10 @@
+﻿################################################################################
+# This .gitignore file was automatically created by Microsoft(R) Visual Studio.
+################################################################################
+
+/WebAPI/MyProject.WebAPI/obj
+/WebAPI/MyProject.WebAPI/bin/Debug/net9.0
+/Infrastructure/MyProject.Persistence/bin/Debug/net9.0
+/Infrastructure/MyProject.Persistence/obj
+/UI/MyProject.UI.ProjectManagementConsole/bin/Debug/net9.0
+/UI/MyProject.UI.ProjectManagementConsole/obj
