@@ -1,0 +1,138 @@
+@page "{id:guid}"
+@model MyProject.UI.RazorPages.Pages.Projects.DetailsModel
+@{
+    ViewData["Title"] = "Project Details";
+}
+
+<div class="row">
+    <div class="col-md-10">
+        @if (Model.Project != null)
+        {
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h2>@Model.Project.ProjectName</h2>
+                <div class="btn-group" role="group">
+                    <a asp-page="./Edit" asp-route-id="@Model.Project.ProjectId" class="btn btn-outline-warning">
+                        <i class="fas fa-edit"></i> Edit
+                    </a>
+                    <a asp-page="./Delete" asp-route-id="@Model.Project.ProjectId" class="btn btn-outline-danger">
+                        <i class="fas fa-trash"></i> Delete
+                    </a>
+                    <a asp-page="./Index" class="btn btn-outline-secondary">
+                        <i class="fas fa-list"></i> Back to List
+                    </a>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h4 class="mb-0">Project Information</h4>
+                        <span class="badge @(Model.Project.ProjectStatus == "completed" ? "bg-success" : 
+                                             Model.Project.ProjectStatus == "in-progress" ? "bg-warning" : 
+                                             Model.Project.ProjectStatus == "on-hold" ? "bg-secondary" : "bg-primary") fs-6">
+                            @Model.Project.ProjectStatus
+                        </span>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <dl class="row">
+                                <dt class="col-sm-4">Project Type:</dt>
+                                <dd class="col-sm-8">@Model.Project.ProjectType</dd>
+
+                                <dt class="col-sm-4">Industry Domain:</dt>
+                                <dd class="col-sm-8">@Model.Project.IndustryDomain</dd>
+
+                                <dt class="col-sm-4">Contract Type:</dt>
+                                <dd class="col-sm-8">@Model.Project.ContractType</dd>
+
+                                <dt class="col-sm-4">Complexity:</dt>
+                                <dd class="col-sm-8">@Model.Project.ProjectComplexity</dd>
+
+                                <dt class="col-sm-4">Current Phase:</dt>
+                                <dd class="col-sm-8">@Model.Project.CurrentPhase</dd>
+
+                                <dt class="col-sm-4">Team Size:</dt>
+                                <dd class="col-sm-8">@Model.Project.TeamSize</dd>
+                            </dl>
+                        </div>
+                        <div class="col-md-6">
+                            <dl class="row">
+                                <dt class="col-sm-4">Planned Start:</dt>
+                                <dd class="col-sm-8">@Model.Project.PlannedStartDate?.ToString("MMM dd, yyyy")</dd>
+
+                                <dt class="col-sm-4">Planned End:</dt>
+                                <dd class="col-sm-8">@Model.Project.PlannedEndDate?.ToString("MMM dd, yyyy")</dd>
+
+                                <dt class="col-sm-4">Actual Start:</dt>
+                                <dd class="col-sm-8">@Model.Project.ActualStartDate?.ToString("MMM dd, yyyy")</dd>
+
+                                <dt class="col-sm-4">Actual End:</dt>
+                                <dd class="col-sm-8">@Model.Project.ActualEndDate?.ToString("MMM dd, yyyy")</dd>
+
+                                <dt class="col-sm-4">Planned Budget:</dt>
+                                <dd class="col-sm-8">@Model.Project.PlannedBudget?.ToString("C")</dd>
+
+                                <dt class="col-sm-4">Actual Budget:</dt>
+                                <dd class="col-sm-8">@Model.Project.ActualBudget?.ToString("C")</dd>
+                            </dl>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            @if (!string.IsNullOrEmpty(Model.Project.Description))
+            {
+                <div class="card mt-3">
+                    <div class="card-header">
+                        <h5 class="mb-0">Description</h5>
+                    </div>
+                    <div class="card-body">
+                        <p>@Model.Project.Description</p>
+                    </div>
+                </div>
+            }
+
+            @if (!string.IsNullOrEmpty(Model.Project.Notes))
+            {
+                <div class="card mt-3">
+                    <div class="card-header">
+                        <h5 class="mb-0">Notes</h5>
+                    </div>
+                    <div class="card-body">
+                        <p>@Model.Project.Notes</p>
+                    </div>
+                </div>
+            }
+
+            <div class="card mt-3">
+                <div class="card-header">
+                    <h5 class="mb-0">Metadata</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <dl class="row">
+                                <dt class="col-sm-4">Project ID:</dt>
+                                <dd class="col-sm-8"><code>@Model.Project.ProjectId</code></dd>
+
+                                <dt class="col-sm-4">Created:</dt>
+                                <dd class="col-sm-8">@Model.Project.CreatedAt.ToString("MMM dd, yyyy HH:mm")</dd>
+                            </dl>
+                        </div>
+                        <div class="col-md-6">
+                            <dl class="row">
+                                <dt class="col-sm-4">Manager ID:</dt>
+                                <dd class="col-sm-8">@(Model.Project.ProjectManagerId?.ToString() ?? "Not assigned")</dd>
+
+                                <dt class="col-sm-4">Updated:</dt>
+                                <dd class="col-sm-8">@Model.Project.UpdatedAt.ToString("MMM dd, yyyy HH:mm")</dd>
+                            </dl>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+</div>

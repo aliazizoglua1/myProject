@@ -1,0 +1,102 @@
+@page
+@model MyProject.UI.RazorPages.Pages.Projects.IndexModel
+@{
+    ViewData["Title"] = "Projects";
+}
+
+<div class="row">
+    <div class="col-md-12">
+        @if (TempData["SuccessMessage"] != null)
+        {
+            <div class="alert alert-success alert-dismissible fade show" role="alert">
+                @TempData["SuccessMessage"]
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        }
+
+        @if (TempData["ErrorMessage"] != null)
+        {
+            <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                @TempData["ErrorMessage"]
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        }
+
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h2>Projects</h2>
+            <a asp-page="./Create" class="btn btn-primary">
+                <i class="fas fa-plus"></i> Create New Project
+            </a>
+        </div>
+
+        @if (Model.Projects != null && Model.Projects.Any())
+        {
+            <div class="table-responsive">
+                <table class="table table-striped table-hover">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>Project Name</th>
+                            <th>Project Type</th>
+                            <th>Status</th>
+                            <th>Start Date</th>
+                            <th>End Date</th>
+                            <th>Budget</th>
+                            <th>Team Size</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var project in Model.Projects)
+                        {
+                            <tr>
+                                <td>
+                                    <strong>@project.ProjectName</strong>
+                                    @if (!string.IsNullOrEmpty(project.Description))
+                                    {
+                                        <br><small class="text-muted">@project.Description.Substring(0, Math.Min(project.Description.Length, 50))@(project.Description.Length > 50 ? "..." : "")</small>
+                                    }
+                                </td>
+                                <td>@project.ProjectType</td>
+                                <td>
+                                    <span class="badge @(project.ProjectStatus == "completed" ? "bg-success" : 
+                                                         project.ProjectStatus == "in-progress" ? "bg-warning" : 
+                                                         project.ProjectStatus == "on-hold" ? "bg-secondary" : "bg-primary")">
+                                        @project.ProjectStatus
+                                    </span>
+                                </td>
+                                <td>@project.PlannedStartDate?.ToString("MMM dd, yyyy")</td>
+                                <td>@project.PlannedEndDate?.ToString("MMM dd, yyyy")</td>
+                                <td>@project.PlannedBudget?.ToString("C")</td>
+                                <td>@project.TeamSize</td>
+                                <td>
+                                    <div class="btn-group" role="group">
+                                        <a asp-page="./Details" asp-route-id="@project.ProjectId" class="btn btn-sm btn-outline-info" title="View Details">
+                                            <i class="fas fa-eye"></i>
+                                        </a>
+                                        <a asp-page="./Edit" asp-route-id="@project.ProjectId" class="btn btn-sm btn-outline-warning" title="Edit">
+                                            <i class="fas fa-edit"></i>
+                                        </a>
+                                        <a asp-page="./Delete" asp-route-id="@project.ProjectId" class="btn btn-sm btn-outline-danger" title="Delete">
+                                            <i class="fas fa-trash"></i>
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+        else
+        {
+            <div class="alert alert-info">
+                <h4 class="alert-heading">No Projects Found</h4>
+                <p>You haven't created any projects yet. <a asp-page="./Create" class="alert-link">Create your first project</a> to get started.</p>
+            </div>
+        }
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://kit.fontawesome.com/your-fontawesome-kit.js" crossorigin="anonymous"></script>
+}
