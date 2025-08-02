@@ -11,8 +11,14 @@ builder.Services.AddHttpClient<IProjectService, ProjectService>(client =>
     client.BaseAddress = new Uri("https://localhost:7065/"); // Adjust port as needed
 });
 
-// Register the project service
+builder.Services.AddHttpClient<ITaskService, TaskService>(client =>
+{
+    client.BaseAddress = new Uri("https://localhost:7065/"); // Adjust port as needed
+});
+
+// Register services
 builder.Services.AddScoped<IProjectService, ProjectService>();
+builder.Services.AddScoped<ITaskService, TaskService>();
 
 var app = builder.Build();
 

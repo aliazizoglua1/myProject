@@ -1,0 +1,222 @@
+@page "{id:guid}"
+@model MyProject.UI.RazorPages.Pages.Tasks.DetailsModel
+@{
+    ViewData["Title"] = "Task Details";
+}
+
+<div class="row">
+    <div class="col-md-10">
+        @if (Model.Task != null)
+        {
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h2>@Model.Task.TaskName</h2>
+                <div class="btn-group" role="group">
+                    <a asp-page="./Edit" asp-route-id="@Model.Task.TaskId" class="btn btn-outline-warning">
+                        <i class="fas fa-edit"></i> Edit
+                    </a>
+                    <a asp-page="./Delete" asp-route-id="@Model.Task.TaskId" class="btn btn-outline-danger">
+                        <i class="fas fa-trash"></i> Delete
+                    </a>
+                    <a asp-page="./Index" class="btn btn-outline-secondary">
+                        <i class="fas fa-list"></i> Back to List
+                    </a>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h4 class="mb-0">Task Information</h4>
+                        <div>
+                            <span class="badge @(Model.Task.TaskStatus == "Completed" ? "bg-success" : 
+                                                 Model.Task.TaskStatus == "In Progress" ? "bg-warning" : 
+                                                 Model.Task.TaskStatus == "On Hold" ? "bg-secondary" : "bg-primary") fs-6 me-2">
+                                @Model.Task.TaskStatus
+                            </span>
+                            <span class="badge @(Model.Task.Priority == "High" ? "bg-danger" : 
+                                                 Model.Task.Priority == "Medium" ? "bg-warning" : "bg-info") fs-6">
+                                @Model.Task.Priority Priority
+                            </span>
+                            @if (Model.Task.IsMilestone)
+                            {
+                                <span class="badge bg-danger fs-6 ms-2">
+                                    <i class="fas fa-flag"></i> Milestone
+                                </span>
+                            }
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <dl class="row">
+                                <dt class="col-sm-4">Task Type:</dt>
+                                <dd class="col-sm-8">@Model.Task.TaskType</dd>
+
+                                <dt class="col-sm-4">Project:</dt>
+                                <dd class="col-sm-8">@(Model.Task.Project?.ProjectName ?? "Not assigned")</dd>
+
+                                <dt class="col-sm-4">Parent Task:</dt>
+                                <dd class="col-sm-8">@(Model.Task.ParentTask?.TaskName ?? "None")</dd>
+
+                                <dt class="col-sm-4">Assigned To:</dt>
+                                <dd class="col-sm-8">@(Model.Task.AssignedToUserId?.ToString() ?? "Unassigned")</dd>
+
+                                <dt class="col-sm-4">Planned Effort:</dt>
+                                <dd class="col-sm-8">@(Model.Task.PlannedEffortHours?.ToString("F1") ?? "Not set") hours</dd>
+
+                                <dt class="col-sm-4">Actual Effort:</dt>
+                                <dd class="col-sm-8">@(Model.Task.ActualEffortHours?.ToString("F1") ?? "Not recorded") hours</dd>
+                            </dl>
+                        </div>
+                        <div class="col-md-6">
+                            <dl class="row">
+                                <dt class="col-sm-4">Planned Start:</dt>
+                                <dd class="col-sm-8">@Model.Task.PlannedStartDate.ToString("MMM dd, yyyy")</dd>
+
+                                <dt class="col-sm-4">Planned End:</dt>
+                                <dd class="col-sm-8">@(Model.Task.PlannedEndDate?.ToString("MMM dd, yyyy") ?? "Not set")</dd>
+
+                                <dt class="col-sm-4">Actual Start:</dt>
+                                <dd class="col-sm-8">@(Model.Task.ActualStartDate?.ToString("MMM dd, yyyy") ?? "Not started")</dd>
+
+                                <dt class="col-sm-4">Actual End:</dt>
+                                <dd class="col-sm-8">@(Model.Task.ActualEndDate?.ToString("MMM dd, yyyy") ?? "Not completed")</dd>
+
+                                <dt class="col-sm-4">Progress:</dt>
+                                <dd class="col-sm-8">
+                                    @if (Model.Task.PlannedEffortHours.HasValue && Model.Task.ActualEffortHours.HasValue)
+                                    {
+                                        var progress = Math.Min(100, (Model.Task.ActualEffortHours.Value / Model.Task.PlannedEffortHours.Value) * 100);
+                                        <div class="progress" style="height: 20px;">
+                                            <div class="progress-bar @(progress > 100 ? "bg-warning" : "bg-success")" 
+                                                 role="progressbar" 
+                                                 style="width: @(Math.Min(100, progress))%">
+                                                @progress.ToString("F0")%
+                                            </div>
+                                        </div>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-muted">Cannot calculate</span>
+                                    }
+                                </dd>
+                            </dl>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            @if (!string.IsNullOrEmpty(Model.Task.Description))
+            {
+                <div class="card mt-3">
+                    <div class="card-header">
+                        <h5 class="mb-0">Description</h5>
+                    </div>
+                    <div class="card-body">
+                        <p>@Model.Task.Description</p>
+                    </div>
+                </div>
+            }
+
+            @if (!string.IsNullOrEmpty(Model.Task.Comments))
+            {
+                <div class="card mt-3">
+                    <div class="card-header">
+                        <h5 class="mb-0">Comments</h5>
+                    </div>
+                    <div class="card-body">
+                        <p>@Model.Task.Comments</p>
+                    </div>
+                </div>
+            }
+
+            @if (Model.Task.Subtasks != null && Model.Task.Subtasks.Any())
+            {
+                <div class="card mt-3">
+                    <div class="card-header">
+                        <h5 class="mb-0">Subtasks (@Model.Task.Subtasks.Count())</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-sm">
+                                <thead>
+                                    <tr>
+                                        <th>Task Name</th>
+                                        <th>Status</th>
+                                        <th>Priority</th>
+                                        <th>Effort</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var subtask in Model.Task.Subtasks)
+                                    {
+                                        <tr>
+                                            <td>@subtask.TaskName</td>
+                                            <td>
+                                                <span class="badge @(subtask.TaskStatus == "Completed" ? "bg-success" : 
+                                                                     subtask.TaskStatus == "In Progress" ? "bg-warning" : 
+                                                                     subtask.TaskStatus == "On Hold" ? "bg-secondary" : "bg-primary")">
+                                                    @subtask.TaskStatus
+                                                </span>
+                                            </td>
+                                            <td>
+                                                <span class="badge @(subtask.Priority == "High" ? "bg-danger" : 
+                                                                     subtask.Priority == "Medium" ? "bg-warning" : "bg-info")">
+                                                    @subtask.Priority
+                                                </span>
+                                            </td>
+                                            <td>@(subtask.PlannedEffortHours?.ToString("F1") ?? "-") hrs</td>
+                                            <td>
+                                                <a asp-page="./Details" asp-route-id="@subtask.TaskId" class="btn btn-sm btn-outline-info">View</a>
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            }
+
+            <div class="card mt-3">
+                <div class="card-header">
+                    <h5 class="mb-0">Metadata</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <dl class="row">
+                                <dt class="col-sm-4">Task ID:</dt>
+                                <dd class="col-sm-8"><code>@Model.Task.TaskId</code></dd>
+
+                                <dt class="col-sm-4">Project ID:</dt>
+                                <dd class="col-sm-8"><code>@Model.Task.ProjectId</code></dd>
+
+                                <dt class="col-sm-4">Created:</dt>
+                                <dd class="col-sm-8">@Model.Task.CreatedAt.ToString("MMM dd, yyyy HH:mm")</dd>
+                            </dl>
+                        </div>
+                        <div class="col-md-6">
+                            <dl class="row">
+                                <dt class="col-sm-4">Parent Task ID:</dt>
+                                <dd class="col-sm-8">@(Model.Task.ParentTaskId?.ToString() ?? "None")</dd>
+
+                                <dt class="col-sm-4">Assigned User ID:</dt>
+                                <dd class="col-sm-8">@(Model.Task.AssignedToUserId?.ToString() ?? "Unassigned")</dd>
+
+                                <dt class="col-sm-4">Updated:</dt>
+                                <dd class="col-sm-8">@Model.Task.UpdatedAt.ToString("MMM dd, yyyy HH:mm")</dd>
+                            </dl>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://kit.fontawesome.com/your-fontawesome-kit.js" crossorigin="anonymous"></script>
+}
