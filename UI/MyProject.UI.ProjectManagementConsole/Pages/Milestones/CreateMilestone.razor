@@ -1,0 +1,248 @@
+@page "/milestones/create"
+@using MyProject.UI.ProjectManagementConsole.Models
+@using MyProject.UI.ProjectManagementConsole.Services
+@inject IMilestoneService MilestoneService
+@inject IProjectService ProjectService
+@inject IUserService UserService
+@inject NavigationManager Navigation
+
+<PageTitle>Add Milestone</PageTitle>
+
+<div class="container-fluid">
+    <div class="row mb-3">
+        <div class="col">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="/milestones">Milestones</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">Add Milestone</li>
+                </ol>
+            </nav>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-header">
+                    <h2>Add New Milestone</h2>
+                </div>
+                <div class="card-body">
+                    <EditForm Model="milestone" OnValidSubmit="HandleValidSubmit">
+                        <DataAnnotationsValidator />
+
+                        @if (errorMessage != null)
+                        {
+                            <div class="alert alert-danger" role="alert">
+                                @errorMessage
+                            </div>
+                        }
+
+                        <div class="mb-3">
+                            <label for="milestoneName" class="form-label">Milestone Name *</label>
+                            <InputText id="milestoneName" class="form-control" @bind-Value="milestone.MilestoneName" />
+                            <ValidationMessage For="@(() => milestone.MilestoneName)" />
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="description" class="form-label">Description</label>
+                            <InputTextArea id="description" class="form-control" rows="3" @bind-Value="milestone.Description" />
+                            <ValidationMessage For="@(() => milestone.Description)" />
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="projectId" class="form-label">Project *</label>
+                                    <InputSelect id="projectId" class="form-select" @bind-Value="milestone.ProjectId">
+                                        <option value="">Select Project</option>
+                                        @if (projects != null)
+                                        {
+                                            @foreach (var project in projects)
+                                            {
+                                                <option value="@project.ProjectId">@project.ProjectName</option>
+                                            }
+                                        }
+                                    </InputSelect>
+                                    <ValidationMessage For="@(() => milestone.ProjectId)" />
+                                </div>
+                            </div>
+                        </div>
+
+
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="targetDate" class="form-label">Target Date *</label>
+                                    <InputDate id="targetDate" class="form-control" @bind-Value="milestone.TargetDate" />
+                                    <ValidationMessage For="@(() => milestone.TargetDate)" />
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="achievedDate" class="form-label">Achieved Date</label>
+                                    <InputDate id="achievedDate" class="form-control" @bind-Value="milestone.AchievedDate" />
+                                    <ValidationMessage For="@(() => milestone.AchievedDate)" />
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="isAchieved" class="form-label">Is Achieved</label>
+                                    <InputCheckbox id="isAchieved" class="form-check-input" @bind-Value="milestone.IsAchieved" />
+                                    <ValidationMessage For="@(() => milestone.IsAchieved)" />
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="notes" class="form-label">Notes</label>
+                            <InputTextArea id="notes" class="form-control" rows="3" @bind-Value="milestone.Notes" />
+                            <ValidationMessage For="@(() => milestone.Notes)" />
+                        </div>
+
+                        <div class="d-flex gap-2">
+                            <button type="submit" class="btn btn-primary" disabled="@isSubmitting">
+                                @if (isSubmitting)
+                                {
+                                    <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                                    <span class="ms-1">Adding...</span>
+                                }
+                                else
+                                {
+                                    <i class="bi bi-check-circle"></i>
+                                    <span class="ms-1">Add Milestone</span>
+                                }
+                            </button>
+                            <a href="/milestones" class="btn btn-secondary">
+                                <i class="bi bi-x-circle"></i>
+                                <span class="ms-1">Cancel</span>
+                            </a>
+                        </div>
+                    </EditForm>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5>Milestone Information</h5>
+                </div>
+                <div class="card-body">
+                    <p class="text-muted">
+                        Milestones represent significant points in a project's timeline. 
+                        They help track progress and mark important achievements or deliverables.
+                    </p>
+                    
+                    <h6>Required Fields:</h6>
+                    <ul class="small text-muted">
+                        <li><strong>Milestone Name:</strong> A clear, descriptive name for the milestone</li>
+                        <li><strong>Project:</strong> The project this milestone belongs to</li>
+                        <li><strong>Planned Date:</strong> When the milestone is expected to be achieved</li>
+                    </ul>
+
+                    <h6>Milestone Types:</h6>
+                    <ul class="small text-muted">
+                        <li><strong>Project:</strong> Major project milestones</li>
+                        <li><strong>Phase:</strong> End of project phases</li>
+                        <li><strong>Release:</strong> Product or feature releases</li>
+                        <li><strong>Sprint:</strong> Agile sprint completions</li>
+                        <li><strong>Review:</strong> Review or approval points</li>
+                        <li><strong>Delivery:</strong> Deliverable completions</li>
+                        <li><strong>Checkpoint:</strong> Progress checkpoints</li>
+                        <li><strong>Gate:</strong> Decision gates or go/no-go points</li>
+                    </ul>
+
+                    <h6>Milestone Status:</h6>
+                    <ul class="small text-muted">
+                        <li><span class="badge bg-warning">Pending</span> - Not yet started</li>
+                        <li><span class="badge bg-info">In Progress</span> - Currently being worked on</li>
+                        <li><span class="badge bg-success">Achieved</span> - Successfully completed</li>
+                        <li><span class="badge bg-danger">Delayed</span> - Behind schedule</li>
+                        <li><span class="badge bg-secondary">Cancelled</span> - No longer required</li>
+                    </ul>
+
+                    <h6>Priority Levels:</h6>
+                    <ul class="small text-muted">
+                        <li><span class="badge bg-success">Low</span> - Can be adjusted if needed</li>
+                        <li><span class="badge bg-warning">Medium</span> - Normal priority</li>
+                        <li><span class="badge bg-danger">High</span> - Important milestone</li>
+                        <li><span class="badge bg-dark">Critical</span> - Must be achieved on time</li>
+                    </ul>
+
+                    <h6>Notes:</h6>
+                    <ul class="small text-muted">
+                        <li>Milestones help track project progress</li>
+                        <li>Acceptance criteria define success</li>
+                        <li>Dependencies affect scheduling</li>
+                        <li>Completion percentage tracks progress</li>
+                        <li>Achieved dates record actual completion</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    private CreateMilestoneDto milestone = new();
+    private List<ProjectDto>? projects;
+    private List<UserDto>? users;
+    private bool isLoading = true;
+    private bool isSubmitting = false;
+    private string? errorMessage;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadData();
+    }
+
+    private async Task LoadData()
+    {
+        try
+        {
+            isLoading = true;
+            errorMessage = null;
+            
+            // Load data in parallel
+            var projectTask = ProjectService.GetProjectsAsync();
+            var userTask = UserService.GetUsersAsync();
+            
+            await Task.WhenAll(projectTask, userTask);
+            
+            projects = await projectTask;
+            users = await userTask;
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Error loading data: {ex.Message}";
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private async Task HandleValidSubmit()
+    {
+        try
+        {
+            isSubmitting = true;
+            errorMessage = null;
+
+            var createdMilestone = await MilestoneService.CreateMilestoneAsync(milestone);
+            Navigation.NavigateTo($"/milestones/{createdMilestone.MilestoneId}");
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Error adding milestone: {ex.Message}";
+        }
+        finally
+        {
+            isSubmitting = false;
+        }
+    }
+} 

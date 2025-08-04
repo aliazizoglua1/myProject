@@ -1,0 +1,385 @@
+@page "/resources/{Id:guid}"
+@using MyProject.UI.ProjectManagementConsole.Models
+@using MyProject.UI.ProjectManagementConsole.Services
+@inject IResourceService ResourceService
+@inject NavigationManager Navigation
+
+<PageTitle>Resource Details</PageTitle>
+
+<div class="container-fluid">
+    <div class="row mb-3">
+        <div class="col">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="/resources">Resources</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">Resource Details</li>
+                </ol>
+            </nav>
+        </div>
+    </div>
+
+    @if (isLoading)
+    {
+        <div class="text-center">
+            <div class="spinner-border" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+        </div>
+    }
+    else if (errorMessage != null)
+    {
+        <div class="alert alert-danger" role="alert">
+            @errorMessage
+        </div>
+    }
+    else if (resource == null)
+    {
+        <div class="alert alert-warning" role="alert">
+            Resource not found.
+        </div>
+    }
+    else
+    {
+        <div class="row">
+            <div class="col-lg-8">
+                <div class="card">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h2>@resource.FirstName @resource.LastName</h2>
+                        <div class="btn-group">
+                            <a href="/resources/@resource.ResourceId/edit" class="btn btn-primary">
+                                <i class="bi bi-pencil"></i> Edit
+                            </a>
+                            <button type="button" class="btn btn-danger" @onclick="DeleteResource">
+                                <i class="bi bi-trash"></i> Delete
+                            </button>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <h5>Basic Information</h5>
+                                <dl class="row">
+                                    <dt class="col-sm-4">Resource ID</dt>
+                                    <dd class="col-sm-8">
+                                        <code>@resource.ResourceId</code>
+                                    </dd>
+
+                                    <dt class="col-sm-4">Full Name</dt>
+                                    <dd class="col-sm-8">@resource.FirstName @resource.LastName</dd>
+
+                                    <dt class="col-sm-4">Email</dt>
+                                    <dd class="col-sm-8">
+                                        <a href="mailto:@resource.Email">@resource.Email</a>
+                                    </dd>
+
+                                    <dt class="col-sm-4">Phone</dt>
+                                    <dd class="col-sm-8">
+                                        @if (!string.IsNullOrEmpty(resource.PhoneNumber))
+                                        {
+                                            <a href="tel:@resource.PhoneNumber">@resource.PhoneNumber</a>
+                                        }
+                                        else
+                                        {
+                                            <span class="text-muted">Not provided</span>
+                                        }
+                                    </dd>
+                                </dl>
+                            </div>
+                            <div class="col-md-6">
+                                <h5>Employment Details</h5>
+                                <dl class="row">
+                                    <dt class="col-sm-4">Department</dt>
+                                    <dd class="col-sm-8">
+                                        <span class="badge bg-info">@resource.Department</span>
+                                    </dd>
+
+                                    <dt class="col-sm-4">Job Title</dt>
+                                    <dd class="col-sm-8">@resource.JobTitle</dd>
+
+                                    <dt class="col-sm-4">Status</dt>
+                                    <dd class="col-sm-8">
+                                        <span class="badge @GetEmploymentStatusBadgeClass(resource.EmploymentStatus)">
+                                            @resource.EmploymentStatus
+                                        </span>
+                                    </dd>
+
+                                    <dt class="col-sm-4">Salary</dt>
+                                    <dd class="col-sm-8">
+                                        @if (resource.Salary.HasValue)
+                                        {
+                                            <span>$@resource.Salary.Value.ToString("N0")</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="text-muted">Not set</span>
+                                        }
+                                    </dd>
+                                </dl>
+                            </div>
+                        </div>
+
+                        <div class="row mt-3">
+                            <div class="col-md-6">
+                                <h5>Employment Timeline</h5>
+                                <dl class="row">
+                                    <dt class="col-sm-4">Hire Date</dt>
+                                    <dd class="col-sm-8">
+                                        @if (resource.HireDate.HasValue)
+                                        {
+                                            <span>@resource.HireDate.Value.ToString("MMM dd, yyyy")</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="text-muted">Not set</span>
+                                        }
+                                    </dd>
+
+                                    <dt class="col-sm-4">Termination Date</dt>
+                                    <dd class="col-sm-8">
+                                        @if (resource.TerminationDate.HasValue)
+                                        {
+                                            <span>@resource.TerminationDate.Value.ToString("MMM dd, yyyy")</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="text-muted">Not set</span>
+                                        }
+                                    </dd>
+
+                                    <dt class="col-sm-4">Tenure</dt>
+                                    <dd class="col-sm-8">@GetTenure(resource.HireDate, resource.TerminationDate)</dd>
+                                </dl>
+                            </div>
+                            <div class="col-md-6">
+                                <h5>Organization</h5>
+                                <dl class="row">
+                                    <dt class="col-sm-4">Tenant</dt>
+                                    <dd class="col-sm-8">
+                                        @if (resource.Tenant != null)
+                                        {
+                                            <span>@resource.Tenant.OrganizationName</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="text-muted">No tenant assigned</span>
+                                        }
+                                    </dd>
+
+                                    <dt class="col-sm-4">User Account</dt>
+                                    <dd class="col-sm-8">
+                                        @if (resource.User != null)
+                                        {
+                                            <span>@resource.User.FirstName @resource.User.LastName</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="text-muted">No user account linked</span>
+                                        }
+                                    </dd>
+                                </dl>
+                            </div>
+                        </div>
+
+                        @if (!string.IsNullOrEmpty(resource.Skills) || !string.IsNullOrEmpty(resource.Certifications) || !string.IsNullOrEmpty(resource.Experience) || !string.IsNullOrEmpty(resource.Education))
+                        {
+                            <div class="row mt-3">
+                                <div class="col-12">
+                                    <h5>Professional Information</h5>
+                                    <div class="row">
+                                        @if (!string.IsNullOrEmpty(resource.Skills))
+                                        {
+                                            <div class="col-md-6">
+                                                <h6>Skills</h6>
+                                                <p class="text-muted">@resource.Skills</p>
+                                            </div>
+                                        }
+                                        @if (!string.IsNullOrEmpty(resource.Certifications))
+                                        {
+                                            <div class="col-md-6">
+                                                <h6>Certifications</h6>
+                                                <p class="text-muted">@resource.Certifications</p>
+                                            </div>
+                                        }
+                                        @if (!string.IsNullOrEmpty(resource.Experience))
+                                        {
+                                            <div class="col-md-6">
+                                                <h6>Experience</h6>
+                                                <p class="text-muted">@resource.Experience</p>
+                                            </div>
+                                        }
+                                        @if (!string.IsNullOrEmpty(resource.Education))
+                                        {
+                                            <div class="col-md-6">
+                                                <h6>Education</h6>
+                                                <p class="text-muted">@resource.Education</p>
+                                            </div>
+                                        }
+                                    </div>
+                                </div>
+                            </div>
+                        }
+
+                        <div class="row mt-3">
+                            <div class="col-md-6">
+                                <h5>Account Information</h5>
+                                <dl class="row">
+                                    <dt class="col-sm-4">Created</dt>
+                                    <dd class="col-sm-8">@resource.CreatedAt.ToString("MMM dd, yyyy 'at' HH:mm")</dd>
+
+                                    <dt class="col-sm-4">Last Updated</dt>
+                                    <dd class="col-sm-8">@resource.UpdatedAt.ToString("MMM dd, yyyy 'at' HH:mm")</dd>
+                                </dl>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-4">
+                <div class="card">
+                    <div class="card-header">
+                        <h5>Resource Profile</h5>
+                    </div>
+                    <div class="card-body text-center">
+                        <div class="mb-3">
+                            <i class="bi bi-person-circle display-1 text-primary"></i>
+                        </div>
+                        <h5>@resource.FirstName @resource.LastName</h5>
+                        <p class="text-muted">@resource.JobTitle</p>
+                        <p class="text-muted">@resource.Department</p>
+                        <div class="mb-3">
+                            <span class="badge @GetEmploymentStatusBadgeClass(resource.EmploymentStatus) fs-6">
+                                @resource.EmploymentStatus
+                            </span>
+                        </div>
+                        @if (resource.Tenant != null)
+                        {
+                            <p class="text-muted small">@resource.Tenant.OrganizationName</p>
+                        }
+                    </div>
+                </div>
+
+                <div class="card mt-3">
+                    <div class="card-header">
+                        <h5>Quick Actions</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="d-grid gap-2">
+                            <a href="/resources/@resource.ResourceId/edit" class="btn btn-primary">
+                                <i class="bi bi-pencil"></i> Edit Resource
+                            </a>
+                            <a href="/resources" class="btn btn-outline-secondary">
+                                <i class="bi bi-arrow-left"></i> Back to Resources
+                            </a>
+                            <button type="button" class="btn btn-outline-danger" @onclick="DeleteResource">
+                                <i class="bi bi-trash"></i> Delete Resource
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card mt-3">
+                    <div class="card-header">
+                        <h5>Resource Statistics</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row text-center">
+                            <div class="col-6">
+                                <div class="border-end">
+                                    <h4 class="text-primary">@GetDaysSinceHire(resource.HireDate)</h4>
+                                    <small class="text-muted">Days Employed</small>
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <h4 class="text-success">@(resource.TerminationDate == null ? "Active" : "Inactive")</h4>
+                                <small class="text-muted">Status</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter]
+    public Guid Id { get; set; }
+
+    private ResourceDto? resource;
+    private bool isLoading = true;
+    private string? errorMessage;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadResource();
+    }
+
+    private async Task LoadResource()
+    {
+        try
+        {
+            isLoading = true;
+            errorMessage = null;
+            resource = await ResourceService.GetResourceAsync(Id);
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Error loading resource: {ex.Message}";
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private async Task DeleteResource()
+    {
+        if (resource != null && await ResourceService.DeleteResourceAsync(resource.ResourceId))
+        {
+            Navigation.NavigateTo("/resources");
+        }
+        else
+        {
+            errorMessage = "Failed to delete resource";
+        }
+    }
+
+    private string GetEmploymentStatusBadgeClass(string status)
+    {
+        return status.ToLower() switch
+        {
+            "full-time" => "bg-success",
+            "part-time" => "bg-info",
+            "contract" => "bg-warning",
+            "temporary" => "bg-secondary",
+            "intern" => "bg-primary",
+            "terminated" => "bg-danger",
+            _ => "bg-secondary"
+        };
+    }
+
+    private string GetTenure(DateOnly? hireDate, DateOnly? terminationDate)
+    {
+        if (!hireDate.HasValue)
+            return "Not available";
+
+        var endDate = terminationDate ?? DateOnly.FromDateTime(DateTime.Today);
+        var tenure = endDate.DayNumber - hireDate.Value.DayNumber;
+        
+        if (tenure < 30)
+            return $"{tenure} days";
+        else if (tenure < 365)
+            return $"{tenure / 30} months";
+        else
+            return $"{tenure / 365} years";
+    }
+
+    private int GetDaysSinceHire(DateOnly? hireDate)
+    {
+        if (!hireDate.HasValue)
+            return 0;
+
+        return DateOnly.FromDateTime(DateTime.Today).DayNumber - hireDate.Value.DayNumber;
+    }
+} 

@@ -1,0 +1,62 @@
+### Get all milestones
+GET {{baseUrl}}/api/milestones
+
+### Get milestone by ID
+GET {{baseUrl}}/api/milestones/{{milestoneId}}
+
+### Get milestones by project
+GET {{baseUrl}}/api/milestones/project/{{projectId}}
+
+### Get milestones by tenant
+GET {{baseUrl}}/api/milestones/tenant/{{tenantId}}
+
+### Get achieved milestones
+GET {{baseUrl}}/api/milestones/achieved
+
+### Get pending milestones
+GET {{baseUrl}}/api/milestones/pending
+
+### Get overdue milestones
+GET {{baseUrl}}/api/milestones/overdue
+
+### Create a new milestone
+POST {{baseUrl}}/api/milestones
+Content-Type: application/json
+
+{
+  "projectId": "{{projectId}}",
+  "milestoneName": "Phase 1 Completion",
+  "description": "Complete the first phase of the project",
+  "dueDate": "2024-12-31",
+  "isAchieved": false,
+  "completionDate": null,
+  "tenantId": "{{tenantId}}"
+}
+
+### Update a milestone
+PUT {{baseUrl}}/api/milestones/{{milestoneId}}
+Content-Type: application/json
+
+{
+  "milestoneName": "Updated Phase 1 Completion",
+  "description": "Updated description for the first phase",
+  "dueDate": "2024-12-15",
+  "isAchieved": false
+}
+
+### Mark milestone as achieved
+PUT {{baseUrl}}/api/milestones/{{milestoneId}}/mark-achieved
+Content-Type: application/json
+
+{
+  "completionDate": "2024-12-10"
+}
+
+### Mark milestone as achieved (with today's date)
+PUT {{baseUrl}}/api/milestones/{{milestoneId}}/mark-achieved
+Content-Type: application/json
+
+{}
+
+### Delete a milestone
+DELETE {{baseUrl}}/api/milestones/{{milestoneId}} 

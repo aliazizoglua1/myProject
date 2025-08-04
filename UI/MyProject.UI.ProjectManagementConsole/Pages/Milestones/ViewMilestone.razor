@@ -1,0 +1,405 @@
+@page "/milestones/{Id:guid}"
+@using MyProject.UI.ProjectManagementConsole.Models
+@using MyProject.UI.ProjectManagementConsole.Services
+@inject IMilestoneService MilestoneService
+@inject NavigationManager Navigation
+
+<PageTitle>Milestone Details</PageTitle>
+
+<div class="container-fluid">
+    <div class="row mb-3">
+        <div class="col">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="/milestones">Milestones</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">Milestone Details</li>
+                </ol>
+            </nav>
+        </div>
+    </div>
+
+    @if (isLoading)
+    {
+        <div class="text-center">
+            <div class="spinner-border" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+        </div>
+    }
+    else if (errorMessage != null)
+    {
+        <div class="alert alert-danger" role="alert">
+            @errorMessage
+        </div>
+    }
+    else if (milestone == null)
+    {
+        <div class="alert alert-warning" role="alert">
+            Milestone not found.
+        </div>
+    }
+    else
+    {
+        <div class="row">
+            <div class="col-lg-8">
+                <div class="card">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h2>@milestone.MilestoneName</h2>
+                        <div class="btn-group">
+                            <a href="/milestones/@milestone.MilestoneId/edit" class="btn btn-primary">
+                                <i class="bi bi-pencil"></i> Edit
+                            </a>
+                            <button type="button" class="btn btn-danger" @onclick="DeleteMilestone">
+                                <i class="bi bi-trash"></i> Delete
+                            </button>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        @if (!string.IsNullOrEmpty(milestone.Description))
+                        {
+                            <div class="mb-4">
+                                <h5>Description</h5>
+                                <p class="text-muted">@milestone.Description</p>
+                            </div>
+                        }
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <h5>Basic Information</h5>
+                                <dl class="row">
+                                    <dt class="col-sm-4">Milestone ID</dt>
+                                    <dd class="col-sm-8">
+                                        <code>@milestone.MilestoneId</code>
+                                    </dd>
+
+                                    <dt class="col-sm-4">Project</dt>
+                                    <dd class="col-sm-8">
+                                        @if (milestone.Project != null)
+                                        {
+                                            <span class="badge bg-info">@milestone.Project.ProjectName</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="text-muted">No project assigned</span>
+                                        }
+                                    </dd>
+
+                                    <dt class="col-sm-4">Is Achieved</dt>
+                                    <dd class="col-sm-8">
+                                        @if (milestone.IsAchieved)
+                                        {
+                                            <span class="badge bg-success">Achieved</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge bg-warning">Pending</span>
+                                        }
+                                    </dd>
+                                </dl>
+                            </div>
+                            <div class="col-md-6">
+                                <h5>Timeline Information</h5>
+                                <dl class="row">
+                                    <dt class="col-sm-4">Target Date</dt>
+                                    <dd class="col-sm-8">
+                                        @if (milestone.TargetDate.HasValue)
+                                        {
+                                            <span>@milestone.TargetDate.Value.ToString("MMM dd, yyyy")</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="text-muted">Not set</span>
+                                        }
+                                    </dd>
+
+                                    <dt class="col-sm-4">Achieved Date</dt>
+                                    <dd class="col-sm-8">
+                                        @if (milestone.AchievedDate.HasValue)
+                                        {
+                                            <span class="text-success">@milestone.AchievedDate.Value.ToString("MMM dd, yyyy")</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="text-muted">Not achieved</span>
+                                        }
+                                    </dd>
+
+                                    <dt class="col-sm-4">Days Remaining</dt>
+                                    <dd class="col-sm-8">@GetDaysRemaining()</dd>
+                                </dl>
+                            </div>
+                        </div>
+
+                        <div class="row mt-3">
+                            <div class="col-md-6">
+                                <h5>Milestone Management</h5>
+                                <dl class="row">
+                                    <dt class="col-sm-4">Action Required</dt>
+                                    <dd class="col-sm-8">
+                                        @if (!milestone.IsAchieved && milestone.TargetDate.HasValue && milestone.TargetDate.Value < DateOnly.FromDateTime(DateTime.Today))
+                                        {
+                                            <span class="badge bg-danger">Overdue</span>
+                                        }
+                                        else if (!milestone.IsAchieved)
+                                        {
+                                            <span class="badge bg-warning">In Progress</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge bg-success">Completed</span>
+                                        }
+                                    </dd>
+
+                                    <dt class="col-sm-4">Days Status</dt>
+                                    <dd class="col-sm-8">@GetMilestoneStatusDays()</dd>
+                                </dl>
+                            </div>
+                        </div>
+
+                        @if (!string.IsNullOrEmpty(milestone.Notes))
+                        {
+                            <div class="row mt-3">
+                                <div class="col-12">
+                                    <h5>Notes</h5>
+                                    <p class="text-muted">@milestone.Notes</p>
+                                </div>
+                            </div>
+                        }
+
+                        <div class="row mt-3">
+                            <div class="col-md-6">
+                                <h5>Account Information</h5>
+                                <dl class="row">
+                                    <dt class="col-sm-4">Created</dt>
+                                    <dd class="col-sm-8">@milestone.CreatedAt.ToString("MMM dd, yyyy 'at' HH:mm")</dd>
+
+                                    <dt class="col-sm-4">Last Updated</dt>
+                                    <dd class="col-sm-8">@milestone.UpdatedAt.ToString("MMM dd, yyyy 'at' HH:mm")</dd>
+                                </dl>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-4">
+                <div class="card">
+                    <div class="card-header">
+                        <h5>Milestone Summary</h5>
+                    </div>
+                    <div class="card-body text-center">
+                        <div class="mb-3">
+                            <i class="bi bi-flag display-1 @GetMilestoneIconClass()"></i>
+                        </div>
+                        <h5>@milestone.MilestoneName</h5>
+                        <p class="text-muted">@(milestone.IsAchieved ? "Achieved" : "Pending")</p>
+                        <div class="mb-3">
+                            <span class="badge @(milestone.IsAchieved ? "bg-success" : "bg-warning") fs-6">
+                                @(milestone.IsAchieved ? "Achieved" : "Pending")
+                            </span>
+                        </div>
+                        @if (milestone.Project != null)
+                        {
+                            <p class="text-muted small">@milestone.Project.ProjectName</p>
+                        }
+                    </div>
+                </div>
+
+                <div class="card mt-3">
+                    <div class="card-header">
+                        <h5>Quick Actions</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="d-grid gap-2">
+                            <a href="/milestones/@milestone.MilestoneId/edit" class="btn btn-primary">
+                                <i class="bi bi-pencil"></i> Edit Milestone
+                            </a>
+                            <a href="/milestones" class="btn btn-outline-secondary">
+                                <i class="bi bi-arrow-left"></i> Back to Milestones
+                            </a>
+                            <button type="button" class="btn btn-outline-danger" @onclick="DeleteMilestone">
+                                <i class="bi bi-trash"></i> Delete Milestone
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card mt-3">
+                    <div class="card-header">
+                        <h5>Milestone Statistics</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row text-center">
+                            <div class="col-6">
+                                <div class="border-end">
+                                    <h4 class="text-primary">@GetDaysRemaining()</h4>
+                                    <small class="text-muted">Days Remaining</small>
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <h4 class="@(milestone.IsAchieved ? "text-success" : "text-warning")">@(milestone.IsAchieved ? "Achieved" : "Pending")</h4>
+                                <small class="text-muted">Current Status</small>
+                            </div>
+                        </div>
+                        @if (milestone.TargetDate.HasValue)
+                        {
+                            <div class="mt-3">
+                                <div class="progress" style="height: 20px;">
+                                    @{
+                                        var progressPercentage = milestone.IsAchieved ? 100 : 
+                                            milestone.TargetDate.Value < DateOnly.FromDateTime(DateTime.Today) ? 100 : 50;
+                                    }
+                                    <div class="progress-bar @(milestone.IsAchieved ? "bg-success" : milestone.TargetDate.Value < DateOnly.FromDateTime(DateTime.Today) ? "bg-danger" : "bg-warning")" 
+                                         role="progressbar" 
+                                         style="width: @progressPercentage%"
+                                         aria-valuenow="@progressPercentage" 
+                                         aria-valuemin="0" 
+                                         aria-valuemax="100">
+                                        @progressPercentage%
+                                    </div>
+                                </div>
+                                <small class="text-muted">Progress Status</small>
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter]
+    public Guid Id { get; set; }
+
+    private MilestoneDto? milestone;
+    private bool isLoading = true;
+    private string? errorMessage;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadMilestone();
+    }
+
+    private async Task LoadMilestone()
+    {
+        try
+        {
+            isLoading = true;
+            errorMessage = null;
+            milestone = await MilestoneService.GetMilestoneAsync(Id);
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Error loading milestone: {ex.Message}";
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private async Task DeleteMilestone()
+    {
+        if (milestone != null && await MilestoneService.DeleteMilestoneAsync(milestone.MilestoneId))
+        {
+            Navigation.NavigateTo("/milestones");
+        }
+        else
+        {
+            errorMessage = "Failed to delete milestone";
+        }
+    }
+
+    private string GetMilestoneStatusBadgeClass(string status)
+    {
+        return status.ToLower() switch
+        {
+            "pending" => "bg-warning",
+            "in progress" => "bg-info",
+            "achieved" => "bg-success",
+            "delayed" => "bg-danger",
+            "cancelled" => "bg-secondary",
+            _ => "bg-secondary"
+        };
+    }
+
+    private string GetPriorityBadgeClass(string priority)
+    {
+        return priority.ToLower() switch
+        {
+            "low" => "bg-success",
+            "medium" => "bg-warning",
+            "high" => "bg-danger",
+            "critical" => "bg-dark",
+            _ => "bg-secondary"
+        };
+    }
+
+    private string GetCompletionClass(int completion)
+    {
+        return completion switch
+        {
+            >= 90 => "text-success fw-bold",
+            >= 70 => "text-info fw-bold",
+            >= 50 => "text-warning fw-bold",
+            >= 30 => "text-danger",
+            _ => "text-muted"
+        };
+    }
+
+    private string GetCompletionProgressBarClass(int completion)
+    {
+        return completion switch
+        {
+            >= 90 => "bg-success",
+            >= 70 => "bg-info",
+            >= 50 => "bg-warning",
+            >= 30 => "bg-danger",
+            _ => "bg-secondary"
+        };
+    }
+
+    private string GetMilestoneIconClass()
+    {
+        return milestone.IsAchieved ? "text-success" : "text-warning";
+    }
+
+    private string GetMilestoneStatusDays()
+    {
+        if (milestone.IsAchieved && milestone.AchievedDate.HasValue)
+        {
+            var daysEarly = milestone.TargetDate.HasValue ? (milestone.TargetDate.Value.DayNumber - milestone.AchievedDate.Value.DayNumber) : 0;
+            return daysEarly >= 0 ? $"Achieved {daysEarly} days early" : $"Achieved {Math.Abs(daysEarly)} days late";
+        }
+        else if (milestone.TargetDate.HasValue)
+        {
+            var daysRemaining = milestone.TargetDate.Value.DayNumber - DateOnly.FromDateTime(DateTime.Today).DayNumber;
+            return daysRemaining >= 0 ? $"{daysRemaining} days remaining" : $"{Math.Abs(daysRemaining)} days overdue";
+        }
+        else
+        {
+            return "No target date set";
+        }
+    }
+
+    private int GetDaysRemaining()
+    {
+        if (!milestone.TargetDate.HasValue)
+            return 0;
+
+        return milestone.TargetDate.Value.DayNumber - DateOnly.FromDateTime(DateTime.Today).DayNumber;
+    }
+
+    private string GetStatusColor()
+    {
+        return milestone.IsAchieved ? "text-success" : "text-warning";
+    }
+
+    private bool IsOverdue()
+    {
+        return milestone.TargetDate.HasValue && 
+               milestone.TargetDate.Value < DateOnly.FromDateTime(DateTime.Today) && 
+               !milestone.IsAchieved;
+    }
+} 

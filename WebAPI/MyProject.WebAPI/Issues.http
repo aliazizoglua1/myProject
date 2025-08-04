@@ -1,0 +1,128 @@
+### Get all issues
+GET {{baseUrl}}/api/issues
+
+### Get issue by ID
+GET {{baseUrl}}/api/issues/{{issueId}}
+
+### Get issues by project
+GET {{baseUrl}}/api/issues/project/{{projectId}}
+
+### Get issues by task
+GET {{baseUrl}}/api/issues/task/{{taskId}}
+
+### Get issues by status
+GET {{baseUrl}}/api/issues/status/{{status}}
+
+### Get issues by priority
+GET {{baseUrl}}/api/issues/priority/{{priority}}
+
+### Get issues by severity
+GET {{baseUrl}}/api/issues/severity/{{severity}}
+
+### Get issues by assigned user
+GET {{baseUrl}}/api/issues/assigned/{{userId}}
+
+### Get issues by type
+GET {{baseUrl}}/api/issues/type/{{issueType}}
+
+### Get open issues
+GET {{baseUrl}}/api/issues/open
+
+### Get critical issues
+GET {{baseUrl}}/api/issues/critical
+
+### Get overdue issues
+GET {{baseUrl}}/api/issues/overdue
+
+### Get issues by tenant
+GET {{baseUrl}}/api/issues/tenant/{{tenantId}}
+
+### Get issues by milestone
+GET {{baseUrl}}/api/issues/milestone/{{milestoneId}}
+
+### Get issues by tenant and status
+GET {{baseUrl}}/api/issues/tenant/{{tenantId}}/status/{{status}}
+
+### Get issues by project and status
+GET {{baseUrl}}/api/issues/project/{{projectId}}/status/{{status}}
+
+### Get issues by tenant and priority
+GET {{baseUrl}}/api/issues/tenant/{{tenantId}}/priority/{{priority}}
+
+### Get issues by tenant and severity
+GET {{baseUrl}}/api/issues/tenant/{{tenantId}}/severity/{{severity}}
+
+### Search issues
+GET {{baseUrl}}/api/issues/search?searchTerm={{searchTerm}}
+
+### Create a new issue
+POST {{baseUrl}}/api/issues
+Content-Type: application/json
+
+{
+  "projectId": "{{projectId}}",
+  "taskId": "{{taskId}}",
+  "issueName": "Database Connection Error",
+  "issueDescription": "Users are experiencing intermittent database connection errors",
+  "issueType": "Bug",
+  "rootCause": "Connection pool exhaustion due to unclosed connections",
+  "impactOnScheduleDays": 2,
+  "impactOnBudgetUsd": 1500.00,
+  "impactOnScope": "Minor scope impact",
+  "impactOnQuality": "Significant quality impact",
+  "resolutionSteps": "1. Fix connection pooling\n2. Add connection monitoring\n3. Implement retry logic",
+  "severity": "High",
+  "priority": "Immediate",
+  "assignedToUserId": "{{userId}}",
+  "status": "Open",
+  "openedDate": "2024-12-01",
+  "tenantId": "{{tenantId}}",
+  "milestoneId": "{{milestoneId}}"
+}
+
+### Update an issue
+PUT {{baseUrl}}/api/issues/{{issueId}}
+Content-Type: application/json
+
+{
+  "issueName": "Updated Database Connection Error",
+  "issueDescription": "Updated description for the database connection issue",
+  "rootCause": "Updated root cause analysis",
+  "impactOnScheduleDays": 3,
+  "impactOnBudgetUsd": 2000.00,
+  "severity": "Critical",
+  "priority": "Immediate",
+  "status": "In Progress",
+  "resolutionSteps": "1. Updated connection pooling\n2. Enhanced monitoring\n3. Improved retry logic",
+  "milestoneId": "{{milestoneId}}"
+}
+
+### Close an issue
+PUT {{baseUrl}}/api/issues/{{issueId}}
+Content-Type: application/json
+
+{
+  "status": "Closed",
+  "closedDate": "2024-12-05"
+}
+
+### Assign issue to user
+PUT {{baseUrl}}/api/issues/{{issueId}}
+Content-Type: application/json
+
+{
+  "assignedToUserId": "{{userId}}",
+  "status": "Assigned"
+}
+
+### Change issue priority
+PUT {{baseUrl}}/api/issues/{{issueId}}
+Content-Type: application/json
+
+{
+  "priority": "High",
+  "severity": "Medium"
+}
+
+### Delete an issue
+DELETE {{baseUrl}}/api/issues/{{issueId}} 

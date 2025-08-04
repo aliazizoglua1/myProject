@@ -1,0 +1,253 @@
+@page "/organizations/{Id:guid}/edit"
+@using MyProject.UI.ProjectManagementConsole.Models
+@using MyProject.UI.ProjectManagementConsole.Services
+@inject IOrganizationService OrganizationService
+@inject NavigationManager Navigation
+
+<PageTitle>Edit Organization</PageTitle>
+
+<div class="container-fluid">
+    <div class="row mb-3">
+        <div class="col">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="/organizations">Organizations</a></li>
+                    <li class="breadcrumb-item"><a href="/organizations/@Id">Organization Details</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">Edit Organization</li>
+                </ol>
+            </nav>
+        </div>
+    </div>
+
+    @if (isLoading)
+    {
+        <div class="text-center">
+            <div class="spinner-border" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+        </div>
+    }
+    else if (errorMessage != null)
+    {
+        <div class="alert alert-danger" role="alert">
+            @errorMessage
+        </div>
+    }
+    else if (organization == null)
+    {
+        <div class="alert alert-warning" role="alert">
+            Organization not found.
+        </div>
+    }
+    else
+    {
+        <div class="row">
+            <div class="col-lg-8">
+                <div class="card">
+                    <div class="card-header">
+                        <h2>Edit Organization</h2>
+                    </div>
+                    <div class="card-body">
+                        <EditForm Model="updateDto" OnValidSubmit="HandleValidSubmit">
+                            <DataAnnotationsValidator />
+
+                            @if (errorMessage != null)
+                            {
+                                <div class="alert alert-danger" role="alert">
+                                    @errorMessage
+                                </div>
+                            }
+
+                            <div class="mb-3">
+                                <label for="organizationName" class="form-label">Organization Name</label>
+                                <InputText id="organizationName" class="form-control" @bind-Value="updateDto.OrganizationName" />
+                                <ValidationMessage For="@(() => updateDto.OrganizationName)" />
+                                <div class="form-text">Leave empty to keep the current value: <strong>@organization.OrganizationName</strong></div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="status" class="form-label">Status</label>
+                                <InputSelect id="status" class="form-select" @bind-Value="updateDto.Status">
+                                    <option value="">Keep Current Status</option>
+                                    <option value="Active">Active</option>
+                                    <option value="Inactive">Inactive</option>
+                                    <option value="Pending">Pending</option>
+                                    <option value="Suspended">Suspended</option>
+                                </InputSelect>
+                                <ValidationMessage For="@(() => updateDto.Status)" />
+                                <div class="form-text">Current status: <span class="badge @GetStatusBadgeClass(organization.Status)">@organization.Status</span></div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="billingPlan" class="form-label">Billing Plan</label>
+                                <InputSelect id="billingPlan" class="form-select" @bind-Value="updateDto.BillingPlan">
+                                    <option value="">Keep Current Plan</option>
+                                    <option value="Basic">Basic</option>
+                                    <option value="Professional">Professional</option>
+                                    <option value="Enterprise">Enterprise</option>
+                                    <option value="Custom">Custom</option>
+                                </InputSelect>
+                                <ValidationMessage For="@(() => updateDto.BillingPlan)" />
+                                <div class="form-text">Current plan: <strong>@organization.BillingPlan</strong></div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="contactEmail" class="form-label">Contact Email</label>
+                                <InputText id="contactEmail" type="email" class="form-control" @bind-Value="updateDto.ContactEmail" />
+                                <ValidationMessage For="@(() => updateDto.ContactEmail)" />
+                                <div class="form-text">Leave empty to keep the current value: <strong>@organization.ContactEmail</strong></div>
+                            </div>
+
+                            <div class="d-flex gap-2">
+                                <button type="submit" class="btn btn-primary" disabled="@isSubmitting">
+                                    @if (isSubmitting)
+                                    {
+                                        <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                                        <span class="ms-1">Updating...</span>
+                                    }
+                                    else
+                                    {
+                                        <i class="bi bi-check-circle"></i>
+                                        <span class="ms-1">Update Organization</span>
+                                    }
+                                </button>
+                                <a href="/organizations/@Id" class="btn btn-secondary">
+                                    <i class="bi bi-x-circle"></i>
+                                    <span class="ms-1">Cancel</span>
+                                </a>
+                            </div>
+                        </EditForm>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-4">
+                <div class="card">
+                    <div class="card-header">
+                        <h5>Current Organization Details</h5>
+                    </div>
+                    <div class="card-body">
+                        <dl class="row">
+                            <dt class="col-sm-4">Name</dt>
+                            <dd class="col-sm-8">@organization.OrganizationName</dd>
+
+                            <dt class="col-sm-4">Status</dt>
+                            <dd class="col-sm-8">
+                                <span class="badge @GetStatusBadgeClass(organization.Status)">
+                                    @organization.Status
+                                </span>
+                            </dd>
+
+                            <dt class="col-sm-4">Billing Plan</dt>
+                            <dd class="col-sm-8">@organization.BillingPlan</dd>
+
+                            <dt class="col-sm-4">Contact Email</dt>
+                            <dd class="col-sm-8">
+                                <a href="mailto:@organization.ContactEmail">@organization.ContactEmail</a>
+                            </dd>
+
+                            <dt class="col-sm-4">Created</dt>
+                            <dd class="col-sm-8">@organization.CreatedAt.ToString("MMM dd, yyyy")</dd>
+
+                            <dt class="col-sm-4">Last Updated</dt>
+                            <dd class="col-sm-8">@organization.UpdatedAt.ToString("MMM dd, yyyy")</dd>
+                        </dl>
+                    </div>
+                </div>
+
+                <div class="card mt-3">
+                    <div class="card-header">
+                        <h5>Quick Actions</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="d-grid gap-2">
+                            <a href="/organizations/@Id" class="btn btn-outline-primary">
+                                <i class="bi bi-eye"></i> View Organization
+                            </a>
+                            <a href="/organizations" class="btn btn-outline-secondary">
+                                <i class="bi bi-arrow-left"></i> Back to Organizations
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter]
+    public Guid Id { get; set; }
+
+    private OrganizationDto? organization;
+    private UpdateOrganizationDto updateDto = new();
+    private bool isLoading = true;
+    private bool isSubmitting = false;
+    private string? errorMessage;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadOrganization();
+    }
+
+    private async Task LoadOrganization()
+    {
+        try
+        {
+            isLoading = true;
+            errorMessage = null;
+            organization = await OrganizationService.GetOrganizationAsync(Id);
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Error loading organization: {ex.Message}";
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private async Task HandleValidSubmit()
+    {
+        try
+        {
+            isSubmitting = true;
+            errorMessage = null;
+
+            // Only update fields that have been changed
+            var updateData = new UpdateOrganizationDto();
+            if (!string.IsNullOrWhiteSpace(updateDto.OrganizationName))
+                updateData.OrganizationName = updateDto.OrganizationName;
+            if (!string.IsNullOrWhiteSpace(updateDto.Status))
+                updateData.Status = updateDto.Status;
+            if (!string.IsNullOrWhiteSpace(updateDto.BillingPlan))
+                updateData.BillingPlan = updateDto.BillingPlan;
+            if (!string.IsNullOrWhiteSpace(updateDto.ContactEmail))
+                updateData.ContactEmail = updateDto.ContactEmail;
+
+            var updatedOrganization = await OrganizationService.UpdateOrganizationAsync(Id, updateData);
+            Navigation.NavigateTo($"/organizations/{updatedOrganization.OrganizationId}");
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Error updating organization: {ex.Message}";
+        }
+        finally
+        {
+            isSubmitting = false;
+        }
+    }
+
+    private string GetStatusBadgeClass(string status)
+    {
+        return status.ToLower() switch
+        {
+            "active" => "bg-success",
+            "inactive" => "bg-secondary",
+            "suspended" => "bg-warning",
+            "pending" => "bg-info",
+            _ => "bg-secondary"
+        };
+    }
+} 

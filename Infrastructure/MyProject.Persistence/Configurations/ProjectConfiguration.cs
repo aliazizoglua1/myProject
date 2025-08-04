@@ -87,6 +87,22 @@ namespace MyProject.Persistence.Configurations
             builder.Property(p => p.OrganizationId)
                 .HasColumnName("organization_id");
 
+            // Relationships
+            builder.HasOne(p => p.Organization)
+                .WithMany(o => o.Projects)
+                .HasForeignKey(p => p.OrganizationId)
+                .OnDelete(DeleteBehavior.SetNull);
+
+            builder.HasOne(p => p.ProjectManager)
+                .WithMany(u => u.ManagedProjects)
+                .HasForeignKey(p => p.ProjectManagerId)
+                .OnDelete(DeleteBehavior.SetNull);
+
+            builder.HasMany(p => p.Milestones)
+                .WithOne(m => m.Project)
+                .HasForeignKey(m => m.ProjectId)
+                .OnDelete(DeleteBehavior.Cascade);
+
             // Indexes
             builder.HasIndex(p => p.PlannedStartDate)
                 .HasDatabaseName("idx_planned_start_date");

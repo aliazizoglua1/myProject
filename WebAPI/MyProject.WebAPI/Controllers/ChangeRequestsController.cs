@@ -116,6 +116,38 @@ namespace MyProject.WebAPI.Controllers
             return Ok(changeRequestDtos);
         }
 
+        [HttpGet("tenant/{tenantId}")]
+        public async Task<ActionResult<IEnumerable<ChangeRequestDto>>> GetChangeRequestsByTenant(Guid tenantId)
+        {
+            var changeRequests = await _changeRequestRepository.GetByTenantIdAsync(tenantId);
+            var changeRequestDtos = changeRequests.Select(MapToDto);
+            return Ok(changeRequestDtos);
+        }
+
+        [HttpGet("milestone/{milestoneId}")]
+        public async Task<ActionResult<IEnumerable<ChangeRequestDto>>> GetChangeRequestsByMilestone(Guid milestoneId)
+        {
+            var changeRequests = await _changeRequestRepository.GetByMilestoneIdAsync(milestoneId);
+            var changeRequestDtos = changeRequests.Select(MapToDto);
+            return Ok(changeRequestDtos);
+        }
+
+        [HttpGet("tenant/{tenantId}/status/{status}")]
+        public async Task<ActionResult<IEnumerable<ChangeRequestDto>>> GetChangeRequestsByTenantAndStatus(Guid tenantId, string status)
+        {
+            var changeRequests = await _changeRequestRepository.GetByTenantAndStatusAsync(tenantId, status);
+            var changeRequestDtos = changeRequests.Select(MapToDto);
+            return Ok(changeRequestDtos);
+        }
+
+        [HttpGet("project/{projectId}/status/{status}")]
+        public async Task<ActionResult<IEnumerable<ChangeRequestDto>>> GetChangeRequestsByProjectAndStatus(Guid projectId, string status)
+        {
+            var changeRequests = await _changeRequestRepository.GetByProjectAndStatusAsync(projectId, status);
+            var changeRequestDtos = changeRequests.Select(MapToDto);
+            return Ok(changeRequestDtos);
+        }
+
         [HttpPost]
         public async Task<ActionResult<ChangeRequestDto>> CreateChangeRequest(CreateChangeRequestDto createDto)
         {
@@ -184,7 +216,13 @@ namespace MyProject.WebAPI.Controllers
                 ActualImpactOnBudgetUsd = changeRequest.ActualImpactOnBudgetUsd,
                 CreatedAt = changeRequest.CreatedAt,
                 UpdatedAt = changeRequest.UpdatedAt,
-                Project = changeRequest.Project != null ? MapProjectToDto(changeRequest.Project) : null
+                TenantId = changeRequest.TenantId,
+                MilestoneId = changeRequest.MilestoneId,
+                Project = changeRequest.Project != null ? MapProjectToDto(changeRequest.Project) : null,
+                RequestedByUser = changeRequest.RequestedByUser != null ? MapUserToDto(changeRequest.RequestedByUser) : null,
+                ApprovedByUser = changeRequest.ApprovedByUser != null ? MapUserToDto(changeRequest.ApprovedByUser) : null,
+                Tenant = changeRequest.Tenant != null ? MapOrganizationToDto(changeRequest.Tenant) : null,
+                Milestone = changeRequest.Milestone != null ? MapMilestoneToDto(changeRequest.Milestone) : null
             };
         }
 
@@ -216,6 +254,51 @@ namespace MyProject.WebAPI.Controllers
             };
         }
 
+        private static UserDto MapUserToDto(User user)
+        {
+            return new UserDto
+            {
+                UserId = user.UserId,
+                Email = user.Email,
+                FirstName = user.FirstName,
+                LastName = user.LastName,
+                IsActive = user.IsActive,
+                CreatedAt = user.CreatedAt,
+                UpdatedAt = user.UpdatedAt
+            };
+        }
+
+        private static OrganizationDto MapOrganizationToDto(Organization organization)
+        {
+            return new OrganizationDto
+            {
+                OrganizationId = organization.OrganizationId,
+                OrganizationName = organization.OrganizationName,
+                Status = organization.Status,
+                BillingPlan = organization.BillingPlan,
+                ContactEmail = organization.ContactEmail,
+                CreatedAt = organization.CreatedAt,
+                UpdatedAt = organization.UpdatedAt
+            };
+        }
+
+        private static MilestoneDto MapMilestoneToDto(Milestone milestone)
+        {
+            return new MilestoneDto
+            {
+                MilestoneId = milestone.MilestoneId,
+                ProjectId = milestone.ProjectId,
+                MilestoneName = milestone.MilestoneName,
+                Description = milestone.Description,
+                DueDate = milestone.DueDate,
+                IsAchieved = milestone.IsAchieved,
+                CompletionDate = milestone.CompletionDate,
+                TenantId = milestone.TenantId,
+                CreatedAt = milestone.CreatedAt,
+                UpdatedAt = milestone.UpdatedAt
+            };
+        }
+
         private static ChangeRequest MapToEntity(CreateChangeRequestDto dto)
         {
             return new ChangeRequest
@@ -236,7 +319,9 @@ namespace MyProject.WebAPI.Controllers
                 ApprovalNotes = dto.ApprovalNotes,
                 VersionAffected = dto.VersionAffected,
                 ActualImpactOnScheduleDays = dto.ActualImpactOnScheduleDays,
-                ActualImpactOnBudgetUsd = dto.ActualImpactOnBudgetUsd
+                ActualImpactOnBudgetUsd = dto.ActualImpactOnBudgetUsd,
+                TenantId = dto.TenantId,
+                MilestoneId = dto.MilestoneId
             };
         }
 
@@ -270,6 +355,8 @@ namespace MyProject.WebAPI.Controllers
                 changeRequest.ActualImpactOnScheduleDays = dto.ActualImpactOnScheduleDays;
             if (dto.ActualImpactOnBudgetUsd.HasValue)
                 changeRequest.ActualImpactOnBudgetUsd = dto.ActualImpactOnBudgetUsd;
+            if (dto.MilestoneId.HasValue)
+                changeRequest.MilestoneId = dto.MilestoneId;
         }
     }
 } 

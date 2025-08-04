@@ -94,10 +94,24 @@ namespace MyProject.Persistence.Configurations
                 .HasColumnName("updated_at")
                 .HasDefaultValueSql("now()");
 
-            // Foreign key relationship
+            builder.Property(r => r.TenantId)
+                .HasColumnName("tenant_id")
+                .IsRequired();
+
+            // Foreign key relationships
             builder.HasOne(r => r.Project)
                 .WithMany()
                 .HasForeignKey(r => r.ProjectId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            builder.HasOne(r => r.RiskOwner)
+                .WithMany()
+                .HasForeignKey(r => r.RiskOwnerId)
+                .OnDelete(DeleteBehavior.SetNull);
+
+            builder.HasOne(r => r.Tenant)
+                .WithMany()
+                .HasForeignKey(r => r.TenantId)
                 .OnDelete(DeleteBehavior.Cascade);
 
             // Indexes
@@ -115,6 +129,9 @@ namespace MyProject.Persistence.Configurations
 
             builder.HasIndex(r => r.RiskStatus)
                 .HasDatabaseName("idx_risks_status");
+
+            builder.HasIndex(r => r.TenantId)
+                .HasDatabaseName("idx_risks_tenant_id");
 
             // Check constraints (these will be handled by the database)
             // The actual constraints are defined in the PostgreSQL table

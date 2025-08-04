@@ -1,0 +1,428 @@
+@page "/projects/{Id:guid}/edit"
+@using MyProject.UI.ProjectManagementConsole.Models
+@using MyProject.UI.ProjectManagementConsole.Services
+@inject IProjectService ProjectService
+@inject NavigationManager Navigation
+
+<PageTitle>Edit Project</PageTitle>
+
+<div class="container-fluid">
+    <div class="row mb-3">
+        <div class="col">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="/projects">Projects</a></li>
+                    <li class="breadcrumb-item"><a href="/projects/@Id">Project Details</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">Edit Project</li>
+                </ol>
+            </nav>
+        </div>
+    </div>
+
+    @if (isLoading)
+    {
+        <div class="text-center">
+            <div class="spinner-border" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+        </div>
+    }
+    else if (errorMessage != null)
+    {
+        <div class="alert alert-danger" role="alert">
+            @errorMessage
+        </div>
+    }
+    else if (project == null)
+    {
+        <div class="alert alert-warning" role="alert">
+            Project not found.
+        </div>
+    }
+    else
+    {
+        <div class="row">
+            <div class="col-lg-8">
+                <div class="card">
+                    <div class="card-header">
+                        <h2>Edit Project</h2>
+                    </div>
+                    <div class="card-body">
+                        <EditForm Model="updateDto" OnValidSubmit="HandleValidSubmit">
+                            <DataAnnotationsValidator />
+
+                            @if (errorMessage != null)
+                            {
+                                <div class="alert alert-danger" role="alert">
+                                    @errorMessage
+                                </div>
+                            }
+
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="projectName" class="form-label">Project Name</label>
+                                        <InputText id="projectName" class="form-control" @bind-Value="updateDto.ProjectName" />
+                                        <ValidationMessage For="@(() => updateDto.ProjectName)" />
+                                        <div class="form-text">Leave empty to keep the current value: <strong>@project.ProjectName</strong></div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="projectType" class="form-label">Project Type</label>
+                                        <InputSelect id="projectType" class="form-select" @bind-Value="updateDto.ProjectType">
+                                            <option value="">Keep Current Type</option>
+                                            <option value="Development">Development</option>
+                                            <option value="Consulting">Consulting</option>
+                                            <option value="Research">Research</option>
+                                            <option value="Maintenance">Maintenance</option>
+                                            <option value="Migration">Migration</option>
+                                            <option value="Implementation">Implementation</option>
+                                            <option value="Training">Training</option>
+                                        </InputSelect>
+                                        <ValidationMessage For="@(() => updateDto.ProjectType)" />
+                                        <div class="form-text">Current type: <span class="badge bg-info">@project.ProjectType</span></div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="industryDomain" class="form-label">Industry Domain</label>
+                                        <InputSelect id="industryDomain" class="form-select" @bind-Value="updateDto.IndustryDomain">
+                                            <option value="">Keep Current Industry</option>
+                                            <option value="Technology">Technology</option>
+                                            <option value="Healthcare">Healthcare</option>
+                                            <option value="Finance">Finance</option>
+                                            <option value="Education">Education</option>
+                                            <option value="Manufacturing">Manufacturing</option>
+                                            <option value="Retail">Retail</option>
+                                            <option value="Government">Government</option>
+                                            <option value="Non-Profit">Non-Profit</option>
+                                            <option value="Other">Other</option>
+                                        </InputSelect>
+                                        <ValidationMessage For="@(() => updateDto.IndustryDomain)" />
+                                        <div class="form-text">Current industry: <strong>@project.IndustryDomain</strong></div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="projectStatus" class="form-label">Project Status</label>
+                                        <InputSelect id="projectStatus" class="form-select" @bind-Value="updateDto.ProjectStatus">
+                                            <option value="">Keep Current Status</option>
+                                            <option value="Planning">Planning</option>
+                                            <option value="Active">Active</option>
+                                            <option value="On Hold">On Hold</option>
+                                            <option value="Completed">Completed</option>
+                                            <option value="Cancelled">Cancelled</option>
+                                            <option value="Suspended">Suspended</option>
+                                        </InputSelect>
+                                        <ValidationMessage For="@(() => updateDto.ProjectStatus)" />
+                                        <div class="form-text">Current status: <span class="badge @GetStatusBadgeClass(project.ProjectStatus)">@project.ProjectStatus</span></div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="plannedStartDate" class="form-label">Planned Start Date</label>
+                                        <InputDate id="plannedStartDate" class="form-control" @bind-Value="updateDto.PlannedStartDate" />
+                                        <ValidationMessage For="@(() => updateDto.PlannedStartDate)" />
+                                        <div class="form-text">Current: @(project.PlannedStartDate?.ToString("MMM dd, yyyy") ?? "Not set")</div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="plannedEndDate" class="form-label">Planned End Date</label>
+                                        <InputDate id="plannedEndDate" class="form-control" @bind-Value="updateDto.PlannedEndDate" />
+                                        <ValidationMessage For="@(() => updateDto.PlannedEndDate)" />
+                                        <div class="form-text">Current: @(project.PlannedEndDate?.ToString("MMM dd, yyyy") ?? "Not set")</div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="actualStartDate" class="form-label">Actual Start Date</label>
+                                        <InputDate id="actualStartDate" class="form-control" @bind-Value="updateDto.ActualStartDate" />
+                                        <ValidationMessage For="@(() => updateDto.ActualStartDate)" />
+                                        <div class="form-text">Current: @(project.ActualStartDate?.ToString("MMM dd, yyyy") ?? "Not set")</div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="actualEndDate" class="form-label">Actual End Date</label>
+                                        <InputDate id="actualEndDate" class="form-control" @bind-Value="updateDto.ActualEndDate" />
+                                        <ValidationMessage For="@(() => updateDto.ActualEndDate)" />
+                                        <div class="form-text">Current: @(project.ActualEndDate?.ToString("MMM dd, yyyy") ?? "Not set")</div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="plannedBudget" class="form-label">Planned Budget</label>
+                                        <InputNumber id="plannedBudget" class="form-control" @bind-Value="updateDto.PlannedBudget" />
+                                        <ValidationMessage For="@(() => updateDto.PlannedBudget)" />
+                                        <div class="form-text">Current: @(project.PlannedBudget?.ToString("C") ?? "Not set")</div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="actualBudget" class="form-label">Actual Budget</label>
+                                        <InputNumber id="actualBudget" class="form-control" @bind-Value="updateDto.ActualBudget" />
+                                        <ValidationMessage For="@(() => updateDto.ActualBudget)" />
+                                        <div class="form-text">Current: @(project.ActualBudget?.ToString("C") ?? "Not set")</div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="teamSize" class="form-label">Team Size</label>
+                                        <InputNumber id="teamSize" class="form-control" @bind-Value="updateDto.TeamSize" />
+                                        <ValidationMessage For="@(() => updateDto.TeamSize)" />
+                                        <div class="form-text">Current: @(project.TeamSize?.ToString() ?? "Not set")</div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="projectComplexity" class="form-label">Project Complexity</label>
+                                        <InputSelect id="projectComplexity" class="form-select" @bind-Value="updateDto.ProjectComplexity">
+                                            <option value="">Keep Current Complexity</option>
+                                            <option value="Low">Low</option>
+                                            <option value="Medium">Medium</option>
+                                            <option value="High">High</option>
+                                            <option value="Very High">Very High</option>
+                                        </InputSelect>
+                                        <ValidationMessage For="@(() => updateDto.ProjectComplexity)" />
+                                        <div class="form-text">Current: <span class="badge @GetComplexityBadgeClass(project.ProjectComplexity)">@project.ProjectComplexity</span></div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="currentPhase" class="form-label">Current Phase</label>
+                                <InputText id="currentPhase" class="form-control" @bind-Value="updateDto.CurrentPhase" />
+                                <ValidationMessage For="@(() => updateDto.CurrentPhase)" />
+                                <div class="form-text">Current: @(project.CurrentPhase ?? "Not set")</div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="description" class="form-label">Description</label>
+                                <InputTextArea id="description" class="form-control" rows="3" @bind-Value="updateDto.Description" />
+                                <ValidationMessage For="@(() => updateDto.Description)" />
+                                <div class="form-text">Current: @(project.Description ?? "Not set")</div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="notes" class="form-label">Notes</label>
+                                <InputTextArea id="notes" class="form-control" rows="3" @bind-Value="updateDto.Notes" />
+                                <ValidationMessage For="@(() => updateDto.Notes)" />
+                                <div class="form-text">Current: @(project.Notes ?? "Not set")</div>
+                            </div>
+
+                            <div class="d-flex gap-2">
+                                <button type="submit" class="btn btn-primary" disabled="@isSubmitting">
+                                    @if (isSubmitting)
+                                    {
+                                        <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                                        <span class="ms-1">Updating...</span>
+                                    }
+                                    else
+                                    {
+                                        <i class="bi bi-check-circle"></i>
+                                        <span class="ms-1">Update Project</span>
+                                    }
+                                </button>
+                                <a href="/projects/@Id" class="btn btn-secondary">
+                                    <i class="bi bi-x-circle"></i>
+                                    <span class="ms-1">Cancel</span>
+                                </a>
+                            </div>
+                        </EditForm>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-4">
+                <div class="card">
+                    <div class="card-header">
+                        <h5>Current Project Details</h5>
+                    </div>
+                    <div class="card-body">
+                        <dl class="row">
+                            <dt class="col-sm-4">Name</dt>
+                            <dd class="col-sm-8">@project.ProjectName</dd>
+
+                            <dt class="col-sm-4">Type</dt>
+                            <dd class="col-sm-8">
+                                <span class="badge bg-info">@project.ProjectType</span>
+                            </dd>
+
+                            <dt class="col-sm-4">Industry</dt>
+                            <dd class="col-sm-8">@project.IndustryDomain</dd>
+
+                            <dt class="col-sm-4">Status</dt>
+                            <dd class="col-sm-8">
+                                <span class="badge @GetStatusBadgeClass(project.ProjectStatus)">
+                                    @project.ProjectStatus
+                                </span>
+                            </dd>
+
+                            <dt class="col-sm-4">Complexity</dt>
+                            <dd class="col-sm-8">
+                                <span class="badge @GetComplexityBadgeClass(project.ProjectComplexity)">
+                                    @project.ProjectComplexity
+                                </span>
+                            </dd>
+
+                            <dt class="col-sm-4">Contract</dt>
+                            <dd class="col-sm-8">@project.ContractType</dd>
+
+                            <dt class="col-sm-4">Team Size</dt>
+                            <dd class="col-sm-8">@(project.TeamSize?.ToString() ?? "Not set")</dd>
+
+                            <dt class="col-sm-4">Phase</dt>
+                            <dd class="col-sm-8">@(project.CurrentPhase ?? "Not set")</dd>
+                        </dl>
+                    </div>
+                </div>
+
+                <div class="card mt-3">
+                    <div class="card-header">
+                        <h5>Quick Actions</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="d-grid gap-2">
+                            <a href="/projects/@Id" class="btn btn-outline-primary">
+                                <i class="bi bi-eye"></i> View Project
+                            </a>
+                            <a href="/projects" class="btn btn-outline-secondary">
+                                <i class="bi bi-arrow-left"></i> Back to Projects
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter]
+    public Guid Id { get; set; }
+
+    private ProjectDto? project;
+    private UpdateProjectDto updateDto = new();
+    private bool isLoading = true;
+    private bool isSubmitting = false;
+    private string? errorMessage;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadProject();
+    }
+
+    private async Task LoadProject()
+    {
+        try
+        {
+            isLoading = true;
+            errorMessage = null;
+            project = await ProjectService.GetProjectAsync(Id);
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Error loading project: {ex.Message}";
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private async Task HandleValidSubmit()
+    {
+        try
+        {
+            isSubmitting = true;
+            errorMessage = null;
+
+            // Only update fields that have been changed
+            var updateData = new UpdateProjectDto();
+            if (!string.IsNullOrWhiteSpace(updateDto.ProjectName))
+                updateData.ProjectName = updateDto.ProjectName;
+            if (!string.IsNullOrWhiteSpace(updateDto.ProjectType))
+                updateData.ProjectType = updateDto.ProjectType;
+            if (!string.IsNullOrWhiteSpace(updateDto.IndustryDomain))
+                updateData.IndustryDomain = updateDto.IndustryDomain;
+            if (!string.IsNullOrWhiteSpace(updateDto.ProjectStatus))
+                updateData.ProjectStatus = updateDto.ProjectStatus;
+            if (!string.IsNullOrWhiteSpace(updateDto.ProjectComplexity))
+                updateData.ProjectComplexity = updateDto.ProjectComplexity;
+            if (!string.IsNullOrWhiteSpace(updateDto.CurrentPhase))
+                updateData.CurrentPhase = updateDto.CurrentPhase;
+            if (!string.IsNullOrWhiteSpace(updateDto.Description))
+                updateData.Description = updateDto.Description;
+            if (!string.IsNullOrWhiteSpace(updateDto.Notes))
+                updateData.Notes = updateDto.Notes;
+            if (updateDto.PlannedStartDate.HasValue)
+                updateData.PlannedStartDate = updateDto.PlannedStartDate;
+            if (updateDto.PlannedEndDate.HasValue)
+                updateData.PlannedEndDate = updateDto.PlannedEndDate;
+            if (updateDto.ActualStartDate.HasValue)
+                updateData.ActualStartDate = updateDto.ActualStartDate;
+            if (updateDto.ActualEndDate.HasValue)
+                updateData.ActualEndDate = updateDto.ActualEndDate;
+            if (updateDto.PlannedBudget.HasValue)
+                updateData.PlannedBudget = updateDto.PlannedBudget;
+            if (updateDto.ActualBudget.HasValue)
+                updateData.ActualBudget = updateDto.ActualBudget;
+            if (updateDto.TeamSize.HasValue)
+                updateData.TeamSize = updateDto.TeamSize;
+
+            var updatedProject = await ProjectService.UpdateProjectAsync(Id, updateData);
+            Navigation.NavigateTo($"/projects/{updatedProject.ProjectId}");
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Error updating project: {ex.Message}";
+        }
+        finally
+        {
+            isSubmitting = false;
+        }
+    }
+
+    private string GetStatusBadgeClass(string status)
+    {
+        return status.ToLower() switch
+        {
+            "planning" => "bg-info",
+            "active" => "bg-success",
+            "on hold" => "bg-warning",
+            "completed" => "bg-secondary",
+            "cancelled" => "bg-danger",
+            "suspended" => "bg-warning",
+            _ => "bg-secondary"
+        };
+    }
+
+    private string GetComplexityBadgeClass(string complexity)
+    {
+        return complexity.ToLower() switch
+        {
+            "low" => "bg-success",
+            "medium" => "bg-warning",
+            "high" => "bg-danger",
+            "very high" => "bg-danger",
+            _ => "bg-secondary"
+        };
+    }
+} 

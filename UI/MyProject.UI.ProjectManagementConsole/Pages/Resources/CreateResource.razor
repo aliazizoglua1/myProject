@@ -1,0 +1,334 @@
+@page "/resources/create"
+@using MyProject.UI.ProjectManagementConsole.Models
+@using MyProject.UI.ProjectManagementConsole.Services
+@inject IResourceService ResourceService
+@inject IOrganizationService OrganizationService
+@inject IUserService UserService
+@inject NavigationManager Navigation
+
+<PageTitle>Add Resource</PageTitle>
+
+<div class="container-fluid">
+    <div class="row mb-3">
+        <div class="col">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="/resources">Resources</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">Add Resource</li>
+                </ol>
+            </nav>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-header">
+                    <h2>Add New Resource</h2>
+                </div>
+                <div class="card-body">
+                    <EditForm Model="resource" OnValidSubmit="HandleValidSubmit">
+                        <DataAnnotationsValidator />
+
+                        @if (errorMessage != null)
+                        {
+                            <div class="alert alert-danger" role="alert">
+                                @errorMessage
+                            </div>
+                        }
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="firstName" class="form-label">First Name *</label>
+                                    <InputText id="firstName" class="form-control" @bind-Value="resource.FirstName" />
+                                    <ValidationMessage For="@(() => resource.FirstName)" />
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="lastName" class="form-label">Last Name *</label>
+                                    <InputText id="lastName" class="form-control" @bind-Value="resource.LastName" />
+                                    <ValidationMessage For="@(() => resource.LastName)" />
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="email" class="form-label">Email Address *</label>
+                                    <InputText id="email" type="email" class="form-control" @bind-Value="resource.Email" />
+                                    <ValidationMessage For="@(() => resource.Email)" />
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="phoneNumber" class="form-label">Phone Number</label>
+                                    <InputText id="phoneNumber" class="form-control" @bind-Value="resource.PhoneNumber" />
+                                    <ValidationMessage For="@(() => resource.PhoneNumber)" />
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="department" class="form-label">Department *</label>
+                                    <InputSelect id="department" class="form-select" @bind-Value="resource.Department">
+                                        <option value="">Select Department</option>
+                                        <option value="Engineering">Engineering</option>
+                                        <option value="Marketing">Marketing</option>
+                                        <option value="Sales">Sales</option>
+                                        <option value="Human Resources">Human Resources</option>
+                                        <option value="Finance">Finance</option>
+                                        <option value="Operations">Operations</option>
+                                        <option value="Customer Support">Customer Support</option>
+                                        <option value="Product Management">Product Management</option>
+                                        <option value="Quality Assurance">Quality Assurance</option>
+                                        <option value="Research & Development">Research & Development</option>
+                                    </InputSelect>
+                                    <ValidationMessage For="@(() => resource.Department)" />
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="jobTitle" class="form-label">Job Title *</label>
+                                    <InputText id="jobTitle" class="form-control" @bind-Value="resource.JobTitle" />
+                                    <ValidationMessage For="@(() => resource.JobTitle)" />
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="employmentStatus" class="form-label">Employment Status</label>
+                                    <InputSelect id="employmentStatus" class="form-select" @bind-Value="resource.EmploymentStatus">
+                                        <option value="Full-time">Full-time</option>
+                                        <option value="Part-time">Part-time</option>
+                                        <option value="Contract">Contract</option>
+                                        <option value="Temporary">Temporary</option>
+                                        <option value="Intern">Intern</option>
+                                    </InputSelect>
+                                    <ValidationMessage For="@(() => resource.EmploymentStatus)" />
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="salary" class="form-label">Salary</label>
+                                    <InputNumber id="salary" class="form-control" @bind-Value="resource.Salary" />
+                                    <ValidationMessage For="@(() => resource.Salary)" />
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="hireDate" class="form-label">Hire Date</label>
+                                    <InputDate id="hireDate" class="form-control" @bind-Value="resource.HireDate" />
+                                    <ValidationMessage For="@(() => resource.HireDate)" />
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="terminationDate" class="form-label">Termination Date</label>
+                                    <InputDate id="terminationDate" class="form-control" @bind-Value="resource.TerminationDate" />
+                                    <ValidationMessage For="@(() => resource.TerminationDate)" />
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="userId" class="form-label">User *</label>
+                                    <InputSelect id="userId" class="form-select" @bind-Value="resource.UserId">
+                                        <option value="">Select User</option>
+                                        @if (users != null)
+                                        {
+                                            @foreach (var user in users)
+                                            {
+                                                <option value="@user.UserId">@user.FirstName @user.LastName (@user.Email)</option>
+                                            }
+                                        }
+                                    </InputSelect>
+                                    <ValidationMessage For="@(() => resource.UserId)" />
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="tenantId" class="form-label">Tenant *</label>
+                                    <InputSelect id="tenantId" class="form-select" @bind-Value="resource.TenantId">
+                                        <option value="">Select Tenant</option>
+                                        @if (organizations != null)
+                                        {
+                                            @foreach (var org in organizations)
+                                            {
+                                                <option value="@org.OrganizationId">@org.OrganizationName</option>
+                                            }
+                                        }
+                                    </InputSelect>
+                                    <ValidationMessage For="@(() => resource.TenantId)" />
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="skills" class="form-label">Skills</label>
+                            <InputTextArea id="skills" class="form-control" rows="3" @bind-Value="resource.Skills" />
+                            <ValidationMessage For="@(() => resource.Skills)" />
+                            <div class="form-text">Enter skills separated by commas (e.g., C#, JavaScript, Project Management)</div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="certifications" class="form-label">Certifications</label>
+                                    <InputTextArea id="certifications" class="form-control" rows="2" @bind-Value="resource.Certifications" />
+                                    <ValidationMessage For="@(() => resource.Certifications)" />
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="education" class="form-label">Education</label>
+                                    <InputTextArea id="education" class="form-control" rows="2" @bind-Value="resource.Education" />
+                                    <ValidationMessage For="@(() => resource.Education)" />
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="experience" class="form-label">Experience</label>
+                            <InputTextArea id="experience" class="form-control" rows="3" @bind-Value="resource.Experience" />
+                            <ValidationMessage For="@(() => resource.Experience)" />
+                        </div>
+
+                        <div class="d-flex gap-2">
+                            <button type="submit" class="btn btn-primary" disabled="@isSubmitting">
+                                @if (isSubmitting)
+                                {
+                                    <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                                    <span class="ms-1">Adding...</span>
+                                }
+                                else
+                                {
+                                    <i class="bi bi-check-circle"></i>
+                                    <span class="ms-1">Add Resource</span>
+                                }
+                            </button>
+                            <a href="/resources" class="btn btn-secondary">
+                                <i class="bi bi-x-circle"></i>
+                                <span class="ms-1">Cancel</span>
+                            </a>
+                        </div>
+                    </EditForm>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5>Resource Information</h5>
+                </div>
+                <div class="card-body">
+                    <p class="text-muted">
+                        Resources represent the human capital in your organization. 
+                        Each resource is linked to a user account and belongs to a specific tenant.
+                    </p>
+                    
+                    <h6>Required Fields:</h6>
+                    <ul class="small text-muted">
+                        <li><strong>First Name:</strong> The resource's first name</li>
+                        <li><strong>Last Name:</strong> The resource's last name</li>
+                        <li><strong>Email:</strong> The resource's email address</li>
+                        <li><strong>Department:</strong> The department they work in</li>
+                        <li><strong>Job Title:</strong> Their position in the organization</li>
+                        <li><strong>User:</strong> The associated user account</li>
+                        <li><strong>Tenant:</strong> The organization they belong to</li>
+                    </ul>
+
+                    <h6>Employment Status:</h6>
+                    <ul class="small text-muted">
+                        <li><span class="badge bg-success">Full-time</span> - Permanent full-time employee</li>
+                        <li><span class="badge bg-info">Part-time</span> - Part-time employee</li>
+                        <li><span class="badge bg-warning">Contract</span> - Contract worker</li>
+                        <li><span class="badge bg-secondary">Temporary</span> - Temporary employee</li>
+                        <li><span class="badge bg-primary">Intern</span> - Intern or trainee</li>
+                    </ul>
+
+                    <h6>Notes:</h6>
+                    <ul class="small text-muted">
+                        <li>Resources must be linked to existing user accounts</li>
+                        <li>Each user can only be a resource in one tenant</li>
+                        <li>Skills and certifications help with resource allocation</li>
+                        <li>Salary information is for internal use only</li>
+                        <li>Termination dates are used for historical tracking</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    private CreateResourceDto resource = new();
+    private List<OrganizationDto>? organizations;
+    private List<UserDto>? users;
+    private bool isLoading = true;
+    private bool isSubmitting = false;
+    private string? errorMessage;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadData();
+    }
+
+    private async Task LoadData()
+    {
+        try
+        {
+            isLoading = true;
+            errorMessage = null;
+            
+            // Load organizations and users in parallel
+            var orgTask = OrganizationService.GetOrganizationsAsync();
+            var userTask = UserService.GetUsersAsync();
+            
+            await Task.WhenAll(orgTask, userTask);
+            
+            organizations = await orgTask;
+            users = await userTask;
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Error loading data: {ex.Message}";
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private async Task HandleValidSubmit()
+    {
+        try
+        {
+            isSubmitting = true;
+            errorMessage = null;
+
+            var createdResource = await ResourceService.CreateResourceAsync(resource);
+            Navigation.NavigateTo($"/resources/{createdResource.ResourceId}");
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Error adding resource: {ex.Message}";
+        }
+        finally
+        {
+            isSubmitting = false;
+        }
+    }
+} 

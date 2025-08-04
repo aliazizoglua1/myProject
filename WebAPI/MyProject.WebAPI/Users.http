@@ -1,0 +1,65 @@
+### Get all users
+GET {{baseUrl}}/api/users
+
+### Get user by ID
+GET {{baseUrl}}/api/users/{{userId}}
+
+### Get user by email
+GET {{baseUrl}}/api/users/email/{{userEmail}}
+
+### Get active users
+GET {{baseUrl}}/api/users/active
+
+### Get inactive users
+GET {{baseUrl}}/api/users/inactive
+
+### Create a new user
+POST {{baseUrl}}/api/users
+Content-Type: application/json
+
+{
+  "email": "john.doe@example.com",
+  "password": "password123",
+  "firstName": "John",
+  "lastName": "Doe",
+  "isActive": true
+}
+
+### Login user
+POST {{baseUrl}}/api/users/login
+Content-Type: application/json
+
+{
+  "email": "john.doe@example.com",
+  "password": "password123"
+}
+
+### Update a user
+PUT {{baseUrl}}/api/users/{{userId}}
+Content-Type: application/json
+
+{
+  "email": "john.updated@example.com",
+  "firstName": "John",
+  "lastName": "Updated",
+  "isActive": true
+}
+
+### Update user password
+PUT {{baseUrl}}/api/users/{{userId}}
+Content-Type: application/json
+
+{
+  "password": "newpassword123"
+}
+
+### Deactivate user
+PUT {{baseUrl}}/api/users/{{userId}}
+Content-Type: application/json
+
+{
+  "isActive": false
+}
+
+### Delete a user
+DELETE {{baseUrl}}/api/users/{{userId}} 

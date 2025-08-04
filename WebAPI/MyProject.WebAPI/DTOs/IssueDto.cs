@@ -24,8 +24,13 @@ namespace MyProject.WebAPI.DTOs
         public DateOnly? ClosedDate { get; set; }
         public DateTime CreatedAt { get; set; }
         public DateTime UpdatedAt { get; set; }
+        public Guid TenantId { get; set; }
+        public Guid? MilestoneId { get; set; }
         public ProjectDto? Project { get; set; }
         public TaskDto? Task { get; set; }
+        public UserDto? AssignedToUser { get; set; }
+        public OrganizationDto? Tenant { get; set; }
+        public MilestoneDto? Milestone { get; set; }
     }
 
     public class CreateIssueDto
@@ -73,6 +78,11 @@ namespace MyProject.WebAPI.DTOs
         public DateOnly OpenedDate { get; set; } = DateOnly.FromDateTime(DateTime.Today);
 
         public DateOnly? ClosedDate { get; set; }
+
+        [Required]
+        public Guid TenantId { get; set; }
+
+        public Guid? MilestoneId { get; set; }
     }
 
     public class UpdateIssueDto
@@ -115,5 +125,7 @@ namespace MyProject.WebAPI.DTOs
         public DateOnly? OpenedDate { get; set; }
 
         public DateOnly? ClosedDate { get; set; }
+
+        public Guid? MilestoneId { get; set; }
     }
 } 

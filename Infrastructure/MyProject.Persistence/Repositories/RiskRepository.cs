@@ -16,6 +16,8 @@ namespace MyProject.Persistence.Repositories
         {
             return await _context.Risks
                 .Include(r => r.Project)
+                .Include(r => r.RiskOwner)
+                .Include(r => r.Tenant)
                 .ToListAsync();
         }
 
@@ -23,6 +25,8 @@ namespace MyProject.Persistence.Repositories
         {
             return await _context.Risks
                 .Include(r => r.Project)
+                .Include(r => r.RiskOwner)
+                .Include(r => r.Tenant)
                 .FirstOrDefaultAsync(r => r.RiskId == id);
         }
 
@@ -30,6 +34,8 @@ namespace MyProject.Persistence.Repositories
         {
             return await _context.Risks
                 .Include(r => r.Project)
+                .Include(r => r.RiskOwner)
+                .Include(r => r.Tenant)
                 .Where(r => r.ProjectId == projectId)
                 .ToListAsync();
         }
@@ -38,6 +44,8 @@ namespace MyProject.Persistence.Repositories
         {
             return await _context.Risks
                 .Include(r => r.Project)
+                .Include(r => r.RiskOwner)
+                .Include(r => r.Tenant)
                 .Where(r => r.RiskStatus == status)
                 .ToListAsync();
         }
@@ -46,6 +54,8 @@ namespace MyProject.Persistence.Repositories
         {
             return await _context.Risks
                 .Include(r => r.Project)
+                .Include(r => r.RiskOwner)
+                .Include(r => r.Tenant)
                 .Where(r => r.RiskCategory == category)
                 .ToListAsync();
         }
@@ -54,6 +64,8 @@ namespace MyProject.Persistence.Repositories
         {
             return await _context.Risks
                 .Include(r => r.Project)
+                .Include(r => r.RiskOwner)
+                .Include(r => r.Tenant)
                 .Where(r => r.RiskOwnerId == ownerId)
                 .ToListAsync();
         }
@@ -93,7 +105,81 @@ namespace MyProject.Persistence.Repositories
         {
             return await _context.Risks
                 .Include(r => r.Project)
+                .Include(r => r.RiskOwner)
+                .Include(r => r.Tenant)
                 .Where(r => r.PlannedRiskExposure >= 15 || r.ActualRiskExposure >= 15)
+                .ToListAsync();
+        }
+
+        public async Task<IEnumerable<Risk>> GetByTenantIdAsync(Guid tenantId)
+        {
+            return await _context.Risks
+                .Include(r => r.Project)
+                .Include(r => r.RiskOwner)
+                .Include(r => r.Tenant)
+                .Where(r => r.TenantId == tenantId)
+                .ToListAsync();
+        }
+
+        public async Task<IEnumerable<Risk>> GetByTenantAndStatusAsync(Guid tenantId, string status)
+        {
+            return await _context.Risks
+                .Include(r => r.Project)
+                .Include(r => r.RiskOwner)
+                .Include(r => r.Tenant)
+                .Where(r => r.TenantId == tenantId && r.RiskStatus == status)
+                .ToListAsync();
+        }
+
+        public async Task<IEnumerable<Risk>> GetByTenantAndCategoryAsync(Guid tenantId, string category)
+        {
+            return await _context.Risks
+                .Include(r => r.Project)
+                .Include(r => r.RiskOwner)
+                .Include(r => r.Tenant)
+                .Where(r => r.TenantId == tenantId && r.RiskCategory == category)
+                .ToListAsync();
+        }
+
+        public async Task<IEnumerable<Risk>> GetByProjectAndStatusAsync(Guid projectId, string status)
+        {
+            return await _context.Risks
+                .Include(r => r.Project)
+                .Include(r => r.RiskOwner)
+                .Include(r => r.Tenant)
+                .Where(r => r.ProjectId == projectId && r.RiskStatus == status)
+                .ToListAsync();
+        }
+
+        public async Task<IEnumerable<Risk>> GetByTenantAndOwnerAsync(Guid tenantId, Guid ownerId)
+        {
+            return await _context.Risks
+                .Include(r => r.Project)
+                .Include(r => r.RiskOwner)
+                .Include(r => r.Tenant)
+                .Where(r => r.TenantId == tenantId && r.RiskOwnerId == ownerId)
+                .ToListAsync();
+        }
+
+        public async Task<IEnumerable<Risk>> GetOverdueRisksAsync()
+        {
+            var thirtyDaysAgo = DateOnly.FromDateTime(DateTime.Today.AddDays(-30));
+            return await _context.Risks
+                .Include(r => r.Project)
+                .Include(r => r.RiskOwner)
+                .Include(r => r.Tenant)
+                .Where(r => r.RiskStatus == "Open" && r.LastReviewDate < thirtyDaysAgo)
+                .ToListAsync();
+        }
+
+        public async Task<IEnumerable<Risk>> GetByExposureRangeAsync(int minExposure, int maxExposure)
+        {
+            return await _context.Risks
+                .Include(r => r.Project)
+                .Include(r => r.RiskOwner)
+                .Include(r => r.Tenant)
+                .Where(r => (r.PlannedRiskExposure >= minExposure && r.PlannedRiskExposure <= maxExposure) ||
+                           (r.ActualRiskExposure >= minExposure && r.ActualRiskExposure <= maxExposure))
                 .ToListAsync();
         }
     }

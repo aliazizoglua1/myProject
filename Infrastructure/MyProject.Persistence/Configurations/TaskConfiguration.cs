@@ -84,6 +84,16 @@ namespace MyProject.Persistence.Configurations
                 .HasColumnName("updated_at")
                 .HasDefaultValueSql("now()");
 
+            builder.Property(t => t.TenantId)
+                .HasColumnName("tenant_id")
+                .IsRequired();
+
+            builder.Property(t => t.MilestoneId)
+                .HasColumnName("milestone_id");
+
+            builder.Property(t => t.IssueId)
+                .HasColumnName("issue_id");
+
             // Foreign key relationships
             builder.HasOne(t => t.Project)
                 .WithMany()
@@ -94,6 +104,26 @@ namespace MyProject.Persistence.Configurations
                 .WithMany(t => t.Subtasks)
                 .HasForeignKey(t => t.ParentTaskId)
                 .OnDelete(DeleteBehavior.Restrict);
+
+            builder.HasOne(t => t.AssignedToUser)
+                .WithMany()
+                .HasForeignKey(t => t.AssignedToUserId)
+                .OnDelete(DeleteBehavior.SetNull);
+
+            builder.HasOne(t => t.Tenant)
+                .WithMany()
+                .HasForeignKey(t => t.TenantId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            builder.HasOne(t => t.Milestone)
+                .WithMany()
+                .HasForeignKey(t => t.MilestoneId)
+                .OnDelete(DeleteBehavior.SetNull);
+
+            builder.HasOne(t => t.Issue)
+                .WithMany()
+                .HasForeignKey(t => t.IssueId)
+                .OnDelete(DeleteBehavior.SetNull);
 
             // Indexes
             builder.HasIndex(t => t.AssignedToUserId)
@@ -113,6 +143,15 @@ namespace MyProject.Persistence.Configurations
 
             builder.HasIndex(t => t.TaskStatus)
                 .HasDatabaseName("idx_tasks_status");
+
+            builder.HasIndex(t => t.TenantId)
+                .HasDatabaseName("idx_tasks_tenant_id");
+
+            builder.HasIndex(t => t.MilestoneId)
+                .HasDatabaseName("idx_tasks_milestone_id");
+
+            builder.HasIndex(t => t.IssueId)
+                .HasDatabaseName("idx_tasks_issue_id");
 
             // Check constraints (these will be handled by the database)
             // The actual constraints are defined in the PostgreSQL table

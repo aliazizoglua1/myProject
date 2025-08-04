@@ -86,11 +86,38 @@ namespace MyProject.Persistence.Configurations
                 .HasColumnName("updated_at")
                 .HasDefaultValueSql("now()");
 
+            builder.Property(cr => cr.TenantId)
+                .HasColumnName("tenant_id")
+                .IsRequired();
+
+            builder.Property(cr => cr.MilestoneId)
+                .HasColumnName("milestone_id");
+
             // Foreign key relationships
             builder.HasOne(cr => cr.Project)
                 .WithMany()
                 .HasForeignKey(cr => cr.ProjectId)
                 .OnDelete(DeleteBehavior.Cascade);
+
+            builder.HasOne(cr => cr.RequestedByUser)
+                .WithMany()
+                .HasForeignKey(cr => cr.RequestedByUserId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            builder.HasOne(cr => cr.ApprovedByUser)
+                .WithMany()
+                .HasForeignKey(cr => cr.ApprovedByUserId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            builder.HasOne(cr => cr.Tenant)
+                .WithMany()
+                .HasForeignKey(cr => cr.TenantId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            builder.HasOne(cr => cr.Milestone)
+                .WithMany()
+                .HasForeignKey(cr => cr.MilestoneId)
+                .OnDelete(DeleteBehavior.SetNull);
 
             // Indexes
             builder.HasIndex(cr => cr.ProjectId)
@@ -104,6 +131,15 @@ namespace MyProject.Persistence.Configurations
 
             builder.HasIndex(cr => cr.ApprovalStatus)
                 .HasDatabaseName("idx_change_requests_status");
+
+            builder.HasIndex(cr => cr.TenantId)
+                .HasDatabaseName("idx_change_requests_tenant_id");
+
+            builder.HasIndex(cr => cr.MilestoneId)
+                .HasDatabaseName("idx_change_requests_milestone_id");
+
+            builder.HasIndex(cr => cr.ApprovedByUserId)
+                .HasDatabaseName("idx_change_requests_approver_id");
 
             // Check constraints (these will be handled by the database)
             // The actual constraints are defined in the PostgreSQL table

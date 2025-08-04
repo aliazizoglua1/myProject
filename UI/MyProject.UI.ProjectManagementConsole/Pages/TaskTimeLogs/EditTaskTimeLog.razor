@@ -1,0 +1,274 @@
+@page "/tasktimelogs/{TaskTimeLogId:guid}/edit"
+@using MyProject.UI.ProjectManagementConsole.Models
+@using MyProject.UI.ProjectManagementConsole.Services
+@inject ITaskTimeLogService TaskTimeLogService
+@inject NavigationManager Navigation
+
+<PageTitle>Edit Time Log</PageTitle>
+
+<div class="container-fluid">
+    <div class="row mb-3">
+        <div class="col">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="/tasktimelogs">Task Time Logs</a></li>
+                    <li class="breadcrumb-item"><a href="/tasktimelogs/@TaskTimeLogId">Time Log Details</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">Edit Time Log</li>
+                </ol>
+            </nav>
+        </div>
+    </div>
+
+    @if (isLoading)
+    {
+        <div class="text-center">
+            <div class="spinner-border" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+        </div>
+    }
+    else if (errorMessage != null)
+    {
+        <div class="alert alert-danger" role="alert">
+            @errorMessage
+        </div>
+    }
+    else if (timeLog == null)
+    {
+        <div class="alert alert-warning" role="alert">
+            <h4 class="alert-heading">Time Log Not Found</h4>
+            <p>The requested time log could not be found.</p>
+            <hr>
+            <a href="/tasktimelogs" class="btn btn-primary">Back to Time Logs</a>
+        </div>
+    }
+    else
+    {
+        <div class="row">
+            <div class="col-lg-8">
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="mb-0"><i class="bi bi-pencil"></i> Edit Time Log</h3>
+                    </div>
+                    <div class="card-body">
+                        <EditForm Model="updateDto" OnValidSubmit="HandleValidSubmit">
+                            <DataAnnotationsValidator />
+                            <ValidationSummary />
+
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="hoursWorked" class="form-label">Hours Worked *</label>
+                                        <InputNumber id="hoursWorked" class="form-control" @bind-Value="updateDto.HoursWorked" step="0.5" min="0.01" max="24" />
+                                        <ValidationMessage For="@(() => updateDto.HoursWorked)" />
+                                        <div class="form-text">Enter hours between 0.01 and 24.0</div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="workType" class="form-label">Work Type</label>
+                                        <InputSelect id="workType" class="form-select" @bind-Value="updateDto.WorkType">
+                                            <option value="">Select Work Type</option>
+                                            <option value="Development">Development</option>
+                                            <option value="Testing">Testing</option>
+                                            <option value="Design">Design</option>
+                                            <option value="Documentation">Documentation</option>
+                                            <option value="Meeting">Meeting</option>
+                                            <option value="Research">Research</option>
+                                            <option value="Support">Support</option>
+                                            <option value="Planning">Planning</option>
+                                            <option value="Review">Review</option>
+                                            <option value="Training">Training</option>
+                                        </InputSelect>
+                                        <ValidationMessage For="@(() => updateDto.WorkType)" />
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="hourlyRate" class="form-label">Hourly Rate ($)</label>
+                                        <InputNumber id="hourlyRate" class="form-control" @bind-Value="updateDto.HourlyRate" step="0.01" min="0" />
+                                        <ValidationMessage For="@(() => updateDto.HourlyRate)" />
+                                        <div class="form-text">Leave empty to use resource's default rate</div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="isBillable" class="form-label">Billable</label>
+                                                                            <div class="form-check">
+                                        <InputCheckbox id="isBillable" class="form-check-input" @bind-Value="isBillable" />
+                                        <label class="form-check-label" for="isBillable">
+                                            This time is billable
+                                        </label>
+                                    </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="description" class="form-label">Description</label>
+                                <InputTextArea id="description" class="form-control" rows="3" @bind-Value="updateDto.Description" placeholder="Describe the work performed..." />
+                                <ValidationMessage For="@(() => updateDto.Description)" />
+                                <div class="form-text">Optional description of the work performed</div>
+                            </div>
+
+                            <div class="d-flex justify-content-between">
+                                <a href="/tasktimelogs/@TaskTimeLogId" class="btn btn-secondary">
+                                    <i class="bi bi-arrow-left"></i> Back to Time Log
+                                </a>
+                                <button type="submit" class="btn btn-primary" disabled="@isSubmitting">
+                                    @if (isSubmitting)
+                                    {
+                                        <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                                        <span>Updating...</span>
+                                    }
+                                    else
+                                    {
+                                        <i class="bi bi-check-circle"></i>
+                                        <span>Update Time Log</span>
+                                    }
+                                </button>
+                            </div>
+                        </EditForm>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-4">
+                <!-- Current Time Log Info -->
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="mb-0"><i class="bi bi-info-circle"></i> Current Time Log</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <strong>Date Worked:</strong>
+                            <br />
+                            <span>@timeLog.DateWorked.ToString("MMMM dd, yyyy")</span>
+                        </div>
+                        <div class="mb-3">
+                            <strong>Task:</strong>
+                            <br />
+                            <span>@(timeLog.Task?.TaskName ?? "Unknown Task")</span>
+                        </div>
+                        <div class="mb-3">
+                            <strong>Resource:</strong>
+                            <br />
+                            <span>@(timeLog.Resource?.FirstName ?? "") @(timeLog.Resource?.LastName ?? "")</span>
+                        </div>
+                        <div class="mb-3">
+                            <strong>Current Hours:</strong>
+                            <br />
+                            <span class="badge bg-primary">@timeLog.HoursWorked.ToString("F1") hours</span>
+                        </div>
+                        @if (timeLog.TotalCost.HasValue)
+                        {
+                            <div class="mb-3">
+                                <strong>Current Cost:</strong>
+                                <br />
+                                <span class="text-success fw-bold">$@timeLog.TotalCost.Value.ToString("F2")</span>
+                            </div>
+                        }
+                    </div>
+                </div>
+
+                <!-- Edit Guidelines -->
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0"><i class="bi bi-lightbulb"></i> Edit Guidelines</h5>
+                    </div>
+                    <div class="card-body">
+                        <p class="text-muted">
+                            When editing time logs, consider:
+                        </p>
+                        <ul class="small text-muted">
+                            <li>Accuracy of hours worked</li>
+                            <li>Appropriate work type categorization</li>
+                            <li>Correct billing information</li>
+                            <li>Clear and detailed descriptions</li>
+                        </ul>
+                        
+                        <hr />
+                        
+                        <div class="alert alert-info">
+                            <i class="bi bi-info-circle"></i>
+                            <strong>Note:</strong> The task and resource cannot be changed after creation.
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter]
+    public Guid TaskTimeLogId { get; set; }
+
+    private TaskTimeLogDto? timeLog;
+    private UpdateTaskTimeLogDto updateDto = new();
+    private bool isBillable = false;
+    private bool isLoading = true;
+    private bool isSubmitting = false;
+    private string? errorMessage;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadTimeLog();
+    }
+
+    private async Task LoadTimeLog()
+    {
+        try
+        {
+            isLoading = true;
+            errorMessage = null;
+            timeLog = await TaskTimeLogService.GetTaskTimeLogAsync(TaskTimeLogId);
+            
+            if (timeLog != null)
+            {
+                // Initialize the update DTO with current values
+                updateDto.HoursWorked = timeLog.HoursWorked;
+                updateDto.Description = timeLog.Description;
+                updateDto.WorkType = timeLog.WorkType;
+                updateDto.IsBillable = timeLog.IsBillable;
+                updateDto.HourlyRate = timeLog.HourlyRate;
+                isBillable = timeLog.IsBillable;
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Error loading time log: {ex.Message}";
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private async Task HandleValidSubmit()
+    {
+        try
+        {
+            isSubmitting = true;
+            errorMessage = null;
+
+            // Update the DTO with the checkbox value
+            updateDto.IsBillable = isBillable;
+
+            var updatedTimeLog = await TaskTimeLogService.UpdateTaskTimeLogAsync(TaskTimeLogId, updateDto);
+            
+            Navigation.NavigateTo($"/tasktimelogs/{updatedTimeLog.TaskTimeLogId}");
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Error updating time log: {ex.Message}";
+        }
+        finally
+        {
+            isSubmitting = false;
+        }
+    }
+} 

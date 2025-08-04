@@ -1,0 +1,493 @@
+@page "/tasks/{Id:guid}"
+@using MyProject.UI.ProjectManagementConsole.Models
+@using MyProject.UI.ProjectManagementConsole.Services
+@inject ITaskService TaskService
+@inject NavigationManager Navigation
+
+<PageTitle>Task Details</PageTitle>
+
+<div class="container-fluid">
+    <div class="row mb-3">
+        <div class="col">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="/tasks">Tasks</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">Task Details</li>
+                </ol>
+            </nav>
+        </div>
+    </div>
+
+    @if (isLoading)
+    {
+        <div class="text-center">
+            <div class="spinner-border" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+        </div>
+    }
+    else if (errorMessage != null)
+    {
+        <div class="alert alert-danger" role="alert">
+            @errorMessage
+        </div>
+    }
+    else if (task == null)
+    {
+        <div class="alert alert-warning" role="alert">
+            Task not found.
+        </div>
+    }
+    else
+    {
+        <div class="row">
+            <div class="col-lg-8">
+                <div class="card">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h2>@task.TaskName</h2>
+                        <div class="btn-group">
+                            <a href="/tasks/@task.TaskId/edit" class="btn btn-primary">
+                                <i class="bi bi-pencil"></i> Edit
+                            </a>
+                            <button type="button" class="btn btn-danger" @onclick="DeleteTask">
+                                <i class="bi bi-trash"></i> Delete
+                            </button>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        @if (!string.IsNullOrEmpty(task.Description))
+                        {
+                            <div class="mb-4">
+                                <h5>Description</h5>
+                                <p class="text-muted">@task.Description</p>
+                            </div>
+                        }
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <h5>Basic Information</h5>
+                                <dl class="row">
+                                    <dt class="col-sm-4">Task ID</dt>
+                                    <dd class="col-sm-8">
+                                        <code>@task.TaskId</code>
+                                    </dd>
+
+                                    <dt class="col-sm-4">Project</dt>
+                                    <dd class="col-sm-8">
+                                        @if (task.Project != null)
+                                        {
+                                            <span class="badge bg-info">@task.Project.ProjectName</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="text-muted">No project assigned</span>
+                                        }
+                                    </dd>
+
+                                    <dt class="col-sm-4">Status</dt>
+                                    <dd class="col-sm-8">
+                                        <span class="badge @GetTaskStatusBadgeClass(task.TaskStatus)">
+                                            @task.TaskStatus
+                                        </span>
+                                    </dd>
+
+                                    <dt class="col-sm-4">Priority</dt>
+                                    <dd class="col-sm-8">
+                                        <span class="badge @GetPriorityBadgeClass(task.Priority)">
+                                            @task.Priority
+                                        </span>
+                                    </dd>
+
+                                    <dt class="col-sm-4">Assigned To</dt>
+                                    <dd class="col-sm-8">
+                                        @if (task.AssignedToUser != null)
+                                        {
+                                            <span>@task.AssignedToUser.FirstName @task.AssignedToUser.LastName</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="text-muted">Unassigned</span>
+                                        }
+                                    </dd>
+
+                                    <dt class="col-sm-4">Milestone</dt>
+                                    <dd class="col-sm-8">
+                                        @if (task.Milestone != null)
+                                        {
+                                            <span>@task.Milestone.MilestoneName</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="text-muted">No milestone</span>
+                                        }
+                                    </dd>
+                                </dl>
+                            </div>
+                            <div class="col-md-6">
+                                <h5>Timeline</h5>
+                                <dl class="row">
+                                    <dt class="col-sm-4">Planned Start</dt>
+                                    <dd class="col-sm-8">@task.PlannedStartDate?.ToString("MMM dd, yyyy")</dd>
+
+                                    <dt class="col-sm-4">Planned End</dt>
+                                    <dd class="col-sm-8">
+                                        @if (task.PlannedEndDate.HasValue)
+                                        {
+                                            <span>@task.PlannedEndDate.Value.ToString("MMM dd, yyyy")</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="text-muted">Not set</span>
+                                        }
+                                    </dd>
+
+                                    <dt class="col-sm-4">Actual Start</dt>
+                                    <dd class="col-sm-8">
+                                        @if (task.ActualStartDate.HasValue)
+                                        {
+                                            <span>@task.ActualStartDate.Value.ToString("MMM dd, yyyy")</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="text-muted">Not started</span>
+                                        }
+                                    </dd>
+
+                                    <dt class="col-sm-4">Actual End</dt>
+                                    <dd class="col-sm-8">
+                                        @if (task.ActualEndDate.HasValue)
+                                        {
+                                            <span>@task.ActualEndDate.Value.ToString("MMM dd, yyyy")</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="text-muted">Not completed</span>
+                                        }
+                                    </dd>
+
+                                    <dt class="col-sm-4">Duration</dt>
+                                    <dd class="col-sm-8">@GetTaskDuration()</dd>
+                                </dl>
+                            </div>
+                        </div>
+
+                        <div class="row mt-3">
+                            <div class="col-md-6">
+                                <h5>Progress & Effort</h5>
+                                <dl class="row">
+                                    <dt class="col-sm-4">Progress</dt>
+                                    <dd class="col-sm-8">
+                                        @if (task.ProgressPercentage.HasValue)
+                                        {
+                                            <div class="progress" style="height: 25px;">
+                                                <div class="progress-bar @GetProgressBarClass(task.ProgressPercentage.Value)" 
+                                                     role="progressbar" 
+                                                     style="width: @task.ProgressPercentage.Value%"
+                                                     aria-valuenow="@task.ProgressPercentage.Value" 
+                                                     aria-valuemin="0" 
+                                                     aria-valuemax="100">
+                                                    @task.ProgressPercentage.Value%
+                                                </div>
+                                            </div>
+                                        }
+                                        else
+                                        {
+                                            <span class="text-muted">Not set</span>
+                                        }
+                                    </dd>
+
+                                    <dt class="col-sm-4">Planned Effort</dt>
+                                    <dd class="col-sm-8">
+                                        @if (task.PlannedEffort.HasValue)
+                                        {
+                                            <span>@task.PlannedEffort.Value hours</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="text-muted">Not set</span>
+                                        }
+                                    </dd>
+
+                                    <dt class="col-sm-4">Actual Effort</dt>
+                                    <dd class="col-sm-8">
+                                        @if (task.ActualEffort.HasValue)
+                                        {
+                                            <span>@task.ActualEffort.Value hours</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="text-muted">Not tracked</span>
+                                        }
+                                    </dd>
+
+                                    <dt class="col-sm-4">Efficiency</dt>
+                                    <dd class="col-sm-8">@GetEfficiency()</dd>
+                                </dl>
+                            </div>
+                            <div class="col-md-6">
+                                <h5>Hierarchy</h5>
+                                <dl class="row">
+                                    <dt class="col-sm-4">Parent Task</dt>
+                                    <dd class="col-sm-8">
+                                        @if (task.ParentTask != null)
+                                        {
+                                            <a href="/tasks/@task.ParentTask.TaskId">@task.ParentTask.TaskName</a>
+                                        }
+                                        else
+                                        {
+                                            <span class="text-muted">No parent task</span>
+                                        }
+                                    </dd>
+
+                                    <dt class="col-sm-4">Subtasks</dt>
+                                    <dd class="col-sm-8">
+                                        @if (task.Subtasks != null && task.Subtasks.Any())
+                                        {
+                                            <ul class="list-unstyled">
+                                                @foreach (var subtask in task.Subtasks)
+                                                {
+                                                    <li><a href="/tasks/@subtask.TaskId">@subtask.TaskName</a></li>
+                                                }
+                                            </ul>
+                                        }
+                                        else
+                                        {
+                                            <span class="text-muted">No subtasks</span>
+                                        }
+                                    </dd>
+                                </dl>
+                            </div>
+                        </div>
+
+                        @if (!string.IsNullOrEmpty(task.Notes))
+                        {
+                            <div class="row mt-3">
+                                <div class="col-12">
+                                    <h5>Notes</h5>
+                                    <p class="text-muted">@task.Notes</p>
+                                </div>
+                            </div>
+                        }
+
+                        <div class="row mt-3">
+                            <div class="col-md-6">
+                                <h5>Account Information</h5>
+                                <dl class="row">
+                                    <dt class="col-sm-4">Created</dt>
+                                    <dd class="col-sm-8">@task.CreatedAt.ToString("MMM dd, yyyy 'at' HH:mm")</dd>
+
+                                    <dt class="col-sm-4">Last Updated</dt>
+                                    <dd class="col-sm-8">@task.UpdatedAt.ToString("MMM dd, yyyy 'at' HH:mm")</dd>
+                                </dl>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-4">
+                <div class="card">
+                    <div class="card-header">
+                        <h5>Task Summary</h5>
+                    </div>
+                    <div class="card-body text-center">
+                        <div class="mb-3">
+                            <i class="bi bi-list-task display-1 text-primary"></i>
+                        </div>
+                        <h5>@task.TaskName</h5>
+                        <p class="text-muted">@task.TaskStatus</p>
+                        <div class="mb-3">
+                            <span class="badge @GetPriorityBadgeClass(task.Priority) fs-6">
+                                @task.Priority Priority
+                            </span>
+                        </div>
+                        @if (task.Project != null)
+                        {
+                            <p class="text-muted small">@task.Project.ProjectName</p>
+                        }
+                    </div>
+                </div>
+
+                <div class="card mt-3">
+                    <div class="card-header">
+                        <h5>Quick Actions</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="d-grid gap-2">
+                            <a href="/tasks/@task.TaskId/edit" class="btn btn-primary">
+                                <i class="bi bi-pencil"></i> Edit Task
+                            </a>
+                            <a href="/tasks" class="btn btn-outline-secondary">
+                                <i class="bi bi-arrow-left"></i> Back to Tasks
+                            </a>
+                            <button type="button" class="btn btn-outline-danger" @onclick="DeleteTask">
+                                <i class="bi bi-trash"></i> Delete Task
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card mt-3">
+                    <div class="card-header">
+                        <h5>Task Statistics</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row text-center">
+                            <div class="col-6">
+                                <div class="border-end">
+                                    <h4 class="text-primary">@GetDaysSinceStart()</h4>
+                                    <small class="text-muted">Days Since Start</small>
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <h4 class="@GetStatusColor()">@task.TaskStatus</h4>
+                                <small class="text-muted">Current Status</small>
+                            </div>
+                        </div>
+                        @if (task.ProgressPercentage.HasValue)
+                        {
+                            <div class="mt-3">
+                                <div class="progress" style="height: 20px;">
+                                    <div class="progress-bar @GetProgressBarClass(task.ProgressPercentage.Value)" 
+                                         role="progressbar" 
+                                         style="width: @task.ProgressPercentage.Value%"
+                                         aria-valuenow="@task.ProgressPercentage.Value" 
+                                         aria-valuemin="0" 
+                                         aria-valuemax="100">
+                                        @task.ProgressPercentage.Value%
+                                    </div>
+                                </div>
+                                <small class="text-muted">Progress</small>
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter]
+    public Guid Id { get; set; }
+
+    private TaskDto? task;
+    private bool isLoading = true;
+    private string? errorMessage;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadTask();
+    }
+
+    private async Task LoadTask()
+    {
+        try
+        {
+            isLoading = true;
+            errorMessage = null;
+            task = await TaskService.GetTaskAsync(Id);
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Error loading task: {ex.Message}";
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private async Task DeleteTask()
+    {
+        if (task != null && await TaskService.DeleteTaskAsync(task.TaskId))
+        {
+            Navigation.NavigateTo("/tasks");
+        }
+        else
+        {
+            errorMessage = "Failed to delete task";
+        }
+    }
+
+    private string GetTaskStatusBadgeClass(string status)
+    {
+        return status.ToLower() switch
+        {
+            "to do" => "bg-secondary",
+            "in progress" => "bg-warning",
+            "completed" => "bg-success",
+            "on hold" => "bg-info",
+            "cancelled" => "bg-danger",
+            _ => "bg-secondary"
+        };
+    }
+
+    private string GetPriorityBadgeClass(string priority)
+    {
+        return priority.ToLower() switch
+        {
+            "low" => "bg-success",
+            "medium" => "bg-warning",
+            "high" => "bg-danger",
+            "urgent" => "bg-dark",
+            _ => "bg-secondary"
+        };
+    }
+
+    private string GetProgressBarClass(decimal progress)
+    {
+        return progress switch
+        {
+            >= 80 => "bg-success",
+            >= 50 => "bg-warning",
+            >= 20 => "bg-info",
+            _ => "bg-secondary"
+        };
+    }
+
+    private string GetTaskDuration()
+    {
+        if (!task.PlannedStartDate.HasValue)
+            return "Not set";
+
+        var endDate = task.ActualEndDate ?? task.PlannedEndDate ?? DateOnly.FromDateTime(DateTime.Today);
+        var duration = (endDate.DayNumber - task.PlannedStartDate.Value.DayNumber);
+        
+        if (duration == 0)
+            return "Same day";
+        else if (duration == 1)
+            return "1 day";
+        else
+            return $"{duration} days";
+    }
+
+    private string GetEfficiency()
+    {
+        if (!task.PlannedEffort.HasValue || !task.ActualEffort.HasValue)
+            return "Not available";
+
+        var efficiency = (task.PlannedEffort.Value / task.ActualEffort.Value) * 100;
+        return $"{efficiency:F1}%";
+    }
+
+    private int GetDaysSinceStart()
+    {
+        if (!task.PlannedStartDate.HasValue)
+            return 0;
+
+        return DateOnly.FromDateTime(DateTime.Today).DayNumber - task.PlannedStartDate.Value.DayNumber;
+    }
+
+    private string GetStatusColor()
+    {
+        return task.TaskStatus.ToLower() switch
+        {
+            "completed" => "text-success",
+            "in progress" => "text-warning",
+            "on hold" => "text-info",
+            "cancelled" => "text-danger",
+            _ => "text-muted"
+        };
+    }
+} 

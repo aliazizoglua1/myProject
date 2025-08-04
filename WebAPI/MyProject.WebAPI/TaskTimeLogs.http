@@ -1,0 +1,92 @@
+### TaskTimeLogs API Tests
+
+### Get all task time logs
+GET https://localhost:7001/api/tasktimelogs
+Accept: application/json
+
+### Get task time log by ID
+GET https://localhost:7001/api/tasktimelogs/{{taskTimeLogId}}
+Accept: application/json
+
+### Get task time logs by task ID
+GET https://localhost:7001/api/tasktimelogs/task/{{taskId}}
+Accept: application/json
+
+### Get task time logs by resource ID
+GET https://localhost:7001/api/tasktimelogs/resource/{{resourceId}}
+Accept: application/json
+
+### Get task time logs by tenant ID
+GET https://localhost:7001/api/tasktimelogs/tenant/{{tenantId}}
+Accept: application/json
+
+### Get task time logs by date range
+GET https://localhost:7001/api/tasktimelogs/daterange?startDate=2024-01-01&endDate=2024-12-31
+Accept: application/json
+
+### Get task time logs by task and date range
+GET https://localhost:7001/api/tasktimelogs/task/{{taskId}}/daterange?startDate=2024-01-01&endDate=2024-12-31
+Accept: application/json
+
+### Get task time logs by resource and date range
+GET https://localhost:7001/api/tasktimelogs/resource/{{resourceId}}/daterange?startDate=2024-01-01&endDate=2024-12-31
+Accept: application/json
+
+### Get task time logs by tenant and date range
+GET https://localhost:7001/api/tasktimelogs/tenant/{{tenantId}}/daterange?startDate=2024-01-01&endDate=2024-12-31
+Accept: application/json
+
+### Get total hours by task
+GET https://localhost:7001/api/tasktimelogs/task/{{taskId}}/total-hours
+Accept: application/json
+
+### Get total hours by resource
+GET https://localhost:7001/api/tasktimelogs/resource/{{resourceId}}/total-hours
+Accept: application/json
+
+### Get billable hours by task
+GET https://localhost:7001/api/tasktimelogs/task/{{taskId}}/billable-hours
+Accept: application/json
+
+### Get billable hours by resource
+GET https://localhost:7001/api/tasktimelogs/resource/{{resourceId}}/billable-hours
+Accept: application/json
+
+### Get total cost by task
+GET https://localhost:7001/api/tasktimelogs/task/{{taskId}}/total-cost
+Accept: application/json
+
+### Get total cost by resource
+GET https://localhost:7001/api/tasktimelogs/resource/{{resourceId}}/total-cost
+Accept: application/json
+
+### Create new task time log
+POST https://localhost:7001/api/tasktimelogs
+Content-Type: application/json
+
+{
+  "taskId": "{{taskId}}",
+  "resourceId": "{{resourceId}}",
+  "dateWorked": "2024-01-15",
+  "hoursWorked": 8.5,
+  "description": "Development work on user authentication feature",
+  "workType": "Development",
+  "isBillable": true,
+  "hourlyRate": 75.00,
+  "tenantId": "{{tenantId}}"
+}
+
+### Update task time log
+PUT https://localhost:7001/api/tasktimelogs/{{taskTimeLogId}}
+Content-Type: application/json
+
+{
+  "hoursWorked": 9.0,
+  "description": "Updated description for the time log",
+  "workType": "Development",
+  "isBillable": true,
+  "hourlyRate": 80.00
+}
+
+### Delete task time log
+DELETE https://localhost:7001/api/tasktimelogs/{{taskTimeLogId}} 

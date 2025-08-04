@@ -1,0 +1,458 @@
+@page "/risks/{Id:guid}/edit"
+@using MyProject.UI.ProjectManagementConsole.Models
+@using MyProject.UI.ProjectManagementConsole.Services
+@inject IRiskService RiskService
+@inject IUserService UserService
+@inject NavigationManager Navigation
+
+<PageTitle>Edit Risk</PageTitle>
+
+<div class="container-fluid">
+    <div class="row mb-3">
+        <div class="col">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="/risks">Risks</a></li>
+                    <li class="breadcrumb-item"><a href="/risks/@Id">Risk Details</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">Edit Risk</li>
+                </ol>
+            </nav>
+        </div>
+    </div>
+
+    @if (isLoading)
+    {
+        <div class="text-center">
+            <div class="spinner-border" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+        </div>
+    }
+    else if (errorMessage != null)
+    {
+        <div class="alert alert-danger" role="alert">
+            @errorMessage
+        </div>
+    }
+    else if (risk == null)
+    {
+        <div class="alert alert-warning" role="alert">
+            Risk not found.
+        </div>
+    }
+    else
+    {
+        <div class="row">
+            <div class="col-lg-8">
+                <div class="card">
+                    <div class="card-header">
+                        <h2>Edit Risk</h2>
+                    </div>
+                    <div class="card-body">
+                        <EditForm Model="updateDto" OnValidSubmit="HandleValidSubmit">
+                            <DataAnnotationsValidator />
+
+                            @if (errorMessage != null)
+                            {
+                                <div class="alert alert-danger" role="alert">
+                                    @errorMessage
+                                </div>
+                            }
+
+                            <div class="mb-3">
+                                <label for="riskName" class="form-label">Risk Name</label>
+                                <InputText id="riskName" class="form-control" @bind-Value="updateDto.RiskName" />
+                                <ValidationMessage For="@(() => updateDto.RiskName)" />
+                                <div class="form-text">Current value: <strong>@risk.RiskName</strong></div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="description" class="form-label">Description</label>
+                                <InputTextArea id="description" class="form-control" rows="3" @bind-Value="updateDto.Description" />
+                                <ValidationMessage For="@(() => updateDto.Description)" />
+                                <div class="form-text">Current value: <strong>@(risk.Description ?? "Not set")</strong></div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="riskOwnerId" class="form-label">Risk Owner</label>
+                                        <InputSelect id="riskOwnerId" class="form-select" @bind-Value="updateDto.RiskOwnerId">
+                                            <option value="">Select Risk Owner (Optional)</option>
+                                            @if (users != null)
+                                            {
+                                                @foreach (var user in users)
+                                                {
+                                                    <option value="@user.UserId">@user.FirstName @user.LastName</option>
+                                                }
+                                            }
+                                        </InputSelect>
+                                        <ValidationMessage For="@(() => updateDto.RiskOwnerId)" />
+                                        <div class="form-text">Current value: <strong>@(risk.RiskOwner?.FirstName + " " + risk.RiskOwner?.LastName ?? "Unassigned")</strong></div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="riskCategory" class="form-label">Risk Category</label>
+                                        <InputSelect id="riskCategory" class="form-select" @bind-Value="updateDto.RiskCategory">
+                                            <option value="">Keep Current Category</option>
+                                            <option value="Technical">Technical</option>
+                                            <option value="Schedule">Schedule</option>
+                                            <option value="Budget">Budget</option>
+                                            <option value="Resource">Resource</option>
+                                            <option value="Quality">Quality</option>
+                                            <option value="Scope">Scope</option>
+                                            <option value="External">External</option>
+                                            <option value="Regulatory">Regulatory</option>
+                                            <option value="Security">Security</option>
+                                            <option value="Operational">Operational</option>
+                                        </InputSelect>
+                                        <ValidationMessage For="@(() => updateDto.RiskCategory)" />
+                                        <div class="form-text">Current value: <span class="badge bg-secondary">@risk.RiskCategory</span></div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="riskStatus" class="form-label">Risk Status</label>
+                                        <InputSelect id="riskStatus" class="form-select" @bind-Value="updateDto.RiskStatus">
+                                            <option value="">Keep Current Status</option>
+                                            <option value="Open">Open</option>
+                                            <option value="Mitigated">Mitigated</option>
+                                            <option value="Closed">Closed</option>
+                                            <option value="Monitoring">Monitoring</option>
+                                            <option value="Escalated">Escalated</option>
+                                        </InputSelect>
+                                        <ValidationMessage For="@(() => updateDto.RiskStatus)" />
+                                        <div class="form-text">Current value: <span class="badge @GetRiskStatusBadgeClass(risk.RiskStatus)">@risk.RiskStatus</span></div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="riskLevel" class="form-label">Risk Level</label>
+                                        <InputSelect id="riskLevel" class="form-select" @bind-Value="updateDto.RiskLevel">
+                                            <option value="">Keep Current Level</option>
+                                            <option value="Low">Low</option>
+                                            <option value="Medium">Medium</option>
+                                            <option value="High">High</option>
+                                            <option value="Critical">Critical</option>
+                                        </InputSelect>
+                                        <ValidationMessage For="@(() => updateDto.RiskLevel)" />
+                                        <div class="form-text">Current value: <span class="badge @GetRiskLevelBadgeClass(risk.RiskLevel)">@risk.RiskLevel</span></div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="probabilityScore" class="form-label">Probability Score (1-10)</label>
+                                        <InputNumber id="probabilityScore" class="form-control" @bind-Value="updateDto.ProbabilityScore" />
+                                        <ValidationMessage For="@(() => updateDto.ProbabilityScore)" />
+                                        <div class="form-text">Current value: <strong>@risk.ProbabilityScore/10</strong></div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="impactScore" class="form-label">Impact Score (1-10)</label>
+                                        <InputNumber id="impactScore" class="form-control" @bind-Value="updateDto.ImpactScore" />
+                                        <ValidationMessage For="@(() => updateDto.ImpactScore)" />
+                                        <div class="form-text">Current value: <strong>@risk.ImpactScore/10</strong></div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="identifiedDate" class="form-label">Identified Date</label>
+                                        <InputDate id="identifiedDate" class="form-control" @bind-Value="updateDto.IdentifiedDate" />
+                                        <ValidationMessage For="@(() => updateDto.IdentifiedDate)" />
+                                        <div class="form-text">Current value: <strong>@risk.IdentifiedDate?.ToString("MMM dd, yyyy")</strong></div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="mitigationDate" class="form-label">Mitigation Date</label>
+                                        <InputDate id="mitigationDate" class="form-control" @bind-Value="updateDto.MitigationDate" />
+                                        <ValidationMessage For="@(() => updateDto.MitigationDate)" />
+                                        <div class="form-text">Current value: <strong>@(risk.MitigationDate?.ToString("MMM dd, yyyy") ?? "Not set")</strong></div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="lastReviewDate" class="form-label">Last Review Date</label>
+                                <InputDate id="lastReviewDate" class="form-control" @bind-Value="updateDto.LastReviewDate" />
+                                <ValidationMessage For="@(() => updateDto.LastReviewDate)" />
+                                <div class="form-text">Current value: <strong>@(risk.LastReviewDate?.ToString("MMM dd, yyyy") ?? "Not reviewed")</strong></div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="mitigationStrategy" class="form-label">Mitigation Strategy</label>
+                                <InputTextArea id="mitigationStrategy" class="form-control" rows="3" @bind-Value="updateDto.MitigationStrategy" />
+                                <ValidationMessage For="@(() => updateDto.MitigationStrategy)" />
+                                <div class="form-text">Current value: <strong>@(risk.MitigationStrategy ?? "Not set")</strong></div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="contingencyPlan" class="form-label">Contingency Plan</label>
+                                <InputTextArea id="contingencyPlan" class="form-control" rows="3" @bind-Value="updateDto.ContingencyPlan" />
+                                <ValidationMessage For="@(() => updateDto.ContingencyPlan)" />
+                                <div class="form-text">Current value: <strong>@(risk.ContingencyPlan ?? "Not set")</strong></div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="notes" class="form-label">Notes</label>
+                                <InputTextArea id="notes" class="form-control" rows="3" @bind-Value="updateDto.Notes" />
+                                <ValidationMessage For="@(() => updateDto.Notes)" />
+                                <div class="form-text">Current value: <strong>@(risk.Notes ?? "Not set")</strong></div>
+                            </div>
+
+                            <div class="d-flex gap-2">
+                                <button type="submit" class="btn btn-primary" disabled="@isSubmitting">
+                                    @if (isSubmitting)
+                                    {
+                                        <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                                        <span class="ms-1">Updating...</span>
+                                    }
+                                    else
+                                    {
+                                        <i class="bi bi-check-circle"></i>
+                                        <span class="ms-1">Update Risk</span>
+                                    }
+                                </button>
+                                <a href="/risks/@Id" class="btn btn-secondary">
+                                    <i class="bi bi-x-circle"></i>
+                                    <span class="ms-1">Cancel</span>
+                                </a>
+                            </div>
+                        </EditForm>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-4">
+                <div class="card">
+                    <div class="card-header">
+                        <h5>Current Risk Details</h5>
+                    </div>
+                    <div class="card-body">
+                        <dl class="row">
+                            <dt class="col-sm-4">Name</dt>
+                            <dd class="col-sm-8">@risk.RiskName</dd>
+
+                            <dt class="col-sm-4">Project</dt>
+                            <dd class="col-sm-8">
+                                @if (risk.Project != null)
+                                {
+                                    <span class="badge bg-info">@risk.Project.ProjectName</span>
+                                }
+                                else
+                                {
+                                    <span class="text-muted">No project assigned</span>
+                                }
+                            </dd>
+
+                            <dt class="col-sm-4">Category</dt>
+                            <dd class="col-sm-8">
+                                <span class="badge bg-secondary">@risk.RiskCategory</span>
+                            </dd>
+
+                            <dt class="col-sm-4">Status</dt>
+                            <dd class="col-sm-8">
+                                <span class="badge @GetRiskStatusBadgeClass(risk.RiskStatus)">
+                                    @risk.RiskStatus
+                                </span>
+                            </dd>
+
+                            <dt class="col-sm-4">Level</dt>
+                            <dd class="col-sm-8">
+                                <span class="badge @GetRiskLevelBadgeClass(risk.RiskLevel)">
+                                    @risk.RiskLevel
+                                </span>
+                            </dd>
+
+                            <dt class="col-sm-4">Owner</dt>
+                            <dd class="col-sm-8">
+                                @if (risk.RiskOwner != null)
+                                {
+                                    <span>@risk.RiskOwner.FirstName @risk.RiskOwner.LastName</span>
+                                }
+                                else
+                                {
+                                    <span class="text-muted">Unassigned</span>
+                                }
+                            </dd>
+
+                            <dt class="col-sm-4">Probability</dt>
+                            <dd class="col-sm-8">@risk.ProbabilityScore/10</dd>
+
+                            <dt class="col-sm-4">Impact</dt>
+                            <dd class="col-sm-8">@risk.ImpactScore/10</dd>
+
+                            <dt class="col-sm-4">Exposure</dt>
+                            <dd class="col-sm-8">@risk.ExposureScore</dd>
+
+                            <dt class="col-sm-4">Identified</dt>
+                            <dd class="col-sm-8">@risk.IdentifiedDate?.ToString("MMM dd, yyyy")</dd>
+                        </dl>
+                    </div>
+                </div>
+
+                <div class="card mt-3">
+                    <div class="card-header">
+                        <h5>Quick Actions</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="d-grid gap-2">
+                            <a href="/risks/@Id" class="btn btn-outline-primary">
+                                <i class="bi bi-eye"></i> View Risk
+                            </a>
+                            <a href="/risks" class="btn btn-outline-secondary">
+                                <i class="bi bi-arrow-left"></i> Back to Risks
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card mt-3">
+                    <div class="card-header">
+                        <h5>Update Notes</h5>
+                    </div>
+                    <div class="card-body">
+                        <ul class="small text-muted">
+                            <li>Only changed fields will be updated</li>
+                            <li>Status changes affect risk visibility</li>
+                            <li>Score updates recalculate exposure</li>
+                            <li>Mitigation dates track progress</li>
+                            <li>Review dates ensure monitoring</li>
+                            <li>Changes take effect immediately</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter]
+    public Guid Id { get; set; }
+
+    private RiskDto? risk;
+    private UpdateRiskDto updateDto = new();
+    private List<UserDto>? users;
+    private bool isLoading = true;
+    private bool isSubmitting = false;
+    private string? errorMessage;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadData();
+    }
+
+    private async Task LoadData()
+    {
+        try
+        {
+            isLoading = true;
+            errorMessage = null;
+            
+            // Load risk and users in parallel
+            var riskTask = RiskService.GetRiskAsync(Id);
+            var userTask = UserService.GetUsersAsync();
+            
+            await Task.WhenAll(riskTask, userTask);
+            
+            risk = await riskTask;
+            users = await userTask;
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Error loading data: {ex.Message}";
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private async Task HandleValidSubmit()
+    {
+        try
+        {
+            isSubmitting = true;
+            errorMessage = null;
+
+            // Only update fields that have been changed
+            var updateData = new UpdateRiskDto();
+            if (!string.IsNullOrWhiteSpace(updateDto.RiskName))
+                updateData.RiskName = updateDto.RiskName;
+            if (!string.IsNullOrWhiteSpace(updateDto.Description))
+                updateData.Description = updateDto.Description;
+            if (updateDto.RiskOwnerId.HasValue)
+                updateData.RiskOwnerId = updateDto.RiskOwnerId;
+            if (!string.IsNullOrWhiteSpace(updateDto.RiskCategory))
+                updateData.RiskCategory = updateDto.RiskCategory;
+            if (!string.IsNullOrWhiteSpace(updateDto.RiskStatus))
+                updateData.RiskStatus = updateDto.RiskStatus;
+            if (!string.IsNullOrWhiteSpace(updateDto.RiskLevel))
+                updateData.RiskLevel = updateDto.RiskLevel;
+            if (updateDto.ProbabilityScore.HasValue)
+                updateData.ProbabilityScore = updateDto.ProbabilityScore;
+            if (updateDto.ImpactScore.HasValue)
+                updateData.ImpactScore = updateDto.ImpactScore;
+            if (updateDto.IdentifiedDate.HasValue)
+                updateData.IdentifiedDate = updateDto.IdentifiedDate;
+            if (updateDto.MitigationDate.HasValue)
+                updateData.MitigationDate = updateDto.MitigationDate;
+            if (updateDto.LastReviewDate.HasValue)
+                updateData.LastReviewDate = updateDto.LastReviewDate;
+            if (!string.IsNullOrWhiteSpace(updateDto.MitigationStrategy))
+                updateData.MitigationStrategy = updateDto.MitigationStrategy;
+            if (!string.IsNullOrWhiteSpace(updateDto.ContingencyPlan))
+                updateData.ContingencyPlan = updateDto.ContingencyPlan;
+            if (!string.IsNullOrWhiteSpace(updateDto.Notes))
+                updateData.Notes = updateDto.Notes;
+
+            var updatedRisk = await RiskService.UpdateRiskAsync(Id, updateData);
+            Navigation.NavigateTo($"/risks/{updatedRisk.RiskId}");
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Error updating risk: {ex.Message}";
+        }
+        finally
+        {
+            isSubmitting = false;
+        }
+    }
+
+    private string GetRiskStatusBadgeClass(string status)
+    {
+        return status.ToLower() switch
+        {
+            "open" => "bg-warning",
+            "mitigated" => "bg-success",
+            "closed" => "bg-secondary",
+            "monitoring" => "bg-info",
+            "escalated" => "bg-danger",
+            _ => "bg-secondary"
+        };
+    }
+
+    private string GetRiskLevelBadgeClass(string level)
+    {
+        return level.ToLower() switch
+        {
+            "low" => "bg-success",
+            "medium" => "bg-warning",
+            "high" => "bg-danger",
+            "critical" => "bg-dark",
+            _ => "bg-secondary"
+        };
+    }
+} 

@@ -28,7 +28,10 @@ namespace MyProject.WebAPI.DTOs
         public string? LessonsLearned { get; set; }
         public DateTime CreatedAt { get; set; }
         public DateTime UpdatedAt { get; set; }
+        public Guid TenantId { get; set; }
         public ProjectDto? Project { get; set; }
+        public UserDto? RiskOwner { get; set; }
+        public OrganizationDto? Tenant { get; set; }
     }
 
     public class CreateRiskDto
@@ -80,6 +83,9 @@ namespace MyProject.WebAPI.DTOs
         public decimal? ActualImpactOnBudgetUsd { get; set; }
 
         public string? LessonsLearned { get; set; }
+
+        [Required]
+        public Guid TenantId { get; set; }
     }
 
     public class UpdateRiskDto

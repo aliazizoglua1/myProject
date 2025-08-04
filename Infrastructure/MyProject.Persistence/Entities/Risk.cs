@@ -11,6 +11,7 @@ namespace MyProject.Persistence.Entities
         public Guid RiskId { get; set; } = Guid.NewGuid();
 
         [Column("project_id")]
+        [Required]
         public Guid ProjectId { get; set; }
 
         [Column("risk_description")]
@@ -57,10 +58,12 @@ namespace MyProject.Persistence.Entities
         public Guid? RiskOwnerId { get; set; }
 
         [Column("risk_status")]
+        [Required]
         [MaxLength(50)]
         public string RiskStatus { get; set; } = "Open";
 
         [Column("identified_date")]
+        [Required]
         public DateOnly IdentifiedDate { get; set; } = DateOnly.FromDateTime(DateTime.Today);
 
         [Column("last_review_date")]
@@ -87,7 +90,13 @@ namespace MyProject.Persistence.Entities
         [Column("updated_at")]
         public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
 
-        // Navigation property
+        [Column("tenant_id")]
+        [Required]
+        public Guid TenantId { get; set; }
+
+        // Navigation properties
         public Project? Project { get; set; }
+        public User? RiskOwner { get; set; }
+        public Organization? Tenant { get; set; }
     }
 } 

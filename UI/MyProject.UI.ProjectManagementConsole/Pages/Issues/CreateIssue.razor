@@ -1,0 +1,353 @@
+@page "/issues/create"
+@using MyProject.UI.ProjectManagementConsole.Models
+@using MyProject.UI.ProjectManagementConsole.Services
+@inject IIssueService IssueService
+@inject IProjectService ProjectService
+@inject ITaskService TaskService
+@inject IUserService UserService
+@inject IMilestoneService MilestoneService
+@inject NavigationManager Navigation
+
+<PageTitle>Add Issue</PageTitle>
+
+<div class="container-fluid">
+    <div class="row mb-3">
+        <div class="col">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="/issues">Issues</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">Add Issue</li>
+                </ol>
+            </nav>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-header">
+                    <h2>Add New Issue</h2>
+                </div>
+                <div class="card-body">
+                    <EditForm Model="issue" OnValidSubmit="HandleValidSubmit">
+                        <DataAnnotationsValidator />
+
+                        @if (errorMessage != null)
+                        {
+                            <div class="alert alert-danger" role="alert">
+                                @errorMessage
+                            </div>
+                        }
+
+                        <div class="mb-3">
+                            <label for="issueName" class="form-label">Issue Name *</label>
+                            <InputText id="issueName" class="form-control" @bind-Value="issue.IssueName" />
+                            <ValidationMessage For="@(() => issue.IssueName)" />
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="description" class="form-label">Description</label>
+                            <InputTextArea id="description" class="form-control" rows="3" @bind-Value="issue.Description" />
+                            <ValidationMessage For="@(() => issue.Description)" />
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="projectId" class="form-label">Project *</label>
+                                    <InputSelect id="projectId" class="form-select" @bind-Value="issue.ProjectId">
+                                        <option value="">Select Project</option>
+                                        @if (projects != null)
+                                        {
+                                            @foreach (var project in projects)
+                                            {
+                                                <option value="@project.ProjectId">@project.ProjectName</option>
+                                            }
+                                        }
+                                    </InputSelect>
+                                    <ValidationMessage For="@(() => issue.ProjectId)" />
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="taskId" class="form-label">Related Task</label>
+                                    <InputSelect id="taskId" class="form-select" @bind-Value="issue.TaskId">
+                                        <option value="">Select Task (Optional)</option>
+                                        @if (tasks != null)
+                                        {
+                                            @foreach (var task in tasks)
+                                            {
+                                                <option value="@task.TaskId">@task.TaskName</option>
+                                            }
+                                        }
+                                    </InputSelect>
+                                    <ValidationMessage For="@(() => issue.TaskId)" />
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="assignedToUserId" class="form-label">Assigned To</label>
+                                    <InputSelect id="assignedToUserId" class="form-select" @bind-Value="issue.AssignedToUserId">
+                                        <option value="">Select User (Optional)</option>
+                                        @if (users != null)
+                                        {
+                                            @foreach (var user in users)
+                                            {
+                                                <option value="@user.UserId">@user.FirstName @user.LastName</option>
+                                            }
+                                        }
+                                    </InputSelect>
+                                    <ValidationMessage For="@(() => issue.AssignedToUserId)" />
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="milestoneId" class="form-label">Milestone</label>
+                                    <InputSelect id="milestoneId" class="form-select" @bind-Value="issue.MilestoneId">
+                                        <option value="">Select Milestone (Optional)</option>
+                                        @if (milestones != null)
+                                        {
+                                            @foreach (var milestone in milestones)
+                                            {
+                                                <option value="@milestone.MilestoneId">@milestone.MilestoneName</option>
+                                            }
+                                        }
+                                    </InputSelect>
+                                    <ValidationMessage For="@(() => issue.MilestoneId)" />
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="status" class="form-label">Status</label>
+                                    <InputSelect id="status" class="form-select" @bind-Value="issue.Status">
+                                        <option value="Open">Open</option>
+                                        <option value="In Progress">In Progress</option>
+                                        <option value="Resolved">Resolved</option>
+                                        <option value="Closed">Closed</option>
+                                        <option value="On Hold">On Hold</option>
+                                    </InputSelect>
+                                    <ValidationMessage For="@(() => issue.Status)" />
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="priority" class="form-label">Priority</label>
+                                    <InputSelect id="priority" class="form-select" @bind-Value="issue.Priority">
+                                        <option value="Low">Low</option>
+                                        <option value="Medium">Medium</option>
+                                        <option value="High">High</option>
+                                        <option value="Urgent">Urgent</option>
+                                    </InputSelect>
+                                    <ValidationMessage For="@(() => issue.Priority)" />
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="severity" class="form-label">Severity</label>
+                                    <InputSelect id="severity" class="form-select" @bind-Value="issue.Severity">
+                                        <option value="Low">Low</option>
+                                        <option value="Medium">Medium</option>
+                                        <option value="High">High</option>
+                                        <option value="Critical">Critical</option>
+                                    </InputSelect>
+                                    <ValidationMessage For="@(() => issue.Severity)" />
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="openedDate" class="form-label">Opened Date *</label>
+                                    <InputDate id="openedDate" class="form-control" @bind-Value="issue.OpenedDate" />
+                                    <ValidationMessage For="@(() => issue.OpenedDate)" />
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="dueDate" class="form-label">Due Date</label>
+                                    <InputDate id="dueDate" class="form-control" @bind-Value="issue.DueDate" />
+                                    <ValidationMessage For="@(() => issue.DueDate)" />
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="resolvedDate" class="form-label">Resolved Date</label>
+                                    <InputDate id="resolvedDate" class="form-control" @bind-Value="issue.ResolvedDate" />
+                                    <ValidationMessage For="@(() => issue.ResolvedDate)" />
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="resolution" class="form-label">Resolution</label>
+                            <InputTextArea id="resolution" class="form-control" rows="3" @bind-Value="issue.Resolution" />
+                            <ValidationMessage For="@(() => issue.Resolution)" />
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="rootCause" class="form-label">Root Cause</label>
+                            <InputTextArea id="rootCause" class="form-control" rows="3" @bind-Value="issue.RootCause" />
+                            <ValidationMessage For="@(() => issue.RootCause)" />
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="notes" class="form-label">Notes</label>
+                            <InputTextArea id="notes" class="form-control" rows="3" @bind-Value="issue.Notes" />
+                            <ValidationMessage For="@(() => issue.Notes)" />
+                        </div>
+
+                        <div class="d-flex gap-2">
+                            <button type="submit" class="btn btn-primary" disabled="@isSubmitting">
+                                @if (isSubmitting)
+                                {
+                                    <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                                    <span class="ms-1">Adding...</span>
+                                }
+                                else
+                                {
+                                    <i class="bi bi-check-circle"></i>
+                                    <span class="ms-1">Add Issue</span>
+                                }
+                            </button>
+                            <a href="/issues" class="btn btn-secondary">
+                                <i class="bi bi-x-circle"></i>
+                                <span class="ms-1">Cancel</span>
+                            </a>
+                        </div>
+                    </EditForm>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5>Issue Information</h5>
+                </div>
+                <div class="card-body">
+                    <p class="text-muted">
+                        Issues represent problems, bugs, or concerns that need to be addressed. 
+                        Each issue should be tracked through its lifecycle from identification to resolution.
+                    </p>
+                    
+                    <h6>Required Fields:</h6>
+                    <ul class="small text-muted">
+                        <li><strong>Issue Name:</strong> A clear, descriptive name for the issue</li>
+                        <li><strong>Project:</strong> The project this issue affects</li>
+                        <li><strong>Opened Date:</strong> When the issue was first identified</li>
+                    </ul>
+
+                    <h6>Issue Status:</h6>
+                    <ul class="small text-muted">
+                        <li><span class="badge bg-warning">Open</span> - Newly identified issue</li>
+                        <li><span class="badge bg-info">In Progress</span> - Currently being worked on</li>
+                        <li><span class="badge bg-success">Resolved</span> - Issue has been fixed</li>
+                        <li><span class="badge bg-secondary">Closed</span> - Issue is complete</li>
+                        <li><span class="badge bg-dark">On Hold</span> - Temporarily paused</li>
+                    </ul>
+
+                    <h6>Priority Levels:</h6>
+                    <ul class="small text-muted">
+                        <li><span class="badge bg-success">Low</span> - Can be addressed when convenient</li>
+                        <li><span class="badge bg-warning">Medium</span> - Normal priority</li>
+                        <li><span class="badge bg-danger">High</span> - Important, needs attention</li>
+                        <li><span class="badge bg-dark">Urgent</span> - Critical, immediate attention required</li>
+                    </ul>
+
+                    <h6>Severity Levels:</h6>
+                    <ul class="small text-muted">
+                        <li><span class="badge bg-success">Low</span> - Minor impact</li>
+                        <li><span class="badge bg-warning">Medium</span> - Moderate impact</li>
+                        <li><span class="badge bg-danger">High</span> - Significant impact</li>
+                        <li><span class="badge bg-dark">Critical</span> - Severe impact</li>
+                    </ul>
+
+                    <h6>Notes:</h6>
+                    <ul class="small text-muted">
+                        <li>Issues can be linked to specific tasks or milestones</li>
+                        <li>Resolution details help prevent similar issues</li>
+                        <li>Root cause analysis improves processes</li>
+                        <li>Due dates help prioritize resolution</li>
+                        <li>Assigned users track responsibility</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    private CreateIssueDto issue = new();
+    private List<ProjectDto>? projects;
+    private List<TaskDto>? tasks;
+    private List<UserDto>? users;
+    private List<MilestoneDto>? milestones;
+    private bool isLoading = true;
+    private bool isSubmitting = false;
+    private string? errorMessage;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadData();
+    }
+
+    private async Task LoadData()
+    {
+        try
+        {
+            isLoading = true;
+            errorMessage = null;
+            
+            // Load data in parallel
+            var projectTask = ProjectService.GetProjectsAsync();
+            var taskTask = TaskService.GetTasksAsync();
+            var userTask = UserService.GetUsersAsync();
+            var milestoneTask = MilestoneService.GetMilestonesAsync();
+            
+            await Task.WhenAll(projectTask, taskTask, userTask, milestoneTask);
+            
+            projects = await projectTask;
+            tasks = await taskTask;
+            users = await userTask;
+            milestones = await milestoneTask;
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Error loading data: {ex.Message}";
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private async Task HandleValidSubmit()
+    {
+        try
+        {
+            isSubmitting = true;
+            errorMessage = null;
+
+            var createdIssue = await IssueService.CreateIssueAsync(issue);
+            Navigation.NavigateTo($"/issues/{createdIssue.IssueId}");
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Error adding issue: {ex.Message}";
+        }
+        finally
+        {
+            isSubmitting = false;
+        }
+    }
+} 

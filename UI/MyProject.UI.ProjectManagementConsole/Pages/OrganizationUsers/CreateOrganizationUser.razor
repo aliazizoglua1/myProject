@@ -1,0 +1,263 @@
+@page "/organizationusers/create"
+@using MyProject.UI.ProjectManagementConsole.Models
+@using MyProject.UI.ProjectManagementConsole.Services
+@inject IOrganizationUserService OrganizationUserService
+@inject IOrganizationService OrganizationService
+@inject IUserService UserService
+@inject NavigationManager Navigation
+
+<PageTitle>Add User to Organization</PageTitle>
+
+<div class="container-fluid">
+    <div class="row mb-3">
+        <div class="col">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="/organizationusers">Organization Users</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">Add User to Organization</li>
+                </ol>
+            </nav>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-header">
+                    <h2>Add User to Organization</h2>
+                </div>
+                <div class="card-body">
+                    <EditForm Model="organizationUser" OnValidSubmit="HandleValidSubmit">
+                        <DataAnnotationsValidator />
+
+                        @if (errorMessage != null)
+                        {
+                            <div class="alert alert-danger" role="alert">
+                                @errorMessage
+                            </div>
+                        }
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="organizationId" class="form-label">Organization *</label>
+                                    <InputSelect id="organizationId" class="form-select" @bind-Value="organizationUser.OrganizationId">
+                                        <option value="">Select Organization</option>
+                                        @if (organizations != null)
+                                        {
+                                            @foreach (var org in organizations)
+                                            {
+                                                <option value="@org.OrganizationId">@org.OrganizationName</option>
+                                            }
+                                        }
+                                    </InputSelect>
+                                    <ValidationMessage For="@(() => organizationUser.OrganizationId)" />
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="userId" class="form-label">User *</label>
+                                    <InputSelect id="userId" class="form-select" @bind-Value="organizationUser.UserId">
+                                        <option value="">Select User</option>
+                                        @if (users != null)
+                                        {
+                                            @foreach (var user in users)
+                                            {
+                                                <option value="@user.UserId">@user.FirstName @user.LastName (@user.Email)</option>
+                                            }
+                                        }
+                                    </InputSelect>
+                                    <ValidationMessage For="@(() => organizationUser.UserId)" />
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="role" class="form-label">Role *</label>
+                                    <InputSelect id="role" class="form-select" @bind-Value="organizationUser.Role">
+                                        <option value="">Select Role</option>
+                                        <option value="Admin">Admin</option>
+                                        <option value="Manager">Manager</option>
+                                        <option value="Member">Member</option>
+                                        <option value="Viewer">Viewer</option>
+                                        <option value="Guest">Guest</option>
+                                    </InputSelect>
+                                    <ValidationMessage For="@(() => organizationUser.Role)" />
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="accessLevel" class="form-label">Access Level</label>
+                                    <InputSelect id="accessLevel" class="form-select" @bind-Value="organizationUser.AccessLevel">
+                                        <option value="Member">Member</option>
+                                        <option value="Admin">Admin</option>
+                                        <option value="Manager">Manager</option>
+                                        <option value="Viewer">Viewer</option>
+                                        <option value="Guest">Guest</option>
+                                    </InputSelect>
+                                    <ValidationMessage For="@(() => organizationUser.AccessLevel)" />
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="joinedDate" class="form-label">Joined Date</label>
+                                    <InputDate id="joinedDate" class="form-control" @bind-Value="organizationUser.JoinedDate" />
+                                    <ValidationMessage For="@(() => organizationUser.JoinedDate)" />
+                                    <div class="form-text">Leave empty to use today's date.</div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <div class="form-check">
+                                        <InputCheckbox id="isActive" class="form-check-input" @bind-Value="organizationUser.IsActive" />
+                                        <label class="form-check-label" for="isActive">
+                                            Active Member
+                                        </label>
+                                    </div>
+                                    <div class="form-text">Active members can access the organization.</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="d-flex gap-2">
+                            <button type="submit" class="btn btn-primary" disabled="@isSubmitting">
+                                @if (isSubmitting)
+                                {
+                                    <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                                    <span class="ms-1">Adding...</span>
+                                }
+                                else
+                                {
+                                    <i class="bi bi-check-circle"></i>
+                                    <span class="ms-1">Add User to Organization</span>
+                                }
+                            </button>
+                            <a href="/organizationusers" class="btn btn-secondary">
+                                <i class="bi bi-x-circle"></i>
+                                <span class="ms-1">Cancel</span>
+                            </a>
+                        </div>
+                    </EditForm>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5>Organization User Information</h5>
+                </div>
+                <div class="card-body">
+                    <p class="text-muted">
+                        Organization Users represent the relationship between users and organizations. 
+                        Each user can belong to multiple organizations with different roles and access levels.
+                    </p>
+                    
+                    <h6>Required Fields:</h6>
+                    <ul class="small text-muted">
+                        <li><strong>Organization:</strong> The organization the user will join</li>
+                        <li><strong>User:</strong> The user to add to the organization</li>
+                        <li><strong>Role:</strong> The user's role within the organization</li>
+                    </ul>
+
+                    <h6>Roles:</h6>
+                    <ul class="small text-muted">
+                        <li><span class="badge bg-danger">Admin</span> - Full administrative access</li>
+                        <li><span class="badge bg-warning">Manager</span> - Management and oversight</li>
+                        <li><span class="badge bg-success">Member</span> - Standard member access</li>
+                        <li><span class="badge bg-info">Viewer</span> - Read-only access</li>
+                        <li><span class="badge bg-secondary">Guest</span> - Limited access</li>
+                    </ul>
+
+                    <h6>Access Levels:</h6>
+                    <ul class="small text-muted">
+                        <li><span class="badge bg-danger">Admin</span> - Full system access</li>
+                        <li><span class="badge bg-warning">Manager</span> - Project management access</li>
+                        <li><span class="badge bg-success">Member</span> - Standard access</li>
+                        <li><span class="badge bg-info">Viewer</span> - Read-only access</li>
+                        <li><span class="badge bg-secondary">Guest</span> - Limited access</li>
+                    </ul>
+
+                    <h6>Notes:</h6>
+                    <ul class="small text-muted">
+                        <li>Users can belong to multiple organizations</li>
+                        <li>Each organization can have different roles</li>
+                        <li>Active members can access the organization</li>
+                        <li>Inactive members cannot access the organization</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    private CreateOrganizationUserDto organizationUser = new();
+    private List<OrganizationDto>? organizations;
+    private List<UserDto>? users;
+    private bool isLoading = true;
+    private bool isSubmitting = false;
+    private string? errorMessage;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadData();
+    }
+
+    private async Task LoadData()
+    {
+        try
+        {
+            isLoading = true;
+            errorMessage = null;
+            
+            // Load organizations and users in parallel
+            var orgTask = OrganizationService.GetOrganizationsAsync();
+            var userTask = UserService.GetUsersAsync();
+            
+            await Task.WhenAll(orgTask, userTask);
+            
+            organizations = await orgTask;
+            users = await userTask;
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Error loading data: {ex.Message}";
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private async Task HandleValidSubmit()
+    {
+        try
+        {
+            isSubmitting = true;
+            errorMessage = null;
+
+            // Set default joined date if not provided
+            if (!organizationUser.JoinedDate.HasValue)
+            {
+                organizationUser.JoinedDate = DateOnly.FromDateTime(DateTime.Today);
+            }
+
+            var createdOrgUser = await OrganizationUserService.CreateOrganizationUserAsync(organizationUser);
+            Navigation.NavigateTo($"/organizationusers/{createdOrgUser.OrganizationId}/{createdOrgUser.UserId}");
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Error adding user to organization: {ex.Message}";
+        }
+        finally
+        {
+            isSubmitting = false;
+        }
+    }
+} 

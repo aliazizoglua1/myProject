@@ -76,5 +76,10 @@ namespace MyProject.Persistence.Entities
 
         [Column("organization_id")]
         public Guid? OrganizationId { get; set; }
+
+        // Navigation properties
+        public Organization? Organization { get; set; }
+        public User? ProjectManager { get; set; }
+        public ICollection<Milestone>? Milestones { get; set; }
     }
 } 

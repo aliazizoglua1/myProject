@@ -1,0 +1,113 @@
+### Get all risks
+GET {{baseUrl}}/api/risks
+
+### Get risk by ID
+GET {{baseUrl}}/api/risks/{{riskId}}
+
+### Get risks by project
+GET {{baseUrl}}/api/risks/project/{{projectId}}
+
+### Get risks by status
+GET {{baseUrl}}/api/risks/status/{{status}}
+
+### Get risks by category
+GET {{baseUrl}}/api/risks/category/{{category}}
+
+### Get risks by owner
+GET {{baseUrl}}/api/risks/owner/{{ownerId}}
+
+### Get high-risk risks
+GET {{baseUrl}}/api/risks/high-risk
+
+### Get risks by tenant
+GET {{baseUrl}}/api/risks/tenant/{{tenantId}}
+
+### Get risks by tenant and status
+GET {{baseUrl}}/api/risks/tenant/{{tenantId}}/status/{{status}}
+
+### Get risks by tenant and category
+GET {{baseUrl}}/api/risks/tenant/{{tenantId}}/category/{{category}}
+
+### Get risks by project and status
+GET {{baseUrl}}/api/risks/project/{{projectId}}/status/{{status}}
+
+### Get risks by tenant and owner
+GET {{baseUrl}}/api/risks/tenant/{{tenantId}}/owner/{{ownerId}}
+
+### Get overdue risks
+GET {{baseUrl}}/api/risks/overdue
+
+### Get risks by exposure range
+GET {{baseUrl}}/api/risks/exposure-range?minExposure=10&maxExposure=25
+
+### Create a new risk
+POST {{baseUrl}}/api/risks
+Content-Type: application/json
+
+{
+  "projectId": "{{projectId}}",
+  "riskDescription": "Key team member may leave the project",
+  "riskCategory": "Resource",
+  "plannedProbabilityScore": 3,
+  "actualProbabilityScore": 2,
+  "plannedImpactScore": 4,
+  "actualImpactScore": 3,
+  "mitigationStrategy": "Cross-train team members and document critical processes",
+  "contingencyPlan": "Identify backup resources and establish knowledge transfer sessions",
+  "triggerEvents": "Team member receives job offer, personal circumstances change",
+  "riskOwnerId": "{{ownerId}}",
+  "riskStatus": "Open",
+  "identifiedDate": "2024-12-01",
+  "tenantId": "{{tenantId}}"
+}
+
+### Update a risk
+PUT {{baseUrl}}/api/risks/{{riskId}}
+Content-Type: application/json
+
+{
+  "riskDescription": "Updated risk description",
+  "plannedProbabilityScore": 2,
+  "actualProbabilityScore": 1,
+  "plannedImpactScore": 3,
+  "actualImpactScore": 2,
+  "mitigationStrategy": "Updated mitigation strategy",
+  "contingencyPlan": "Updated contingency plan",
+  "riskStatus": "Mitigated"
+}
+
+### Close a risk
+PUT {{baseUrl}}/api/risks/{{riskId}}
+Content-Type: application/json
+
+{
+  "riskStatus": "Closed",
+  "closureDate": "2024-12-15",
+  "outcomeDescription": "Risk was successfully mitigated through cross-training",
+  "actualImpactOnScheduleDays": 0,
+  "actualImpactOnBudgetUsd": 0.00,
+  "lessonsLearned": "Early identification and proactive mitigation prevented impact"
+}
+
+### Update risk review
+PUT {{baseUrl}}/api/risks/{{riskId}}
+Content-Type: application/json
+
+{
+  "lastReviewDate": "2024-12-10",
+  "actualProbabilityScore": 1,
+  "actualImpactScore": 2,
+  "riskStatus": "Under Control"
+}
+
+### Assign risk owner
+PUT {{baseUrl}}/api/risks/{{riskId}}
+Content-Type: application/json
+
+{
+  "riskOwnerId": "{{newOwnerId}}",
+  "riskStatus": "Assigned"
+}
+
+### Delete a risk
+DELETE {{baseUrl}}/api/risks/{{riskId}} 

@@ -1,0 +1,163 @@
+@page "/users/create"
+@using MyProject.UI.ProjectManagementConsole.Models
+@using MyProject.UI.ProjectManagementConsole.Services
+@inject IUserService UserService
+@inject NavigationManager Navigation
+
+<PageTitle>Create User</PageTitle>
+
+<div class="container-fluid">
+    <div class="row mb-3">
+        <div class="col">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="/users">Users</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">Create User</li>
+                </ol>
+            </nav>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-header">
+                    <h2>Create New User</h2>
+                </div>
+                <div class="card-body">
+                    <EditForm Model="user" OnValidSubmit="HandleValidSubmit">
+                        <DataAnnotationsValidator />
+
+                        @if (errorMessage != null)
+                        {
+                            <div class="alert alert-danger" role="alert">
+                                @errorMessage
+                            </div>
+                        }
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="firstName" class="form-label">First Name *</label>
+                                    <InputText id="firstName" class="form-control" @bind-Value="user.FirstName" />
+                                    <ValidationMessage For="@(() => user.FirstName)" />
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="lastName" class="form-label">Last Name *</label>
+                                    <InputText id="lastName" class="form-control" @bind-Value="user.LastName" />
+                                    <ValidationMessage For="@(() => user.LastName)" />
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="email" class="form-label">Email Address *</label>
+                            <InputText id="email" type="email" class="form-control" @bind-Value="user.Email" />
+                            <ValidationMessage For="@(() => user.Email)" />
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="password" class="form-label">Password *</label>
+                            <InputText id="password" type="password" class="form-control" @bind-Value="user.Password" />
+                            <ValidationMessage For="@(() => user.Password)" />
+                            <div class="form-text">Password must be at least 6 characters long.</div>
+                        </div>
+
+                        <div class="mb-3">
+                            <div class="form-check">
+                                <InputCheckbox id="isActive" class="form-check-input" @bind-Value="user.IsActive" />
+                                <label class="form-check-label" for="isActive">
+                                    Active User
+                                </label>
+                            </div>
+                            <div class="form-text">Active users can log in and access the system.</div>
+                        </div>
+
+                        <div class="d-flex gap-2">
+                            <button type="submit" class="btn btn-primary" disabled="@isSubmitting">
+                                @if (isSubmitting)
+                                {
+                                    <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                                    <span class="ms-1">Creating...</span>
+                                }
+                                else
+                                {
+                                    <i class="bi bi-check-circle"></i>
+                                    <span class="ms-1">Create User</span>
+                                }
+                            </button>
+                            <a href="/users" class="btn btn-secondary">
+                                <i class="bi bi-x-circle"></i>
+                                <span class="ms-1">Cancel</span>
+                            </a>
+                        </div>
+                    </EditForm>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5>User Information</h5>
+                </div>
+                <div class="card-body">
+                    <p class="text-muted">
+                        Users are the individuals who can access your project management system. 
+                        Each user can be assigned to organizations and have different roles and permissions.
+                    </p>
+                    
+                    <h6>Required Fields:</h6>
+                    <ul class="small text-muted">
+                        <li><strong>First Name:</strong> The user's first name</li>
+                        <li><strong>Last Name:</strong> The user's last name</li>
+                        <li><strong>Email:</strong> The user's email address (must be unique)</li>
+                        <li><strong>Password:</strong> The user's login password (minimum 6 characters)</li>
+                    </ul>
+
+                    <h6>User Status:</h6>
+                    <ul class="small text-muted">
+                        <li><span class="badge bg-success">Active</span> - User can log in and access the system</li>
+                        <li><span class="badge bg-secondary">Inactive</span> - User cannot log in (account disabled)</li>
+                    </ul>
+
+                    <h6>Security Notes:</h6>
+                    <ul class="small text-muted">
+                        <li>Passwords are securely hashed before storage</li>
+                        <li>Email addresses must be unique across the system</li>
+                        <li>Users can be assigned to multiple organizations</li>
+                        <li>Each organization can have different roles and permissions</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    private CreateUserDto user = new();
+    private bool isSubmitting = false;
+    private string? errorMessage;
+
+    private async Task HandleValidSubmit()
+    {
+        try
+        {
+            isSubmitting = true;
+            errorMessage = null;
+
+            var createdUser = await UserService.CreateUserAsync(user);
+            Navigation.NavigateTo($"/users/{createdUser.UserId}");
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Error creating user: {ex.Message}";
+        }
+        finally
+        {
+            isSubmitting = false;
+        }
+    }
+} 

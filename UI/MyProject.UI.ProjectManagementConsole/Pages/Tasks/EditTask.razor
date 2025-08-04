@@ -1,0 +1,457 @@
+@page "/tasks/{Id:guid}/edit"
+@using MyProject.UI.ProjectManagementConsole.Models
+@using MyProject.UI.ProjectManagementConsole.Services
+@inject ITaskService TaskService
+@inject IProjectService ProjectService
+@inject IUserService UserService
+@inject IMilestoneService MilestoneService
+@inject NavigationManager Navigation
+
+<PageTitle>Edit Task</PageTitle>
+
+<div class="container-fluid">
+    <div class="row mb-3">
+        <div class="col">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="/tasks">Tasks</a></li>
+                    <li class="breadcrumb-item"><a href="/tasks/@Id">Task Details</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">Edit Task</li>
+                </ol>
+            </nav>
+        </div>
+    </div>
+
+    @if (isLoading)
+    {
+        <div class="text-center">
+            <div class="spinner-border" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+        </div>
+    }
+    else if (errorMessage != null)
+    {
+        <div class="alert alert-danger" role="alert">
+            @errorMessage
+        </div>
+    }
+    else if (task == null)
+    {
+        <div class="alert alert-warning" role="alert">
+            Task not found.
+        </div>
+    }
+    else
+    {
+        <div class="row">
+            <div class="col-lg-8">
+                <div class="card">
+                    <div class="card-header">
+                        <h2>Edit Task</h2>
+                    </div>
+                    <div class="card-body">
+                        <EditForm Model="updateDto" OnValidSubmit="HandleValidSubmit">
+                            <DataAnnotationsValidator />
+
+                            @if (errorMessage != null)
+                            {
+                                <div class="alert alert-danger" role="alert">
+                                    @errorMessage
+                                </div>
+                            }
+
+                            <div class="mb-3">
+                                <label for="taskName" class="form-label">Task Name</label>
+                                <InputText id="taskName" class="form-control" @bind-Value="updateDto.TaskName" />
+                                <ValidationMessage For="@(() => updateDto.TaskName)" />
+                                <div class="form-text">Current value: <strong>@task.TaskName</strong></div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="description" class="form-label">Description</label>
+                                <InputTextArea id="description" class="form-control" rows="3" @bind-Value="updateDto.Description" />
+                                <ValidationMessage For="@(() => updateDto.Description)" />
+                                <div class="form-text">Current value: <strong>@(task.Description ?? "Not set")</strong></div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="parentTaskId" class="form-label">Parent Task</label>
+                                        <InputSelect id="parentTaskId" class="form-select" @bind-Value="updateDto.ParentTaskId">
+                                            <option value="">Select Parent Task (Optional)</option>
+                                            @if (parentTasks != null)
+                                            {
+                                                @foreach (var parentTask in parentTasks.Where(t => t.TaskId != task.TaskId))
+                                                {
+                                                    <option value="@parentTask.TaskId">@parentTask.TaskName</option>
+                                                }
+                                            }
+                                        </InputSelect>
+                                        <ValidationMessage For="@(() => updateDto.ParentTaskId)" />
+                                        <div class="form-text">Current value: <strong>@(task.ParentTask?.TaskName ?? "No parent task")</strong></div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="assignedToUserId" class="form-label">Assigned To</label>
+                                        <InputSelect id="assignedToUserId" class="form-select" @bind-Value="updateDto.AssignedToUserId">
+                                            <option value="">Select User (Optional)</option>
+                                            @if (users != null)
+                                            {
+                                                @foreach (var user in users)
+                                                {
+                                                    <option value="@user.UserId">@user.FirstName @user.LastName</option>
+                                                }
+                                            }
+                                        </InputSelect>
+                                        <ValidationMessage For="@(() => updateDto.AssignedToUserId)" />
+                                        <div class="form-text">Current value: <strong>@(task.AssignedToUser?.FirstName + " " + task.AssignedToUser?.LastName ?? "Unassigned")</strong></div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="plannedStartDate" class="form-label">Planned Start Date</label>
+                                        <InputDate id="plannedStartDate" class="form-control" @bind-Value="updateDto.PlannedStartDate" />
+                                        <ValidationMessage For="@(() => updateDto.PlannedStartDate)" />
+                                        <div class="form-text">Current value: <strong>@task.PlannedStartDate?.ToString("MMM dd, yyyy")</strong></div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="plannedEndDate" class="form-label">Planned End Date</label>
+                                        <InputDate id="plannedEndDate" class="form-control" @bind-Value="updateDto.PlannedEndDate" />
+                                        <ValidationMessage For="@(() => updateDto.PlannedEndDate)" />
+                                        <div class="form-text">Current value: <strong>@(task.PlannedEndDate?.ToString("MMM dd, yyyy") ?? "Not set")</strong></div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="actualStartDate" class="form-label">Actual Start Date</label>
+                                        <InputDate id="actualStartDate" class="form-control" @bind-Value="updateDto.ActualStartDate" />
+                                        <ValidationMessage For="@(() => updateDto.ActualStartDate)" />
+                                        <div class="form-text">Current value: <strong>@(task.ActualStartDate?.ToString("MMM dd, yyyy") ?? "Not started")</strong></div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="actualEndDate" class="form-label">Actual End Date</label>
+                                        <InputDate id="actualEndDate" class="form-control" @bind-Value="updateDto.ActualEndDate" />
+                                        <ValidationMessage For="@(() => updateDto.ActualEndDate)" />
+                                        <div class="form-text">Current value: <strong>@(task.ActualEndDate?.ToString("MMM dd, yyyy") ?? "Not completed")</strong></div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="taskStatus" class="form-label">Task Status</label>
+                                        <InputSelect id="taskStatus" class="form-select" @bind-Value="updateDto.TaskStatus">
+                                            <option value="">Keep Current Status</option>
+                                            <option value="To Do">To Do</option>
+                                            <option value="In Progress">In Progress</option>
+                                            <option value="Completed">Completed</option>
+                                            <option value="On Hold">On Hold</option>
+                                            <option value="Cancelled">Cancelled</option>
+                                        </InputSelect>
+                                        <ValidationMessage For="@(() => updateDto.TaskStatus)" />
+                                        <div class="form-text">Current value: <span class="badge @GetTaskStatusBadgeClass(task.TaskStatus)">@task.TaskStatus</span></div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="priority" class="form-label">Priority</label>
+                                        <InputSelect id="priority" class="form-select" @bind-Value="updateDto.Priority">
+                                            <option value="">Keep Current Priority</option>
+                                            <option value="Low">Low</option>
+                                            <option value="Medium">Medium</option>
+                                            <option value="High">High</option>
+                                            <option value="Urgent">Urgent</option>
+                                        </InputSelect>
+                                        <ValidationMessage For="@(() => updateDto.Priority)" />
+                                        <div class="form-text">Current value: <span class="badge @GetPriorityBadgeClass(task.Priority)">@task.Priority</span></div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="plannedEffort" class="form-label">Planned Effort (Hours)</label>
+                                        <InputNumber id="plannedEffort" class="form-control" @bind-Value="updateDto.PlannedEffort" />
+                                        <ValidationMessage For="@(() => updateDto.PlannedEffort)" />
+                                        <div class="form-text">Current value: <strong>@(task.PlannedEffort?.ToString() ?? "Not set") hours</strong></div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="actualEffort" class="form-label">Actual Effort (Hours)</label>
+                                        <InputNumber id="actualEffort" class="form-control" @bind-Value="updateDto.ActualEffort" />
+                                        <ValidationMessage For="@(() => updateDto.ActualEffort)" />
+                                        <div class="form-text">Current value: <strong>@(task.ActualEffort?.ToString() ?? "Not tracked") hours</strong></div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="progressPercentage" class="form-label">Progress Percentage</label>
+                                <InputNumber id="progressPercentage" class="form-control" @bind-Value="updateDto.ProgressPercentage" />
+                                <ValidationMessage For="@(() => updateDto.ProgressPercentage)" />
+                                <div class="form-text">Current value: <strong>@(task.ProgressPercentage?.ToString() ?? "Not set")%</strong></div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="notes" class="form-label">Notes</label>
+                                <InputTextArea id="notes" class="form-control" rows="3" @bind-Value="updateDto.Notes" />
+                                <ValidationMessage For="@(() => updateDto.Notes)" />
+                                <div class="form-text">Current value: <strong>@(task.Notes ?? "Not set")</strong></div>
+                            </div>
+
+                            <div class="d-flex gap-2">
+                                <button type="submit" class="btn btn-primary" disabled="@isSubmitting">
+                                    @if (isSubmitting)
+                                    {
+                                        <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                                        <span class="ms-1">Updating...</span>
+                                    }
+                                    else
+                                    {
+                                        <i class="bi bi-check-circle"></i>
+                                        <span class="ms-1">Update Task</span>
+                                    }
+                                </button>
+                                <a href="/tasks/@Id" class="btn btn-secondary">
+                                    <i class="bi bi-x-circle"></i>
+                                    <span class="ms-1">Cancel</span>
+                                </a>
+                            </div>
+                        </EditForm>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-4">
+                <div class="card">
+                    <div class="card-header">
+                        <h5>Current Task Details</h5>
+                    </div>
+                    <div class="card-body">
+                        <dl class="row">
+                            <dt class="col-sm-4">Name</dt>
+                            <dd class="col-sm-8">@task.TaskName</dd>
+
+                            <dt class="col-sm-4">Project</dt>
+                            <dd class="col-sm-8">
+                                @if (task.Project != null)
+                                {
+                                    <span class="badge bg-info">@task.Project.ProjectName</span>
+                                }
+                                else
+                                {
+                                    <span class="text-muted">No project assigned</span>
+                                }
+                            </dd>
+
+                            <dt class="col-sm-4">Status</dt>
+                            <dd class="col-sm-8">
+                                <span class="badge @GetTaskStatusBadgeClass(task.TaskStatus)">
+                                    @task.TaskStatus
+                                </span>
+                            </dd>
+
+                            <dt class="col-sm-4">Priority</dt>
+                            <dd class="col-sm-8">
+                                <span class="badge @GetPriorityBadgeClass(task.Priority)">
+                                    @task.Priority
+                                </span>
+                            </dd>
+
+                            <dt class="col-sm-4">Assigned To</dt>
+                            <dd class="col-sm-8">
+                                @if (task.AssignedToUser != null)
+                                {
+                                    <span>@task.AssignedToUser.FirstName @task.AssignedToUser.LastName</span>
+                                }
+                                else
+                                {
+                                    <span class="text-muted">Unassigned</span>
+                                }
+                            </dd>
+
+                            <dt class="col-sm-4">Planned Start</dt>
+                            <dd class="col-sm-8">@task.PlannedStartDate?.ToString("MMM dd, yyyy")</dd>
+
+                            <dt class="col-sm-4">Planned End</dt>
+                            <dd class="col-sm-8">@(task.PlannedEndDate?.ToString("MMM dd, yyyy") ?? "Not set")</dd>
+
+                            <dt class="col-sm-4">Progress</dt>
+                            <dd class="col-sm-8">@(task.ProgressPercentage?.ToString() ?? "Not set")%</dd>
+                        </dl>
+                    </div>
+                </div>
+
+                <div class="card mt-3">
+                    <div class="card-header">
+                        <h5>Quick Actions</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="d-grid gap-2">
+                            <a href="/tasks/@Id" class="btn btn-outline-primary">
+                                <i class="bi bi-eye"></i> View Task
+                            </a>
+                            <a href="/tasks" class="btn btn-outline-secondary">
+                                <i class="bi bi-arrow-left"></i> Back to Tasks
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card mt-3">
+                    <div class="card-header">
+                        <h5>Update Notes</h5>
+                    </div>
+                    <div class="card-body">
+                        <ul class="small text-muted">
+                            <li>Only changed fields will be updated</li>
+                            <li>Status changes affect task visibility</li>
+                            <li>Progress updates help track completion</li>
+                            <li>Actual dates are updated as work progresses</li>
+                            <li>Effort tracking helps with resource planning</li>
+                            <li>Changes take effect immediately</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter]
+    public Guid Id { get; set; }
+
+    private TaskDto? task;
+    private UpdateTaskDto updateDto = new();
+    private List<TaskDto>? parentTasks;
+    private List<UserDto>? users;
+    private bool isLoading = true;
+    private bool isSubmitting = false;
+    private string? errorMessage;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadData();
+    }
+
+    private async Task LoadData()
+    {
+        try
+        {
+            isLoading = true;
+            errorMessage = null;
+            
+            // Load task and related data in parallel
+            var taskTask = TaskService.GetTaskAsync(Id);
+            var parentTaskTask = TaskService.GetTasksAsync();
+            var userTask = UserService.GetUsersAsync();
+            
+            await Task.WhenAll(taskTask, parentTaskTask, userTask);
+            
+            task = await taskTask;
+            parentTasks = await parentTaskTask;
+            users = await userTask;
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Error loading data: {ex.Message}";
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private async Task HandleValidSubmit()
+    {
+        try
+        {
+            isSubmitting = true;
+            errorMessage = null;
+
+            // Only update fields that have been changed
+            var updateData = new UpdateTaskDto();
+            if (!string.IsNullOrWhiteSpace(updateDto.TaskName))
+                updateData.TaskName = updateDto.TaskName;
+            if (!string.IsNullOrWhiteSpace(updateDto.Description))
+                updateData.Description = updateDto.Description;
+            if (updateDto.ParentTaskId.HasValue)
+                updateData.ParentTaskId = updateDto.ParentTaskId;
+            if (updateDto.AssignedToUserId.HasValue)
+                updateData.AssignedToUserId = updateDto.AssignedToUserId;
+            if (updateDto.PlannedStartDate.HasValue)
+                updateData.PlannedStartDate = updateDto.PlannedStartDate;
+            if (updateDto.PlannedEndDate.HasValue)
+                updateData.PlannedEndDate = updateDto.PlannedEndDate;
+            if (updateDto.ActualStartDate.HasValue)
+                updateData.ActualStartDate = updateDto.ActualStartDate;
+            if (updateDto.ActualEndDate.HasValue)
+                updateData.ActualEndDate = updateDto.ActualEndDate;
+            if (!string.IsNullOrWhiteSpace(updateDto.TaskStatus))
+                updateData.TaskStatus = updateDto.TaskStatus;
+            if (!string.IsNullOrWhiteSpace(updateDto.Priority))
+                updateData.Priority = updateDto.Priority;
+            if (updateDto.PlannedEffort.HasValue)
+                updateData.PlannedEffort = updateDto.PlannedEffort;
+            if (updateDto.ActualEffort.HasValue)
+                updateData.ActualEffort = updateDto.ActualEffort;
+            if (updateDto.ProgressPercentage.HasValue)
+                updateData.ProgressPercentage = updateDto.ProgressPercentage;
+            if (!string.IsNullOrWhiteSpace(updateDto.Notes))
+                updateData.Notes = updateDto.Notes;
+
+            var updatedTask = await TaskService.UpdateTaskAsync(Id, updateData);
+            Navigation.NavigateTo($"/tasks/{updatedTask.TaskId}");
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Error updating task: {ex.Message}";
+        }
+        finally
+        {
+            isSubmitting = false;
+        }
+    }
+
+    private string GetTaskStatusBadgeClass(string status)
+    {
+        return status.ToLower() switch
+        {
+            "to do" => "bg-secondary",
+            "in progress" => "bg-warning",
+            "completed" => "bg-success",
+            "on hold" => "bg-info",
+            "cancelled" => "bg-danger",
+            _ => "bg-secondary"
+        };
+    }
+
+    private string GetPriorityBadgeClass(string priority)
+    {
+        return priority.ToLower() switch
+        {
+            "low" => "bg-success",
+            "medium" => "bg-warning",
+            "high" => "bg-danger",
+            "urgent" => "bg-dark",
+            _ => "bg-secondary"
+        };
+    }
+} 

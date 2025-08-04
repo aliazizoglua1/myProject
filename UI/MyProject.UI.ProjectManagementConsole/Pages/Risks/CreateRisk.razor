@@ -1,0 +1,343 @@
+@page "/risks/create"
+@using MyProject.UI.ProjectManagementConsole.Models
+@using MyProject.UI.ProjectManagementConsole.Services
+@inject IRiskService RiskService
+@inject IProjectService ProjectService
+@inject IUserService UserService
+@inject NavigationManager Navigation
+
+<PageTitle>Add Risk</PageTitle>
+
+<div class="container-fluid">
+    <div class="row mb-3">
+        <div class="col">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="/risks">Risks</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">Add Risk</li>
+                </ol>
+            </nav>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-header">
+                    <h2>Add New Risk</h2>
+                </div>
+                <div class="card-body">
+                    <EditForm Model="risk" OnValidSubmit="HandleValidSubmit">
+                        <DataAnnotationsValidator />
+
+                        @if (errorMessage != null)
+                        {
+                            <div class="alert alert-danger" role="alert">
+                                @errorMessage
+                            </div>
+                        }
+
+                        <div class="mb-3">
+                            <label for="riskName" class="form-label">Risk Name *</label>
+                            <InputText id="riskName" class="form-control" @bind-Value="risk.RiskName" />
+                            <ValidationMessage For="@(() => risk.RiskName)" />
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="description" class="form-label">Description</label>
+                            <InputTextArea id="description" class="form-control" rows="3" @bind-Value="risk.Description" />
+                            <ValidationMessage For="@(() => risk.Description)" />
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="projectId" class="form-label">Project *</label>
+                                    <InputSelect id="projectId" class="form-select" @bind-Value="risk.ProjectId">
+                                        <option value="">Select Project</option>
+                                        @if (projects != null)
+                                        {
+                                            @foreach (var project in projects)
+                                            {
+                                                <option value="@project.ProjectId">@project.ProjectName</option>
+                                            }
+                                        }
+                                    </InputSelect>
+                                    <ValidationMessage For="@(() => risk.ProjectId)" />
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="riskOwnerId" class="form-label">Risk Owner</label>
+                                    <InputSelect id="riskOwnerId" class="form-select" @bind-Value="risk.RiskOwnerId">
+                                        <option value="">Select Risk Owner (Optional)</option>
+                                        @if (users != null)
+                                        {
+                                            @foreach (var user in users)
+                                            {
+                                                <option value="@user.UserId">@user.FirstName @user.LastName</option>
+                                            }
+                                        }
+                                    </InputSelect>
+                                    <ValidationMessage For="@(() => risk.RiskOwnerId)" />
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="riskCategory" class="form-label">Risk Category *</label>
+                                    <InputSelect id="riskCategory" class="form-select" @bind-Value="risk.RiskCategory">
+                                        <option value="">Select Category</option>
+                                        <option value="Technical">Technical</option>
+                                        <option value="Schedule">Schedule</option>
+                                        <option value="Budget">Budget</option>
+                                        <option value="Resource">Resource</option>
+                                        <option value="Quality">Quality</option>
+                                        <option value="Scope">Scope</option>
+                                        <option value="External">External</option>
+                                        <option value="Regulatory">Regulatory</option>
+                                        <option value="Security">Security</option>
+                                        <option value="Operational">Operational</option>
+                                    </InputSelect>
+                                    <ValidationMessage For="@(() => risk.RiskCategory)" />
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="riskStatus" class="form-label">Risk Status</label>
+                                    <InputSelect id="riskStatus" class="form-select" @bind-Value="risk.RiskStatus">
+                                        <option value="Open">Open</option>
+                                        <option value="Mitigated">Mitigated</option>
+                                        <option value="Closed">Closed</option>
+                                        <option value="Monitoring">Monitoring</option>
+                                        <option value="Escalated">Escalated</option>
+                                    </InputSelect>
+                                    <ValidationMessage For="@(() => risk.RiskStatus)" />
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="riskLevel" class="form-label">Risk Level</label>
+                                    <InputSelect id="riskLevel" class="form-select" @bind-Value="risk.RiskLevel">
+                                        <option value="Low">Low</option>
+                                        <option value="Medium">Medium</option>
+                                        <option value="High">High</option>
+                                        <option value="Critical">Critical</option>
+                                    </InputSelect>
+                                    <ValidationMessage For="@(() => risk.RiskLevel)" />
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="identifiedDate" class="form-label">Identified Date *</label>
+                                    <InputDate id="identifiedDate" class="form-control" @bind-Value="risk.IdentifiedDate" />
+                                    <ValidationMessage For="@(() => risk.IdentifiedDate)" />
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="probabilityScore" class="form-label">Probability Score (1-10) *</label>
+                                    <InputNumber id="probabilityScore" class="form-control" @bind-Value="risk.ProbabilityScore" />
+                                    <ValidationMessage For="@(() => risk.ProbabilityScore)" />
+                                    <div class="form-text">1 = Very Low, 10 = Very High</div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="impactScore" class="form-label">Impact Score (1-10) *</label>
+                                    <InputNumber id="impactScore" class="form-control" @bind-Value="risk.ImpactScore" />
+                                    <ValidationMessage For="@(() => risk.ImpactScore)" />
+                                    <div class="form-text">1 = Very Low, 10 = Very High</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="mitigationDate" class="form-label">Mitigation Date</label>
+                                    <InputDate id="mitigationDate" class="form-control" @bind-Value="risk.MitigationDate" />
+                                    <ValidationMessage For="@(() => risk.MitigationDate)" />
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="lastReviewDate" class="form-label">Last Review Date</label>
+                                    <InputDate id="lastReviewDate" class="form-control" @bind-Value="risk.LastReviewDate" />
+                                    <ValidationMessage For="@(() => risk.LastReviewDate)" />
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="mitigationStrategy" class="form-label">Mitigation Strategy</label>
+                            <InputTextArea id="mitigationStrategy" class="form-control" rows="3" @bind-Value="risk.MitigationStrategy" />
+                            <ValidationMessage For="@(() => risk.MitigationStrategy)" />
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="contingencyPlan" class="form-label">Contingency Plan</label>
+                            <InputTextArea id="contingencyPlan" class="form-control" rows="3" @bind-Value="risk.ContingencyPlan" />
+                            <ValidationMessage For="@(() => risk.ContingencyPlan)" />
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="notes" class="form-label">Notes</label>
+                            <InputTextArea id="notes" class="form-control" rows="3" @bind-Value="risk.Notes" />
+                            <ValidationMessage For="@(() => risk.Notes)" />
+                        </div>
+
+                        <div class="d-flex gap-2">
+                            <button type="submit" class="btn btn-primary" disabled="@isSubmitting">
+                                @if (isSubmitting)
+                                {
+                                    <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                                    <span class="ms-1">Adding...</span>
+                                }
+                                else
+                                {
+                                    <i class="bi bi-check-circle"></i>
+                                    <span class="ms-1">Add Risk</span>
+                                }
+                            </button>
+                            <a href="/risks" class="btn btn-secondary">
+                                <i class="bi bi-x-circle"></i>
+                                <span class="ms-1">Cancel</span>
+                            </a>
+                        </div>
+                    </EditForm>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5>Risk Information</h5>
+                </div>
+                <div class="card-body">
+                    <p class="text-muted">
+                        Risks represent potential threats or opportunities that could impact project success. 
+                        Each risk should be assessed for probability and impact.
+                    </p>
+                    
+                    <h6>Required Fields:</h6>
+                    <ul class="small text-muted">
+                        <li><strong>Risk Name:</strong> A clear, descriptive name for the risk</li>
+                        <li><strong>Project:</strong> The project this risk affects</li>
+                        <li><strong>Risk Category:</strong> The type of risk</li>
+                        <li><strong>Identified Date:</strong> When the risk was first identified</li>
+                        <li><strong>Probability Score:</strong> Likelihood of occurrence (1-10)</li>
+                        <li><strong>Impact Score:</strong> Severity of impact (1-10)</li>
+                    </ul>
+
+                    <h6>Risk Categories:</h6>
+                    <ul class="small text-muted">
+                        <li><strong>Technical:</strong> Technology, architecture, or technical issues</li>
+                        <li><strong>Schedule:</strong> Timeline and deadline risks</li>
+                        <li><strong>Budget:</strong> Cost and financial risks</li>
+                        <li><strong>Resource:</strong> Personnel and resource availability</li>
+                        <li><strong>Quality:</strong> Quality and performance risks</li>
+                        <li><strong>Scope:</strong> Requirements and scope changes</li>
+                        <li><strong>External:</strong> External dependencies and factors</li>
+                        <li><strong>Regulatory:</strong> Compliance and regulatory issues</li>
+                        <li><strong>Security:</strong> Security and privacy risks</li>
+                        <li><strong>Operational:</strong> Day-to-day operational risks</li>
+                    </ul>
+
+                    <h6>Risk Levels:</h6>
+                    <ul class="small text-muted">
+                        <li><span class="badge bg-success">Low</span> - Minimal impact, easily managed</li>
+                        <li><span class="badge bg-warning">Medium</span> - Moderate impact, requires attention</li>
+                        <li><span class="badge bg-danger">High</span> - Significant impact, high priority</li>
+                        <li><span class="badge bg-dark">Critical</span> - Severe impact, immediate action required</li>
+                    </ul>
+
+                    <h6>Scoring Guide:</h6>
+                    <ul class="small text-muted">
+                        <li><strong>Probability (1-10):</strong> How likely the risk is to occur</li>
+                        <li><strong>Impact (1-10):</strong> How severe the impact would be</li>
+                        <li><strong>Exposure Score:</strong> Probability × Impact (calculated automatically)</li>
+                    </ul>
+
+                    <h6>Notes:</h6>
+                    <ul class="small text-muted">
+                        <li>Exposure score is calculated as Probability × Impact</li>
+                        <li>Risks with high exposure scores need immediate attention</li>
+                        <li>Mitigation strategies should be specific and actionable</li>
+                        <li>Contingency plans provide backup options</li>
+                        <li>Regular review dates help ensure risk monitoring</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    private CreateRiskDto risk = new();
+    private List<ProjectDto>? projects;
+    private List<UserDto>? users;
+    private bool isLoading = true;
+    private bool isSubmitting = false;
+    private string? errorMessage;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadData();
+    }
+
+    private async Task LoadData()
+    {
+        try
+        {
+            isLoading = true;
+            errorMessage = null;
+            
+            // Load data in parallel
+            var projectTask = ProjectService.GetProjectsAsync();
+            var userTask = UserService.GetUsersAsync();
+            
+            await Task.WhenAll(projectTask, userTask);
+            
+            projects = await projectTask;
+            users = await userTask;
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Error loading data: {ex.Message}";
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private async Task HandleValidSubmit()
+    {
+        try
+        {
+            isSubmitting = true;
+            errorMessage = null;
+
+            var createdRisk = await RiskService.CreateRiskAsync(risk);
+            Navigation.NavigateTo($"/risks/{createdRisk.RiskId}");
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Error adding risk: {ex.Message}";
+        }
+        finally
+        {
+            isSubmitting = false;
+        }
+    }
+} 

@@ -1,0 +1,17 @@
+[
+  {
+    "Name": "New Profile",
+    "Projects": [
+      {
+        "Path": "WebAPI\\MyProject.WebAPI\\MyProject.WebAPI.csproj",
+        "Action": "StartWithoutDebugging",
+        "DebugTarget": "IIS Express"
+      },
+      {
+        "Path": "UI\\MyProject.UI.ProjectManagementConsole\\MyProject.UI.ProjectManagementConsole.csproj",
+        "Action": "Start",
+        "DebugTarget": "IIS Express"
+      }
+    ]
+  }
+]

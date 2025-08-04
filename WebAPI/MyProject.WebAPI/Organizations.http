@@ -1,0 +1,36 @@
+### Get all organizations
+GET {{baseUrl}}/api/organizations
+
+### Get organization by ID
+GET {{baseUrl}}/api/organizations/{{organizationId}}
+
+### Get organization by name
+GET {{baseUrl}}/api/organizations/name/{{organizationName}}
+
+### Get organizations by status
+GET {{baseUrl}}/api/organizations/status/Active
+
+### Create a new organization
+POST {{baseUrl}}/api/organizations
+Content-Type: application/json
+
+{
+  "organizationName": "Test Organization",
+  "status": "Active",
+  "billingPlan": "Premium",
+  "contactEmail": "contact@testorg.com"
+}
+
+### Update an organization
+PUT {{baseUrl}}/api/organizations/{{organizationId}}
+Content-Type: application/json
+
+{
+  "organizationName": "Updated Organization Name",
+  "status": "Active",
+  "billingPlan": "Enterprise",
+  "contactEmail": "updated@testorg.com"
+}
+
+### Delete an organization
+DELETE {{baseUrl}}/api/organizations/{{organizationId}} 

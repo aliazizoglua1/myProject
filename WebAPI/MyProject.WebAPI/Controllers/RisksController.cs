@@ -75,6 +75,62 @@ namespace MyProject.WebAPI.Controllers
             return Ok(riskDtos);
         }
 
+        [HttpGet("tenant/{tenantId}")]
+        public async Task<ActionResult<IEnumerable<RiskDto>>> GetRisksByTenant(Guid tenantId)
+        {
+            var risks = await _riskRepository.GetByTenantIdAsync(tenantId);
+            var riskDtos = risks.Select(MapToDto);
+            return Ok(riskDtos);
+        }
+
+        [HttpGet("tenant/{tenantId}/status/{status}")]
+        public async Task<ActionResult<IEnumerable<RiskDto>>> GetRisksByTenantAndStatus(Guid tenantId, string status)
+        {
+            var risks = await _riskRepository.GetByTenantAndStatusAsync(tenantId, status);
+            var riskDtos = risks.Select(MapToDto);
+            return Ok(riskDtos);
+        }
+
+        [HttpGet("tenant/{tenantId}/category/{category}")]
+        public async Task<ActionResult<IEnumerable<RiskDto>>> GetRisksByTenantAndCategory(Guid tenantId, string category)
+        {
+            var risks = await _riskRepository.GetByTenantAndCategoryAsync(tenantId, category);
+            var riskDtos = risks.Select(MapToDto);
+            return Ok(riskDtos);
+        }
+
+        [HttpGet("project/{projectId}/status/{status}")]
+        public async Task<ActionResult<IEnumerable<RiskDto>>> GetRisksByProjectAndStatus(Guid projectId, string status)
+        {
+            var risks = await _riskRepository.GetByProjectAndStatusAsync(projectId, status);
+            var riskDtos = risks.Select(MapToDto);
+            return Ok(riskDtos);
+        }
+
+        [HttpGet("tenant/{tenantId}/owner/{ownerId}")]
+        public async Task<ActionResult<IEnumerable<RiskDto>>> GetRisksByTenantAndOwner(Guid tenantId, Guid ownerId)
+        {
+            var risks = await _riskRepository.GetByTenantAndOwnerAsync(tenantId, ownerId);
+            var riskDtos = risks.Select(MapToDto);
+            return Ok(riskDtos);
+        }
+
+        [HttpGet("overdue")]
+        public async Task<ActionResult<IEnumerable<RiskDto>>> GetOverdueRisks()
+        {
+            var risks = await _riskRepository.GetOverdueRisksAsync();
+            var riskDtos = risks.Select(MapToDto);
+            return Ok(riskDtos);
+        }
+
+        [HttpGet("exposure-range")]
+        public async Task<ActionResult<IEnumerable<RiskDto>>> GetRisksByExposureRange([FromQuery] int minExposure, [FromQuery] int maxExposure)
+        {
+            var risks = await _riskRepository.GetByExposureRangeAsync(minExposure, maxExposure);
+            var riskDtos = risks.Select(MapToDto);
+            return Ok(riskDtos);
+        }
+
         [HttpPost]
         public async Task<ActionResult<RiskDto>> CreateRisk(CreateRiskDto createDto)
         {
@@ -147,7 +203,10 @@ namespace MyProject.WebAPI.Controllers
                 LessonsLearned = risk.LessonsLearned,
                 CreatedAt = risk.CreatedAt,
                 UpdatedAt = risk.UpdatedAt,
-                Project = risk.Project != null ? MapProjectToDto(risk.Project) : null
+                TenantId = risk.TenantId,
+                Project = risk.Project != null ? MapProjectToDto(risk.Project) : null,
+                RiskOwner = risk.RiskOwner != null ? MapUserToDto(risk.RiskOwner) : null,
+                Tenant = risk.Tenant != null ? MapOrganizationToDto(risk.Tenant) : null
             };
         }
 
@@ -179,6 +238,34 @@ namespace MyProject.WebAPI.Controllers
             };
         }
 
+        private static UserDto MapUserToDto(User user)
+        {
+            return new UserDto
+            {
+                UserId = user.UserId,
+                Email = user.Email,
+                FirstName = user.FirstName,
+                LastName = user.LastName,
+                IsActive = user.IsActive,
+                CreatedAt = user.CreatedAt,
+                UpdatedAt = user.UpdatedAt
+            };
+        }
+
+        private static OrganizationDto MapOrganizationToDto(Organization organization)
+        {
+            return new OrganizationDto
+            {
+                OrganizationId = organization.OrganizationId,
+                OrganizationName = organization.OrganizationName,
+                Status = organization.Status,
+                BillingPlan = organization.BillingPlan,
+                ContactEmail = organization.ContactEmail,
+                CreatedAt = organization.CreatedAt,
+                UpdatedAt = organization.UpdatedAt
+            };
+        }
+
         private static Risk MapToEntity(CreateRiskDto dto)
         {
             return new Risk
@@ -201,7 +288,8 @@ namespace MyProject.WebAPI.Controllers
                 OutcomeDescription = dto.OutcomeDescription,
                 ActualImpactOnScheduleDays = dto.ActualImpactOnScheduleDays,
                 ActualImpactOnBudgetUsd = dto.ActualImpactOnBudgetUsd,
-                LessonsLearned = dto.LessonsLearned
+                LessonsLearned = dto.LessonsLearned,
+                TenantId = dto.TenantId
             };
         }
 

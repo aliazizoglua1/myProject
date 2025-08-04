@@ -1,0 +1,183 @@
+### Get all tasks
+GET {{baseUrl}}/api/tasks
+
+### Get task by ID
+GET {{baseUrl}}/api/tasks/{{taskId}}
+
+### Get tasks by project
+GET {{baseUrl}}/api/tasks/project/{{projectId}}
+
+### Get tasks by status
+GET {{baseUrl}}/api/tasks/status/{{status}}
+
+### Get tasks by priority
+GET {{baseUrl}}/api/tasks/priority/{{priority}}
+
+### Get tasks by assigned user
+GET {{baseUrl}}/api/tasks/assigned/{{userId}}
+
+### Get subtasks
+GET {{baseUrl}}/api/tasks/parent/{{parentTaskId}}
+
+### Get milestones
+GET {{baseUrl}}/api/tasks/milestones
+
+### Get overdue tasks
+GET {{baseUrl}}/api/tasks/overdue
+
+### Get tasks with subtasks
+GET {{baseUrl}}/api/tasks/with-subtasks
+
+### Get tasks by tenant
+GET {{baseUrl}}/api/tasks/tenant/{{tenantId}}
+
+### Get tasks by tenant and status
+GET {{baseUrl}}/api/tasks/tenant/{{tenantId}}/status/{{status}}
+
+### Get tasks by tenant and priority
+GET {{baseUrl}}/api/tasks/tenant/{{tenantId}}/priority/{{priority}}
+
+### Get tasks by project and status
+GET {{baseUrl}}/api/tasks/project/{{projectId}}/status/{{status}}
+
+### Get tasks by milestone
+GET {{baseUrl}}/api/tasks/milestone/{{milestoneId}}
+
+### Get tasks by tenant and user
+GET {{baseUrl}}/api/tasks/tenant/{{tenantId}}/user/{{userId}}
+
+### Get overdue tasks by tenant
+GET {{baseUrl}}/api/tasks/tenant/{{tenantId}}/overdue
+
+### Get milestones by tenant
+GET {{baseUrl}}/api/tasks/tenant/{{tenantId}}/milestones
+
+### Create a new task
+POST {{baseUrl}}/api/tasks
+Content-Type: application/json
+
+{
+  "projectId": "{{projectId}}",
+  "taskName": "Implement User Authentication",
+  "taskType": "Development",
+  "assignedToUserId": "{{userId}}",
+  "plannedEffortHours": 16.0,
+  "plannedStartDate": "2024-12-01",
+  "plannedEndDate": "2024-12-15",
+  "taskStatus": "To Do",
+  "priority": "High",
+  "isMilestone": false,
+  "description": "Implement secure user authentication system with JWT tokens",
+  "comments": "Need to integrate with existing SSO system",
+  "tenantId": "{{tenantId}}",
+  "milestoneId": "{{milestoneId}}"
+}
+
+### Create a milestone task
+POST {{baseUrl}}/api/tasks
+Content-Type: application/json
+
+{
+  "projectId": "{{projectId}}",
+  "taskName": "Phase 1 Complete",
+  "taskType": "Milestone",
+  "plannedStartDate": "2024-12-15",
+  "plannedEndDate": "2024-12-15",
+  "taskStatus": "To Do",
+  "priority": "Medium",
+  "isMilestone": true,
+  "description": "Completion of Phase 1 development",
+  "tenantId": "{{tenantId}}"
+}
+
+### Create a subtask
+POST {{baseUrl}}/api/tasks
+Content-Type: application/json
+
+{
+  "projectId": "{{projectId}}",
+  "taskName": "Design Database Schema",
+  "taskType": "Design",
+  "parentTaskId": "{{parentTaskId}}",
+  "assignedToUserId": "{{userId}}",
+  "plannedEffortHours": 8.0,
+  "plannedStartDate": "2024-12-01",
+  "plannedEndDate": "2024-12-05",
+  "taskStatus": "To Do",
+  "priority": "Medium",
+  "isMilestone": false,
+  "description": "Design the database schema for user management",
+  "tenantId": "{{tenantId}}"
+}
+
+### Update a task
+PUT {{baseUrl}}/api/tasks/{{taskId}}
+Content-Type: application/json
+
+{
+  "taskName": "Updated Task Name",
+  "taskStatus": "In Progress",
+  "actualStartDate": "2024-12-01",
+  "actualEffortHours": 4.0,
+  "comments": "Started implementation"
+}
+
+### Start a task
+PUT {{baseUrl}}/api/tasks/{{taskId}}
+Content-Type: application/json
+
+{
+  "taskStatus": "In Progress",
+  "actualStartDate": "2024-12-01"
+}
+
+### Complete a task
+PUT {{baseUrl}}/api/tasks/{{taskId}}
+Content-Type: application/json
+
+{
+  "taskStatus": "Completed",
+  "actualEndDate": "2024-12-15",
+  "actualEffortHours": 14.5,
+  "comments": "Task completed successfully"
+}
+
+### Assign task to user
+PUT {{baseUrl}}/api/tasks/{{taskId}}
+Content-Type: application/json
+
+{
+  "assignedToUserId": "{{newUserId}}",
+  "taskStatus": "Assigned"
+}
+
+### Update task priority
+PUT {{baseUrl}}/api/tasks/{{taskId}}
+Content-Type: application/json
+
+{
+  "priority": "High",
+  "comments": "Escalated due to deadline"
+}
+
+### Update task effort
+PUT {{baseUrl}}/api/tasks/{{taskId}}
+Content-Type: application/json
+
+{
+  "plannedEffortHours": 20.0,
+  "actualEffortHours": 8.5,
+  "comments": "Updated effort estimates based on progress"
+}
+
+### Link task to milestone
+PUT {{baseUrl}}/api/tasks/{{taskId}}
+Content-Type: application/json
+
+{
+  "milestoneId": "{{milestoneId}}",
+  "comments": "Linked to milestone"
+}
+
+### Delete a task
+DELETE {{baseUrl}}/api/tasks/{{taskId}} 

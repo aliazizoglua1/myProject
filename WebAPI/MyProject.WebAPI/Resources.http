@@ -1,0 +1,121 @@
+### Get all resources
+GET {{baseUrl}}/api/resources
+
+### Get resource by ID
+GET {{baseUrl}}/api/resources/{{resourceId}}
+
+### Get resource by email
+GET {{baseUrl}}/api/resources/email/{{email}}
+
+### Get resources by department
+GET {{baseUrl}}/api/resources/department/{{department}}
+
+### Get resources by role
+GET {{baseUrl}}/api/resources/role/{{roleTitle}}
+
+### Get resources by status
+GET {{baseUrl}}/api/resources/status/{{status}}
+
+### Get resources by location
+GET {{baseUrl}}/api/resources/location/{{location}}
+
+### Get resources by skills
+GET {{baseUrl}}/api/resources/skills?skills=JavaScript&skills=React&skills=TypeScript
+
+### Get active resources
+GET {{baseUrl}}/api/resources/active
+
+### Get available resources
+GET {{baseUrl}}/api/resources/available
+
+### Get resources by tenant
+GET {{baseUrl}}/api/resources/tenant/{{tenantId}}
+
+### Get resources by user
+GET {{baseUrl}}/api/resources/user/{{userId}}
+
+### Get resources by tenant and status
+GET {{baseUrl}}/api/resources/tenant/{{tenantId}}/status/{{status}}
+
+### Get resources by tenant and department
+GET {{baseUrl}}/api/resources/tenant/{{tenantId}}/department/{{department}}
+
+### Get resources by tenant and role
+GET {{baseUrl}}/api/resources/tenant/{{tenantId}}/role/{{roleTitle}}
+
+### Get resource by user and tenant
+GET {{baseUrl}}/api/resources/user/{{userId}}/tenant/{{tenantId}}
+
+### Search resources
+GET {{baseUrl}}/api/resources/search?searchTerm={{searchTerm}}
+
+### Create a new resource
+POST {{baseUrl}}/api/resources
+Content-Type: application/json
+
+{
+  "firstName": "John",
+  "lastName": "Doe",
+  "email": "john.doe@company.com",
+  "roleTitle": "Senior Software Developer",
+  "department": "Engineering",
+  "skills": ["C#", "ASP.NET Core", "Entity Framework", "SQL Server", "JavaScript"],
+  "experienceLevel": "Senior",
+  "fullTimeEquivalent": 1.0,
+  "weeklyCapacityHours": 40.0,
+  "costRatePerHour": 75.00,
+  "location": "New York",
+  "employmentStatus": "Active",
+  "startDateEmployment": "2024-01-15",
+  "userId": "{{userId}}",
+  "tenantId": "{{tenantId}}"
+}
+
+### Update a resource
+PUT {{baseUrl}}/api/resources/{{resourceId}}
+Content-Type: application/json
+
+{
+  "firstName": "John",
+  "lastName": "Smith",
+  "email": "john.smith@company.com",
+  "roleTitle": "Lead Software Developer",
+  "department": "Engineering",
+  "skills": ["C#", "ASP.NET Core", "Entity Framework", "SQL Server", "JavaScript", "React"],
+  "experienceLevel": "Senior",
+  "fullTimeEquivalent": 1.0,
+  "weeklyCapacityHours": 40.0,
+  "costRatePerHour": 85.00,
+  "location": "New York",
+  "employmentStatus": "Active"
+}
+
+### Update resource employment status
+PUT {{baseUrl}}/api/resources/{{resourceId}}
+Content-Type: application/json
+
+{
+  "employmentStatus": "Inactive",
+  "endDateEmployment": "2024-12-31"
+}
+
+### Update resource capacity
+PUT {{baseUrl}}/api/resources/{{resourceId}}
+Content-Type: application/json
+
+{
+  "fullTimeEquivalent": 0.8,
+  "weeklyCapacityHours": 32.0,
+  "costRatePerHour": 80.00
+}
+
+### Update resource skills
+PUT {{baseUrl}}/api/resources/{{resourceId}}
+Content-Type: application/json
+
+{
+  "skills": ["C#", "ASP.NET Core", "Entity Framework", "SQL Server", "JavaScript", "React", "TypeScript", "Docker"]
+}
+
+### Delete a resource
+DELETE {{baseUrl}}/api/resources/{{resourceId}} 

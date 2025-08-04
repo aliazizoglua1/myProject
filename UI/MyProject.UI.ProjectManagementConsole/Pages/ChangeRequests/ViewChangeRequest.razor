@@ -1,0 +1,426 @@
+@page "/change-requests/{Id:guid}"
+@using MyProject.UI.ProjectManagementConsole.Models
+@using MyProject.UI.ProjectManagementConsole.Services
+@inject IChangeRequestService ChangeRequestService
+@inject NavigationManager Navigation
+
+<PageTitle>Change Request Details</PageTitle>
+
+<div class="container-fluid">
+    <div class="row mb-3">
+        <div class="col">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="/change-requests">Change Requests</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">Change Request Details</li>
+                </ol>
+            </nav>
+        </div>
+    </div>
+
+    @if (isLoading)
+    {
+        <div class="text-center">
+            <div class="spinner-border" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+        </div>
+    }
+    else if (errorMessage != null)
+    {
+        <div class="alert alert-danger" role="alert">
+            @errorMessage
+        </div>
+    }
+    else if (changeRequest == null)
+    {
+        <div class="alert alert-warning" role="alert">
+            Change Request not found.
+        </div>
+    }
+    else
+    {
+        <div class="row">
+            <div class="col-lg-8">
+                <div class="card">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h2>@changeRequest.ChangeRequestTitle</h2>
+                        <div class="btn-group">
+                            <a href="/change-requests/@changeRequest.ChangeRequestId/edit" class="btn btn-primary">
+                                <i class="bi bi-pencil"></i> Edit
+                            </a>
+                            <button type="button" class="btn btn-danger" @onclick="DeleteChangeRequest">
+                                <i class="bi bi-trash"></i> Delete
+                            </button>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        @if (!string.IsNullOrEmpty(changeRequest.Description))
+                        {
+                            <div class="mb-4">
+                                <h5>Description</h5>
+                                <p class="text-muted">@changeRequest.Description</p>
+                            </div>
+                        }
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <h5>Basic Information</h5>
+                                <dl class="row">
+                                    <dt class="col-sm-4">Change Request ID</dt>
+                                    <dd class="col-sm-8">
+                                        <code>@changeRequest.ChangeRequestId</code>
+                                    </dd>
+
+                                    <dt class="col-sm-4">Project</dt>
+                                    <dd class="col-sm-8">
+                                        @if (changeRequest.Project != null)
+                                        {
+                                            <span class="badge bg-info">@changeRequest.Project.ProjectName</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="text-muted">No project assigned</span>
+                                        }
+                                    </dd>
+
+                                    <dt class="col-sm-4">Type</dt>
+                                    <dd class="col-sm-8">
+                                        <span class="badge bg-secondary">@changeRequest.ChangeType</span>
+                                    </dd>
+
+                                    <dt class="col-sm-4">Status</dt>
+                                    <dd class="col-sm-8">
+                                        <span class="badge @GetChangeRequestStatusBadgeClass(changeRequest.ApprovalStatus)">
+                                            @changeRequest.ApprovalStatus
+                                        </span>
+                                    </dd>
+
+                                    <dt class="col-sm-4">Priority</dt>
+                                    <dd class="col-sm-8">
+                                        <span class="badge @GetPriorityBadgeClass(changeRequest.Priority)">
+                                            @changeRequest.Priority
+                                        </span>
+                                    </dd>
+
+                                    <dt class="col-sm-4">Requested By</dt>
+                                    <dd class="col-sm-8">
+                                        @if (changeRequest.RequestedByUser != null)
+                                        {
+                                            <span>@changeRequest.RequestedByUser.FirstName @changeRequest.RequestedByUser.LastName</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="text-muted">Unknown</span>
+                                        }
+                                    </dd>
+                                </dl>
+                            </div>
+                            <div class="col-md-6">
+                                <h5>Timeline</h5>
+                                <dl class="row">
+                                    <dt class="col-sm-4">Request Date</dt>
+                                    <dd class="col-sm-8">@changeRequest.RequestDate.ToString("MMM dd, yyyy")</dd>
+
+                                    <dt class="col-sm-4">Approval Date</dt>
+                                    <dd class="col-sm-8">
+                                        @if (changeRequest.ApprovalDate.HasValue)
+                                        {
+                                            <span class="text-success">@changeRequest.ApprovalDate.Value.ToString("MMM dd, yyyy")</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="text-muted">Not approved</span>
+                                        }
+                                    </dd>
+
+                                    <dt class="col-sm-4">Days Since Request</dt>
+                                    <dd class="col-sm-8">@GetDaysSinceRequested()</dd>
+                                </dl>
+                            </div>
+                        </div>
+
+                        <div class="row mt-3">
+                            <div class="col-md-6">
+                                <h5>Change Request Management</h5>
+                                <dl class="row">
+                                    <dt class="col-sm-4">Action Required</dt>
+                                    <dd class="col-sm-8">
+                                        @if (changeRequest.ApprovalStatus == "Pending" && changeRequest.Priority == "Critical")
+                                        {
+                                            <span class="badge bg-danger">Immediate Review</span>
+                                        }
+                                        else if (changeRequest.ApprovalStatus == "Pending")
+                                        {
+                                            <span class="badge bg-warning">Review Required</span>
+                                        }
+                                        else if (changeRequest.ApprovalStatus == "Approved")
+                                        {
+                                            <span class="badge bg-success">Ready for Implementation</span>
+                                        }
+                                        else if (changeRequest.ApprovalStatus == "Implemented")
+                                        {
+                                            <span class="badge bg-primary">Completed</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge bg-secondary">No Action</span>
+                                        }
+                                    </dd>
+
+                                    <dt class="col-sm-4">Priority Level</dt>
+                                    <dd class="col-sm-8">
+                                        @if (changeRequest.Priority == "Critical" || changeRequest.Priority == "High")
+                                        {
+                                            <span class="badge bg-danger">High Priority</span>
+                                        }
+                                        else if (changeRequest.Priority == "Medium")
+                                        {
+                                            <span class="badge bg-warning">Medium Priority</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge bg-success">Low Priority</span>
+                                        }
+                                    </dd>
+                                </dl>
+                            </div>
+                        </div>
+
+                        @if (!string.IsNullOrEmpty(changeRequest.BusinessJustification))
+                        {
+                            <div class="row mt-3">
+                                <div class="col-12">
+                                    <h5>Business Justification</h5>
+                                    <p class="text-muted">@changeRequest.BusinessJustification</p>
+                                </div>
+                            </div>
+                        }
+
+                        @if (!string.IsNullOrEmpty(changeRequest.TechnicalImpact))
+                        {
+                            <div class="row mt-3">
+                                <div class="col-12">
+                                    <h5>Technical Impact</h5>
+                                    <p class="text-muted">@changeRequest.TechnicalImpact</p>
+                                </div>
+                            </div>
+                        }
+
+                        @if (!string.IsNullOrEmpty(changeRequest.ImplementationPlan))
+                        {
+                            <div class="row mt-3">
+                                <div class="col-12">
+                                    <h5>Implementation Plan</h5>
+                                    <p class="text-muted">@changeRequest.ImplementationPlan</p>
+                                </div>
+                            </div>
+                        }
+
+                        @if (!string.IsNullOrEmpty(changeRequest.RiskAssessment))
+                        {
+                            <div class="row mt-3">
+                                <div class="col-12">
+                                    <h5>Risk Assessment</h5>
+                                    <p class="text-muted">@changeRequest.RiskAssessment</p>
+                                </div>
+                            </div>
+                        }
+
+                        @if (!string.IsNullOrEmpty(changeRequest.Notes))
+                        {
+                            <div class="row mt-3">
+                                <div class="col-12">
+                                    <h5>Notes</h5>
+                                    <p class="text-muted">@changeRequest.Notes</p>
+                                </div>
+                            </div>
+                        }
+
+                        <div class="row mt-3">
+                            <div class="col-md-6">
+                                <h5>Account Information</h5>
+                                <dl class="row">
+                                    <dt class="col-sm-4">Created</dt>
+                                    <dd class="col-sm-8">@changeRequest.CreatedAt.ToString("MMM dd, yyyy 'at' HH:mm")</dd>
+
+                                    <dt class="col-sm-4">Last Updated</dt>
+                                    <dd class="col-sm-8">@changeRequest.UpdatedAt.ToString("MMM dd, yyyy 'at' HH:mm")</dd>
+                                </dl>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-4">
+                <div class="card">
+                    <div class="card-header">
+                        <h5>Change Request Summary</h5>
+                    </div>
+                    <div class="card-body text-center">
+                        <div class="mb-3">
+                            <i class="bi bi-arrow-repeat display-1 @GetChangeRequestIconClass()"></i>
+                        </div>
+                        <h5>@changeRequest.ChangeRequestTitle</h5>
+                        <p class="text-muted">@changeRequest.ChangeType</p>
+                        <div class="mb-3">
+                            <span class="badge @GetChangeRequestStatusBadgeClass(changeRequest.ApprovalStatus) fs-6">
+                                @changeRequest.ApprovalStatus
+                            </span>
+                        </div>
+                        <div class="mb-3">
+                            <span class="badge @GetPriorityBadgeClass(changeRequest.Priority) fs-6">
+                                @changeRequest.Priority Priority
+                            </span>
+                        </div>
+                        @if (changeRequest.Project != null)
+                        {
+                            <p class="text-muted small">@changeRequest.Project.ProjectName</p>
+                        }
+                    </div>
+                </div>
+
+                <div class="card mt-3">
+                    <div class="card-header">
+                        <h5>Quick Actions</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="d-grid gap-2">
+                            <a href="/change-requests/@changeRequest.ChangeRequestId/edit" class="btn btn-primary">
+                                <i class="bi bi-pencil"></i> Edit Change Request
+                            </a>
+                            <a href="/change-requests" class="btn btn-outline-secondary">
+                                <i class="bi bi-arrow-left"></i> Back to Change Requests
+                            </a>
+                            <button type="button" class="btn btn-outline-danger" @onclick="DeleteChangeRequest">
+                                <i class="bi bi-trash"></i> Delete Change Request
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card mt-3">
+                    <div class="card-header">
+                        <h5>Change Request Statistics</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row text-center">
+                            <div class="col-6">
+                                <div class="border-end">
+                                    <h4 class="text-primary">@GetDaysSinceRequested()</h4>
+                                    <small class="text-muted">Days Since Request</small>
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <h4 class="@GetStatusColor()">@changeRequest.ApprovalStatus</h4>
+                                <small class="text-muted">Current Status</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter]
+    public Guid Id { get; set; }
+
+    private ChangeRequestDto? changeRequest;
+    private bool isLoading = true;
+    private string? errorMessage;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadChangeRequest();
+    }
+
+    private async Task LoadChangeRequest()
+    {
+        try
+        {
+            isLoading = true;
+            errorMessage = null;
+            changeRequest = await ChangeRequestService.GetChangeRequestAsync(Id);
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Error loading change request: {ex.Message}";
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private async Task DeleteChangeRequest()
+    {
+        if (changeRequest != null && await ChangeRequestService.DeleteChangeRequestAsync(changeRequest.ChangeRequestId))
+        {
+            Navigation.NavigateTo("/change-requests");
+        }
+        else
+        {
+            errorMessage = "Failed to delete change request";
+        }
+    }
+
+    private string GetChangeRequestStatusBadgeClass(string status)
+    {
+        return status.ToLower() switch
+        {
+            "pending" => "bg-warning",
+            "under review" => "bg-info",
+            "approved" => "bg-success",
+            "rejected" => "bg-danger",
+            "implemented" => "bg-primary",
+            "cancelled" => "bg-secondary",
+            _ => "bg-secondary"
+        };
+    }
+
+    private string GetPriorityBadgeClass(string priority)
+    {
+        return priority.ToLower() switch
+        {
+            "low" => "bg-success",
+            "medium" => "bg-warning",
+            "high" => "bg-danger",
+            "critical" => "bg-dark",
+            _ => "bg-secondary"
+        };
+    }
+
+    private string GetChangeRequestIconClass()
+    {
+        return changeRequest.ApprovalStatus.ToLower() switch
+        {
+            "approved" => "text-success",
+            "implemented" => "text-primary",
+            "rejected" => "text-danger",
+            "cancelled" => "text-muted",
+            "under review" => "text-warning",
+            _ => "text-info"
+        };
+    }
+
+    private int GetDaysSinceRequested()
+    {
+        return (DateOnly.FromDateTime(DateTime.Today).DayNumber - changeRequest.RequestDate.DayNumber);
+    }
+
+    private string GetStatusColor()
+    {
+        return changeRequest.ApprovalStatus.ToLower() switch
+        {
+            "approved" => "text-success",
+            "implemented" => "text-primary",
+            "rejected" => "text-danger",
+            "cancelled" => "text-secondary",
+            "under review" => "text-warning",
+            _ => "text-muted"
+        };
+    }
+} 

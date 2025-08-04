@@ -1,0 +1,270 @@
+@page "/projects/create"
+@using MyProject.UI.ProjectManagementConsole.Models
+@using MyProject.UI.ProjectManagementConsole.Services
+@inject IProjectService ProjectService
+@inject NavigationManager Navigation
+
+<PageTitle>Create Project</PageTitle>
+
+<div class="container-fluid">
+    <div class="row mb-3">
+        <div class="col">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="/projects">Projects</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">Create Project</li>
+                </ol>
+            </nav>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-header">
+                    <h2>Create New Project</h2>
+                </div>
+                <div class="card-body">
+                    <EditForm Model="project" OnValidSubmit="HandleValidSubmit">
+                        <DataAnnotationsValidator />
+
+                        @if (errorMessage != null)
+                        {
+                            <div class="alert alert-danger" role="alert">
+                                @errorMessage
+                            </div>
+                        }
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="projectName" class="form-label">Project Name *</label>
+                                    <InputText id="projectName" class="form-control" @bind-Value="project.ProjectName" />
+                                    <ValidationMessage For="@(() => project.ProjectName)" />
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="projectType" class="form-label">Project Type *</label>
+                                    <InputSelect id="projectType" class="form-select" @bind-Value="project.ProjectType">
+                                        <option value="">Select Project Type</option>
+                                        <option value="Development">Development</option>
+                                        <option value="Consulting">Consulting</option>
+                                        <option value="Research">Research</option>
+                                        <option value="Maintenance">Maintenance</option>
+                                        <option value="Migration">Migration</option>
+                                        <option value="Implementation">Implementation</option>
+                                        <option value="Training">Training</option>
+                                    </InputSelect>
+                                    <ValidationMessage For="@(() => project.ProjectType)" />
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="industryDomain" class="form-label">Industry Domain *</label>
+                                    <InputSelect id="industryDomain" class="form-select" @bind-Value="project.IndustryDomain">
+                                        <option value="">Select Industry</option>
+                                        <option value="Technology">Technology</option>
+                                        <option value="Healthcare">Healthcare</option>
+                                        <option value="Finance">Finance</option>
+                                        <option value="Education">Education</option>
+                                        <option value="Manufacturing">Manufacturing</option>
+                                        <option value="Retail">Retail</option>
+                                        <option value="Government">Government</option>
+                                        <option value="Non-Profit">Non-Profit</option>
+                                        <option value="Other">Other</option>
+                                    </InputSelect>
+                                    <ValidationMessage For="@(() => project.IndustryDomain)" />
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="projectStatus" class="form-label">Project Status</label>
+                                    <InputSelect id="projectStatus" class="form-select" @bind-Value="project.ProjectStatus">
+                                        <option value="Planning">Planning</option>
+                                        <option value="Active">Active</option>
+                                        <option value="On Hold">On Hold</option>
+                                        <option value="Completed">Completed</option>
+                                        <option value="Cancelled">Cancelled</option>
+                                        <option value="Suspended">Suspended</option>
+                                    </InputSelect>
+                                    <ValidationMessage For="@(() => project.ProjectStatus)" />
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="plannedStartDate" class="form-label">Planned Start Date</label>
+                                    <InputDate id="plannedStartDate" class="form-control" @bind-Value="project.PlannedStartDate" />
+                                    <ValidationMessage For="@(() => project.PlannedStartDate)" />
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="plannedEndDate" class="form-label">Planned End Date</label>
+                                    <InputDate id="plannedEndDate" class="form-control" @bind-Value="project.PlannedEndDate" />
+                                    <ValidationMessage For="@(() => project.PlannedEndDate)" />
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="plannedBudget" class="form-label">Planned Budget</label>
+                                    <InputNumber id="plannedBudget" class="form-control" @bind-Value="project.PlannedBudget" />
+                                    <ValidationMessage For="@(() => project.PlannedBudget)" />
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="teamSize" class="form-label">Team Size</label>
+                                    <InputNumber id="teamSize" class="form-control" @bind-Value="project.TeamSize" />
+                                    <ValidationMessage For="@(() => project.TeamSize)" />
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="contractType" class="form-label">Contract Type</label>
+                                    <InputSelect id="contractType" class="form-select" @bind-Value="project.ContractType">
+                                        <option value="Fixed Price">Fixed Price</option>
+                                        <option value="Time and Materials">Time and Materials</option>
+                                        <option value="Cost Plus">Cost Plus</option>
+                                        <option value="Retainer">Retainer</option>
+                                        <option value="Milestone Based">Milestone Based</option>
+                                    </InputSelect>
+                                    <ValidationMessage For="@(() => project.ContractType)" />
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="projectComplexity" class="form-label">Project Complexity</label>
+                                    <InputSelect id="projectComplexity" class="form-select" @bind-Value="project.ProjectComplexity">
+                                        <option value="Low">Low</option>
+                                        <option value="Medium">Medium</option>
+                                        <option value="High">High</option>
+                                        <option value="Very High">Very High</option>
+                                    </InputSelect>
+                                    <ValidationMessage For="@(() => project.ProjectComplexity)" />
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="currentPhase" class="form-label">Current Phase</label>
+                            <InputText id="currentPhase" class="form-control" @bind-Value="project.CurrentPhase" />
+                            <ValidationMessage For="@(() => project.CurrentPhase)" />
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="description" class="form-label">Description</label>
+                            <InputTextArea id="description" class="form-control" rows="3" @bind-Value="project.Description" />
+                            <ValidationMessage For="@(() => project.Description)" />
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="notes" class="form-label">Notes</label>
+                            <InputTextArea id="notes" class="form-control" rows="3" @bind-Value="project.Notes" />
+                            <ValidationMessage For="@(() => project.Notes)" />
+                        </div>
+
+                        <div class="d-flex gap-2">
+                            <button type="submit" class="btn btn-primary" disabled="@isSubmitting">
+                                @if (isSubmitting)
+                                {
+                                    <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                                    <span class="ms-1">Creating...</span>
+                                }
+                                else
+                                {
+                                    <i class="bi bi-check-circle"></i>
+                                    <span class="ms-1">Create Project</span>
+                                }
+                            </button>
+                            <a href="/projects" class="btn btn-secondary">
+                                <i class="bi bi-x-circle"></i>
+                                <span class="ms-1">Cancel</span>
+                            </a>
+                        </div>
+                    </EditForm>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5>Project Information</h5>
+                </div>
+                <div class="card-body">
+                    <p class="text-muted">
+                        Projects are the core entities in your project management system. 
+                        Each project can contain multiple tasks, milestones, and resources.
+                    </p>
+                    
+                    <h6>Required Fields:</h6>
+                    <ul class="small text-muted">
+                        <li><strong>Project Name:</strong> The display name for your project</li>
+                        <li><strong>Project Type:</strong> The category of project work</li>
+                        <li><strong>Industry Domain:</strong> The industry this project serves</li>
+                    </ul>
+
+                    <h6>Project Types:</h6>
+                    <ul class="small text-muted">
+                        <li><strong>Development:</strong> Software or product development</li>
+                        <li><strong>Consulting:</strong> Advisory and consulting services</li>
+                        <li><strong>Research:</strong> Research and analysis projects</li>
+                        <li><strong>Maintenance:</strong> Ongoing maintenance and support</li>
+                        <li><strong>Migration:</strong> System migration and upgrades</li>
+                        <li><strong>Implementation:</strong> System implementation projects</li>
+                        <li><strong>Training:</strong> Training and education projects</li>
+                    </ul>
+
+                    <h6>Project Status:</h6>
+                    <ul class="small text-muted">
+                        <li><span class="badge bg-info">Planning</span> - Project is in planning phase</li>
+                        <li><span class="badge bg-success">Active</span> - Project is currently active</li>
+                        <li><span class="badge bg-warning">On Hold</span> - Project is temporarily paused</li>
+                        <li><span class="badge bg-secondary">Completed</span> - Project has been completed</li>
+                        <li><span class="badge bg-danger">Cancelled</span> - Project has been cancelled</li>
+                        <li><span class="badge bg-warning">Suspended</span> - Project is suspended</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    private CreateProjectDto project = new();
+    private bool isSubmitting = false;
+    private string? errorMessage;
+
+    private async Task HandleValidSubmit()
+    {
+        try
+        {
+            isSubmitting = true;
+            errorMessage = null;
+
+            var createdProject = await ProjectService.CreateProjectAsync(project);
+            Navigation.NavigateTo($"/projects/{createdProject.ProjectId}");
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Error creating project: {ex.Message}";
+        }
+        finally
+        {
+            isSubmitting = false;
+        }
+    }
+} 

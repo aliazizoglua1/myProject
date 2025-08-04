@@ -16,6 +16,10 @@ namespace MyProject.Persistence.Repositories
         {
             return await _context.ChangeRequests
                 .Include(cr => cr.Project)
+                .Include(cr => cr.RequestedByUser)
+                .Include(cr => cr.ApprovedByUser)
+                .Include(cr => cr.Tenant)
+                .Include(cr => cr.Milestone)
                 .ToListAsync();
         }
 
@@ -23,6 +27,10 @@ namespace MyProject.Persistence.Repositories
         {
             return await _context.ChangeRequests
                 .Include(cr => cr.Project)
+                .Include(cr => cr.RequestedByUser)
+                .Include(cr => cr.ApprovedByUser)
+                .Include(cr => cr.Tenant)
+                .Include(cr => cr.Milestone)
                 .FirstOrDefaultAsync(cr => cr.ChangeRequestId == id);
         }
 
@@ -30,6 +38,10 @@ namespace MyProject.Persistence.Repositories
         {
             return await _context.ChangeRequests
                 .Include(cr => cr.Project)
+                .Include(cr => cr.RequestedByUser)
+                .Include(cr => cr.ApprovedByUser)
+                .Include(cr => cr.Tenant)
+                .Include(cr => cr.Milestone)
                 .Where(cr => cr.ProjectId == projectId)
                 .ToListAsync();
         }
@@ -38,6 +50,10 @@ namespace MyProject.Persistence.Repositories
         {
             return await _context.ChangeRequests
                 .Include(cr => cr.Project)
+                .Include(cr => cr.RequestedByUser)
+                .Include(cr => cr.ApprovedByUser)
+                .Include(cr => cr.Tenant)
+                .Include(cr => cr.Milestone)
                 .Where(cr => cr.ApprovalStatus == status)
                 .ToListAsync();
         }
@@ -46,6 +62,10 @@ namespace MyProject.Persistence.Repositories
         {
             return await _context.ChangeRequests
                 .Include(cr => cr.Project)
+                .Include(cr => cr.RequestedByUser)
+                .Include(cr => cr.ApprovedByUser)
+                .Include(cr => cr.Tenant)
+                .Include(cr => cr.Milestone)
                 .Where(cr => cr.RequestedByUserId == userId)
                 .ToListAsync();
         }
@@ -54,6 +74,10 @@ namespace MyProject.Persistence.Repositories
         {
             return await _context.ChangeRequests
                 .Include(cr => cr.Project)
+                .Include(cr => cr.RequestedByUser)
+                .Include(cr => cr.ApprovedByUser)
+                .Include(cr => cr.Tenant)
+                .Include(cr => cr.Milestone)
                 .Where(cr => cr.ApprovedByUserId == userId)
                 .ToListAsync();
         }
@@ -62,6 +86,10 @@ namespace MyProject.Persistence.Repositories
         {
             return await _context.ChangeRequests
                 .Include(cr => cr.Project)
+                .Include(cr => cr.RequestedByUser)
+                .Include(cr => cr.ApprovedByUser)
+                .Include(cr => cr.Tenant)
+                .Include(cr => cr.Milestone)
                 .Where(cr => cr.ApprovalStatus == "Pending")
                 .ToListAsync();
         }
@@ -70,6 +98,10 @@ namespace MyProject.Persistence.Repositories
         {
             return await _context.ChangeRequests
                 .Include(cr => cr.Project)
+                .Include(cr => cr.RequestedByUser)
+                .Include(cr => cr.ApprovedByUser)
+                .Include(cr => cr.Tenant)
+                .Include(cr => cr.Milestone)
                 .Where(cr => cr.ApprovalStatus == "Approved")
                 .ToListAsync();
         }
@@ -78,6 +110,10 @@ namespace MyProject.Persistence.Repositories
         {
             return await _context.ChangeRequests
                 .Include(cr => cr.Project)
+                .Include(cr => cr.RequestedByUser)
+                .Include(cr => cr.ApprovedByUser)
+                .Include(cr => cr.Tenant)
+                .Include(cr => cr.Milestone)
                 .Where(cr => cr.ApprovalStatus == "Rejected")
                 .ToListAsync();
         }
@@ -86,6 +122,10 @@ namespace MyProject.Persistence.Repositories
         {
             return await _context.ChangeRequests
                 .Include(cr => cr.Project)
+                .Include(cr => cr.RequestedByUser)
+                .Include(cr => cr.ApprovedByUser)
+                .Include(cr => cr.Tenant)
+                .Include(cr => cr.Milestone)
                 .Where(cr => cr.RequestDate >= startDate && cr.RequestDate <= endDate)
                 .ToListAsync();
         }
@@ -94,7 +134,59 @@ namespace MyProject.Persistence.Repositories
         {
             return await _context.ChangeRequests
                 .Include(cr => cr.Project)
+                .Include(cr => cr.RequestedByUser)
+                .Include(cr => cr.ApprovedByUser)
+                .Include(cr => cr.Tenant)
+                .Include(cr => cr.Milestone)
                 .Where(cr => cr.VersionAffected == version)
+                .ToListAsync();
+        }
+
+        public async Task<IEnumerable<ChangeRequest>> GetByTenantIdAsync(Guid tenantId)
+        {
+            return await _context.ChangeRequests
+                .Include(cr => cr.Project)
+                .Include(cr => cr.RequestedByUser)
+                .Include(cr => cr.ApprovedByUser)
+                .Include(cr => cr.Tenant)
+                .Include(cr => cr.Milestone)
+                .Where(cr => cr.TenantId == tenantId)
+                .ToListAsync();
+        }
+
+        public async Task<IEnumerable<ChangeRequest>> GetByMilestoneIdAsync(Guid milestoneId)
+        {
+            return await _context.ChangeRequests
+                .Include(cr => cr.Project)
+                .Include(cr => cr.RequestedByUser)
+                .Include(cr => cr.ApprovedByUser)
+                .Include(cr => cr.Tenant)
+                .Include(cr => cr.Milestone)
+                .Where(cr => cr.MilestoneId == milestoneId)
+                .ToListAsync();
+        }
+
+        public async Task<IEnumerable<ChangeRequest>> GetByTenantAndStatusAsync(Guid tenantId, string status)
+        {
+            return await _context.ChangeRequests
+                .Include(cr => cr.Project)
+                .Include(cr => cr.RequestedByUser)
+                .Include(cr => cr.ApprovedByUser)
+                .Include(cr => cr.Tenant)
+                .Include(cr => cr.Milestone)
+                .Where(cr => cr.TenantId == tenantId && cr.ApprovalStatus == status)
+                .ToListAsync();
+        }
+
+        public async Task<IEnumerable<ChangeRequest>> GetByProjectAndStatusAsync(Guid projectId, string status)
+        {
+            return await _context.ChangeRequests
+                .Include(cr => cr.Project)
+                .Include(cr => cr.RequestedByUser)
+                .Include(cr => cr.ApprovedByUser)
+                .Include(cr => cr.Tenant)
+                .Include(cr => cr.Milestone)
+                .Where(cr => cr.ProjectId == projectId && cr.ApprovalStatus == status)
                 .ToListAsync();
         }
 
@@ -129,10 +221,28 @@ namespace MyProject.Persistence.Repositories
             return await _context.ChangeRequests.AnyAsync(cr => cr.ChangeRequestId == id);
         }
 
+        public async Task<bool> ExistsByProjectAndTitleAsync(Guid projectId, string title, Guid? excludeChangeRequestId = null)
+        {
+            if (excludeChangeRequestId.HasValue)
+            {
+                return await _context.ChangeRequests.AnyAsync(cr => 
+                    cr.ProjectId == projectId && 
+                    cr.RequestTitle == title && 
+                    cr.ChangeRequestId != excludeChangeRequestId.Value);
+            }
+            return await _context.ChangeRequests.AnyAsync(cr => 
+                cr.ProjectId == projectId && 
+                cr.RequestTitle == title);
+        }
+
         public async Task<IEnumerable<ChangeRequest>> SearchByTitleAsync(string searchTerm)
         {
             return await _context.ChangeRequests
                 .Include(cr => cr.Project)
+                .Include(cr => cr.RequestedByUser)
+                .Include(cr => cr.ApprovedByUser)
+                .Include(cr => cr.Tenant)
+                .Include(cr => cr.Milestone)
                 .Where(cr => cr.RequestTitle.Contains(searchTerm) || 
                            cr.RequestDescription.Contains(searchTerm) ||
                            cr.ReasonForChange.Contains(searchTerm))

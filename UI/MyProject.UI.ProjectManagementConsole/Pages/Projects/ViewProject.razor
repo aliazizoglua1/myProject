@@ -1,0 +1,302 @@
+@page "/projects/{Id:guid}"
+@using MyProject.UI.ProjectManagementConsole.Models
+@using MyProject.UI.ProjectManagementConsole.Services
+@inject IProjectService ProjectService
+@inject NavigationManager Navigation
+
+<PageTitle>Project Details</PageTitle>
+
+<div class="container-fluid">
+    <div class="row mb-3">
+        <div class="col">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="/projects">Projects</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">Project Details</li>
+                </ol>
+            </nav>
+        </div>
+    </div>
+
+    @if (isLoading)
+    {
+        <div class="text-center">
+            <div class="spinner-border" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+        </div>
+    }
+    else if (errorMessage != null)
+    {
+        <div class="alert alert-danger" role="alert">
+            @errorMessage
+        </div>
+    }
+    else if (project == null)
+    {
+        <div class="alert alert-warning" role="alert">
+            Project not found.
+        </div>
+    }
+    else
+    {
+        <div class="row">
+            <div class="col-lg-8">
+                <div class="card">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h2>@project.ProjectName</h2>
+                        <div class="btn-group">
+                            <a href="/projects/@project.ProjectId/edit" class="btn btn-primary">
+                                <i class="bi bi-pencil"></i> Edit
+                            </a>
+                            <button type="button" class="btn btn-danger" @onclick="DeleteProject">
+                                <i class="bi bi-trash"></i> Delete
+                            </button>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <h5>Basic Information</h5>
+                                <dl class="row">
+                                    <dt class="col-sm-4">Project ID</dt>
+                                    <dd class="col-sm-8">
+                                        <code>@project.ProjectId</code>
+                                    </dd>
+
+                                    <dt class="col-sm-4">Name</dt>
+                                    <dd class="col-sm-8">@project.ProjectName</dd>
+
+                                    <dt class="col-sm-4">Type</dt>
+                                    <dd class="col-sm-8">
+                                        <span class="badge bg-info">@project.ProjectType</span>
+                                    </dd>
+
+                                    <dt class="col-sm-4">Industry</dt>
+                                    <dd class="col-sm-8">@project.IndustryDomain</dd>
+
+                                    <dt class="col-sm-4">Status</dt>
+                                    <dd class="col-sm-8">
+                                        <span class="badge @GetStatusBadgeClass(project.ProjectStatus)">
+                                            @project.ProjectStatus
+                                        </span>
+                                    </dd>
+
+                                    <dt class="col-sm-4">Complexity</dt>
+                                    <dd class="col-sm-8">
+                                        <span class="badge @GetComplexityBadgeClass(project.ProjectComplexity)">
+                                            @project.ProjectComplexity
+                                        </span>
+                                    </dd>
+
+                                    <dt class="col-sm-4">Contract Type</dt>
+                                    <dd class="col-sm-8">@project.ContractType</dd>
+
+                                    <dt class="col-sm-4">Team Size</dt>
+                                    <dd class="col-sm-8">@(project.TeamSize?.ToString() ?? "Not set")</dd>
+
+                                    <dt class="col-sm-4">Current Phase</dt>
+                                    <dd class="col-sm-8">@(project.CurrentPhase ?? "Not set")</dd>
+                                </dl>
+                            </div>
+                            <div class="col-md-6">
+                                <h5>Timeline & Budget</h5>
+                                <dl class="row">
+                                    <dt class="col-sm-4">Planned Start</dt>
+                                    <dd class="col-sm-8">@(project.PlannedStartDate?.ToString("MMM dd, yyyy") ?? "Not set")</dd>
+
+                                    <dt class="col-sm-4">Planned End</dt>
+                                    <dd class="col-sm-8">@(project.PlannedEndDate?.ToString("MMM dd, yyyy") ?? "Not set")</dd>
+
+                                    <dt class="col-sm-4">Actual Start</dt>
+                                    <dd class="col-sm-8">@(project.ActualStartDate?.ToString("MMM dd, yyyy") ?? "Not set")</dd>
+
+                                    <dt class="col-sm-4">Actual End</dt>
+                                    <dd class="col-sm-8">@(project.ActualEndDate?.ToString("MMM dd, yyyy") ?? "Not set")</dd>
+
+                                    <dt class="col-sm-4">Planned Budget</dt>
+                                    <dd class="col-sm-8">@(project.PlannedBudget?.ToString("C") ?? "Not set")</dd>
+
+                                    <dt class="col-sm-4">Actual Budget</dt>
+                                    <dd class="col-sm-8">@(project.ActualBudget?.ToString("C") ?? "Not set")</dd>
+
+                                    <dt class="col-sm-4">Created</dt>
+                                    <dd class="col-sm-8">@project.CreatedAt.ToString("MMM dd, yyyy 'at' HH:mm")</dd>
+
+                                    <dt class="col-sm-4">Last Updated</dt>
+                                    <dd class="col-sm-8">@project.UpdatedAt.ToString("MMM dd, yyyy 'at' HH:mm")</dd>
+                                </dl>
+                            </div>
+                        </div>
+
+                        @if (!string.IsNullOrEmpty(project.Description))
+                        {
+                            <div class="row mt-3">
+                                <div class="col-12">
+                                    <h5>Description</h5>
+                                    <p>@project.Description</p>
+                                </div>
+                            </div>
+                        }
+
+                        @if (!string.IsNullOrEmpty(project.Notes))
+                        {
+                            <div class="row mt-3">
+                                <div class="col-12">
+                                    <h5>Notes</h5>
+                                    <p>@project.Notes</p>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-4">
+                <div class="card">
+                    <div class="card-header">
+                        <h5>Project Team</h5>
+                    </div>
+                    <div class="card-body">
+                        @if (project.ProjectManager != null)
+                        {
+                            <div class="d-flex align-items-center mb-3">
+                                <div class="flex-shrink-0">
+                                    <i class="bi bi-person-circle fs-1 text-primary"></i>
+                                </div>
+                                <div class="flex-grow-1 ms-3">
+                                    <h6 class="mb-0">Project Manager</h6>
+                                    <p class="mb-0">@project.ProjectManager.FirstName @project.ProjectManager.LastName</p>
+                                    <small class="text-muted">@project.ProjectManager.Email</small>
+                                </div>
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="text-center text-muted">
+                                <i class="bi bi-person-x display-4"></i>
+                                <p class="mt-2">No Project Manager Assigned</p>
+                            </div>
+                        }
+                    </div>
+                </div>
+
+                <div class="card mt-3">
+                    <div class="card-header">
+                        <h5>Organization</h5>
+                    </div>
+                    <div class="card-body">
+                        @if (project.Organization != null)
+                        {
+                            <div class="d-flex align-items-center">
+                                <div class="flex-shrink-0">
+                                    <i class="bi bi-building fs-1 text-success"></i>
+                                </div>
+                                <div class="flex-grow-1 ms-3">
+                                    <h6 class="mb-0">@project.Organization.OrganizationName</h6>
+                                    <small class="text-muted">@project.Organization.ContactEmail</small>
+                                </div>
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="text-center text-muted">
+                                <i class="bi bi-building-x display-4"></i>
+                                <p class="mt-2">No Organization Assigned</p>
+                            </div>
+                        }
+                    </div>
+                </div>
+
+                <div class="card mt-3">
+                    <div class="card-header">
+                        <h5>Quick Actions</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="d-grid gap-2">
+                            <a href="/projects/@project.ProjectId/edit" class="btn btn-primary">
+                                <i class="bi bi-pencil"></i> Edit Project
+                            </a>
+                            <a href="/projects" class="btn btn-outline-secondary">
+                                <i class="bi bi-arrow-left"></i> Back to Projects
+                            </a>
+                            <button type="button" class="btn btn-outline-danger" @onclick="DeleteProject">
+                                <i class="bi bi-trash"></i> Delete Project
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter]
+    public Guid Id { get; set; }
+
+    private ProjectDto? project;
+    private bool isLoading = true;
+    private string? errorMessage;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadProject();
+    }
+
+    private async Task LoadProject()
+    {
+        try
+        {
+            isLoading = true;
+            errorMessage = null;
+            project = await ProjectService.GetProjectAsync(Id);
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Error loading project: {ex.Message}";
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private async Task DeleteProject()
+    {
+        if (project != null && await ProjectService.DeleteProjectAsync(project.ProjectId))
+        {
+            Navigation.NavigateTo("/projects");
+        }
+        else
+        {
+            errorMessage = "Failed to delete project";
+        }
+    }
+
+    private string GetStatusBadgeClass(string status)
+    {
+        return status.ToLower() switch
+        {
+            "planning" => "bg-info",
+            "active" => "bg-success",
+            "on hold" => "bg-warning",
+            "completed" => "bg-secondary",
+            "cancelled" => "bg-danger",
+            "suspended" => "bg-warning",
+            _ => "bg-secondary"
+        };
+    }
+
+    private string GetComplexityBadgeClass(string complexity)
+    {
+        return complexity.ToLower() switch
+        {
+            "low" => "bg-success",
+            "medium" => "bg-warning",
+            "high" => "bg-danger",
+            "very high" => "bg-danger",
+            _ => "bg-secondary"
+        };
+    }
+} 

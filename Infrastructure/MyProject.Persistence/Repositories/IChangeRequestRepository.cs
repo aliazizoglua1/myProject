@@ -15,10 +15,15 @@ namespace MyProject.Persistence.Repositories
         Task<IEnumerable<ChangeRequest>> GetRejectedRequestsAsync();
         Task<IEnumerable<ChangeRequest>> GetByRequestDateRangeAsync(DateOnly startDate, DateOnly endDate);
         Task<IEnumerable<ChangeRequest>> GetByVersionAffectedAsync(string version);
+        Task<IEnumerable<ChangeRequest>> GetByTenantIdAsync(Guid tenantId);
+        Task<IEnumerable<ChangeRequest>> GetByMilestoneIdAsync(Guid milestoneId);
+        Task<IEnumerable<ChangeRequest>> GetByTenantAndStatusAsync(Guid tenantId, string status);
+        Task<IEnumerable<ChangeRequest>> GetByProjectAndStatusAsync(Guid projectId, string status);
         Task<ChangeRequest> AddAsync(ChangeRequest changeRequest);
         Task<ChangeRequest> UpdateAsync(ChangeRequest changeRequest);
         Task<bool> DeleteAsync(Guid id);
         Task<bool> ExistsAsync(Guid id);
+        Task<bool> ExistsByProjectAndTitleAsync(Guid projectId, string title, Guid? excludeChangeRequestId = null);
         Task<IEnumerable<ChangeRequest>> SearchByTitleAsync(string searchTerm);
     }
 } 

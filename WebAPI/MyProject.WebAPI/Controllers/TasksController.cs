@@ -99,6 +99,70 @@ namespace MyProject.WebAPI.Controllers
             return Ok(taskDtos);
         }
 
+        [HttpGet("tenant/{tenantId}")]
+        public async Task<ActionResult<IEnumerable<TaskDto>>> GetTasksByTenant(Guid tenantId)
+        {
+            var tasks = await _taskRepository.GetByTenantIdAsync(tenantId);
+            var taskDtos = tasks.Select(MapToDto);
+            return Ok(taskDtos);
+        }
+
+        [HttpGet("tenant/{tenantId}/status/{status}")]
+        public async Task<ActionResult<IEnumerable<TaskDto>>> GetTasksByTenantAndStatus(Guid tenantId, string status)
+        {
+            var tasks = await _taskRepository.GetByTenantAndStatusAsync(tenantId, status);
+            var taskDtos = tasks.Select(MapToDto);
+            return Ok(taskDtos);
+        }
+
+        [HttpGet("tenant/{tenantId}/priority/{priority}")]
+        public async Task<ActionResult<IEnumerable<TaskDto>>> GetTasksByTenantAndPriority(Guid tenantId, string priority)
+        {
+            var tasks = await _taskRepository.GetByTenantAndPriorityAsync(tenantId, priority);
+            var taskDtos = tasks.Select(MapToDto);
+            return Ok(taskDtos);
+        }
+
+        [HttpGet("project/{projectId}/status/{status}")]
+        public async Task<ActionResult<IEnumerable<TaskDto>>> GetTasksByProjectAndStatus(Guid projectId, string status)
+        {
+            var tasks = await _taskRepository.GetByProjectAndStatusAsync(projectId, status);
+            var taskDtos = tasks.Select(MapToDto);
+            return Ok(taskDtos);
+        }
+
+        [HttpGet("milestone/{milestoneId}")]
+        public async Task<ActionResult<IEnumerable<TaskDto>>> GetTasksByMilestone(Guid milestoneId)
+        {
+            var tasks = await _taskRepository.GetByMilestoneIdAsync(milestoneId);
+            var taskDtos = tasks.Select(MapToDto);
+            return Ok(taskDtos);
+        }
+
+        [HttpGet("tenant/{tenantId}/user/{userId}")]
+        public async Task<ActionResult<IEnumerable<TaskDto>>> GetTasksByTenantAndUser(Guid tenantId, Guid userId)
+        {
+            var tasks = await _taskRepository.GetByTenantAndUserAsync(tenantId, userId);
+            var taskDtos = tasks.Select(MapToDto);
+            return Ok(taskDtos);
+        }
+
+        [HttpGet("tenant/{tenantId}/overdue")]
+        public async Task<ActionResult<IEnumerable<TaskDto>>> GetOverdueTasksByTenant(Guid tenantId)
+        {
+            var tasks = await _taskRepository.GetOverdueTasksByTenantAsync(tenantId);
+            var taskDtos = tasks.Select(MapToDto);
+            return Ok(taskDtos);
+        }
+
+        [HttpGet("tenant/{tenantId}/milestones")]
+        public async Task<ActionResult<IEnumerable<TaskDto>>> GetMilestonesByTenant(Guid tenantId)
+        {
+            var tasks = await _taskRepository.GetMilestonesByTenantAsync(tenantId);
+            var taskDtos = tasks.Select(MapToDto);
+            return Ok(taskDtos);
+        }
+
         [HttpPost]
         public async Task<ActionResult<TaskDto>> CreateTask(CreateTaskDto createDto)
         {
@@ -166,9 +230,14 @@ namespace MyProject.WebAPI.Controllers
                 Comments = task.Comments,
                 CreatedAt = task.CreatedAt,
                 UpdatedAt = task.UpdatedAt,
+                TenantId = task.TenantId,
+                MilestoneId = task.MilestoneId,
                 Project = task.Project != null ? MapProjectToDto(task.Project) : null,
                 ParentTask = task.ParentTask != null ? MapToDto(task.ParentTask) : null,
-                Subtasks = task.Subtasks?.Select(MapToDto).ToList()
+                Subtasks = task.Subtasks?.Select(MapToDto).ToList(),
+                AssignedToUser = task.AssignedToUser != null ? MapUserToDto(task.AssignedToUser) : null,
+                Tenant = task.Tenant != null ? MapOrganizationToDto(task.Tenant) : null,
+                Milestone = task.Milestone != null ? MapMilestoneToDto(task.Milestone) : null
             };
         }
 
@@ -200,6 +269,49 @@ namespace MyProject.WebAPI.Controllers
             };
         }
 
+        private static UserDto MapUserToDto(User user)
+        {
+            return new UserDto
+            {
+                UserId = user.UserId,
+                Email = user.Email,
+                FirstName = user.FirstName,
+                LastName = user.LastName,
+                IsActive = user.IsActive,
+                CreatedAt = user.CreatedAt,
+                UpdatedAt = user.UpdatedAt
+            };
+        }
+
+        private static OrganizationDto MapOrganizationToDto(Organization organization)
+        {
+            return new OrganizationDto
+            {
+                OrganizationId = organization.OrganizationId,
+                OrganizationName = organization.OrganizationName,
+                Status = organization.Status,
+                BillingPlan = organization.BillingPlan,
+                ContactEmail = organization.ContactEmail,
+                CreatedAt = organization.CreatedAt,
+                UpdatedAt = organization.UpdatedAt
+            };
+        }
+
+        private static MilestoneDto MapMilestoneToDto(Milestone milestone)
+        {
+            return new MilestoneDto
+            {
+                MilestoneId = milestone.MilestoneId,
+                ProjectId = milestone.ProjectId,
+                MilestoneName = milestone.MilestoneName,
+                Description = milestone.Description, 
+                IsAchieved = milestone.IsAchieved,
+                CreatedAt = milestone.CreatedAt,
+                UpdatedAt = milestone.UpdatedAt,
+                TenantId = milestone.TenantId
+            };
+        }
+
         private static Task MapToEntity(CreateTaskDto dto)
         {
             return new Task
@@ -219,7 +331,9 @@ namespace MyProject.WebAPI.Controllers
                 Priority = dto.Priority,
                 IsMilestone = dto.IsMilestone,
                 Description = dto.Description,
-                Comments = dto.Comments
+                Comments = dto.Comments,
+                TenantId = dto.TenantId,
+                MilestoneId = dto.MilestoneId
             };
         }
 
@@ -238,7 +352,7 @@ namespace MyProject.WebAPI.Controllers
             if (dto.ActualEffortHours.HasValue)
                 task.ActualEffortHours = dto.ActualEffortHours;
             if (dto.PlannedStartDate.HasValue)
-                task.PlannedStartDate = dto.PlannedStartDate.Value;
+                task.PlannedStartDate = dto.PlannedStartDate;
             if (dto.PlannedEndDate.HasValue)
                 task.PlannedEndDate = dto.PlannedEndDate;
             if (dto.ActualStartDate.HasValue)

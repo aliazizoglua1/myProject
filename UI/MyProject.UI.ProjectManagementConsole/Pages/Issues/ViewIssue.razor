@@ -1,0 +1,397 @@
+@page "/issues/{IssueId:guid}"
+@using MyProject.UI.ProjectManagementConsole.Models
+@using MyProject.UI.ProjectManagementConsole.Services
+@inject IIssueService IssueService
+@inject NavigationManager Navigation
+
+<PageTitle>View Issue</PageTitle>
+
+<div class="container-fluid">
+    @if (isLoading)
+    {
+        <div class="text-center">
+            <div class="spinner-border" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+        </div>
+    }
+    else if (errorMessage != null)
+    {
+        <div class="alert alert-danger" role="alert">
+            @errorMessage
+        </div>
+    }
+    else if (issue == null)
+    {
+        <div class="alert alert-warning" role="alert">
+            <h4 class="alert-heading">Issue Not Found</h4>
+            <p>The requested issue could not be found.</p>
+            <hr>
+            <a href="/issues" class="btn btn-primary">Back to Issues</a>
+        </div>
+    }
+    else
+    {
+        <div class="row mb-3">
+            <div class="col">
+                <nav aria-label="breadcrumb">
+                    <ol class="breadcrumb">
+                        <li class="breadcrumb-item"><a href="/issues">Issues</a></li>
+                        <li class="breadcrumb-item active" aria-current="page">@issue.IssueName</li>
+                    </ol>
+                </nav>
+            </div>
+            <div class="col-auto">
+                <div class="btn-group" role="group">
+                    <a href="/issues/@issue.IssueId/edit" class="btn btn-primary">
+                        <i class="bi bi-pencil"></i> Edit Issue
+                    </a>
+                    <button type="button" class="btn btn-danger" @onclick="() => DeleteIssue(issue.IssueId)">
+                        <i class="bi bi-trash"></i> Delete Issue
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-lg-8">
+                <!-- Main Issue Details -->
+                <div class="card mb-4">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h3 class="mb-0">
+                            <i class="bi bi-bug text-danger"></i> @issue.IssueName
+                        </h3>
+                        <div>
+                            <span class="badge @GetIssueStatusBadgeClass(issue.Status) fs-6">
+                                @issue.Status
+                            </span>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        @if (!string.IsNullOrEmpty(issue.Description))
+                        {
+                            <div class="mb-4">
+                                <h5>Description</h5>
+                                <p class="text-muted">@issue.Description</p>
+                            </div>
+                        }
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <h5>Priority & Severity</h5>
+                                <div class="mb-3">
+                                    <span class="badge @GetPriorityBadgeClass(issue.Priority) me-2">
+                                        Priority: @issue.Priority
+                                    </span>
+                                    <span class="badge @GetSeverityBadgeClass(issue.Severity)">
+                                        Severity: @issue.Severity
+                                    </span>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <h5>Assignment</h5>
+                                @if (issue.AssignedToUser != null)
+                                {
+                                    <p class="mb-0">
+                                        <i class="bi bi-person"></i> 
+                                        @issue.AssignedToUser.FirstName @issue.AssignedToUser.LastName
+                                    </p>
+                                }
+                                else
+                                {
+                                    <p class="text-muted mb-0">Unassigned</p>
+                                }
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Project Information -->
+                @if (issue.Project != null)
+                {
+                    <div class="card mb-4">
+                        <div class="card-header">
+                            <h5 class="mb-0"><i class="bi bi-folder"></i> Project Information</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <strong>Project:</strong> @issue.Project.ProjectName
+                                </div>
+                                <div class="col-md-6">
+                                    <strong>Project ID:</strong> @issue.Project.ProjectId
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                }
+
+                <!-- Task Information -->
+                @if (issue.Task != null)
+                {
+                    <div class="card mb-4">
+                        <div class="card-header">
+                            <h5 class="mb-0"><i class="bi bi-list-task"></i> Related Task</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <strong>Task:</strong> @issue.Task.TaskName
+                                </div>
+                                <div class="col-md-6">
+                                    <strong>Task ID:</strong> @issue.Task.TaskId
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                }
+
+                <!-- Milestone Information -->
+                @if (issue.Milestone != null)
+                {
+                    <div class="card mb-4">
+                        <div class="card-header">
+                            <h5 class="mb-0"><i class="bi bi-flag"></i> Milestone</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <strong>Milestone:</strong> @issue.Milestone.MilestoneName
+                                </div>
+                                <div class="col-md-6">
+                                    <strong>Due Date:</strong> @issue.Milestone.TargetDate?.ToString("MMM dd, yyyy")
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                }
+
+                <!-- Resolution Information -->
+                @if (!string.IsNullOrEmpty(issue.Resolution) || issue.ResolvedDate.HasValue)
+                {
+                    <div class="card mb-4">
+                        <div class="card-header">
+                            <h5 class="mb-0"><i class="bi bi-check-circle"></i> Resolution</h5>
+                        </div>
+                        <div class="card-body">
+                            @if (!string.IsNullOrEmpty(issue.Resolution))
+                            {
+                                <div class="mb-3">
+                                    <strong>Resolution:</strong>
+                                    <p class="text-muted mb-0">@issue.Resolution</p>
+                                </div>
+                            }
+                            @if (issue.ResolvedDate.HasValue)
+                            {
+                                <div>
+                                    <strong>Resolved Date:</strong> @issue.ResolvedDate.Value.ToString("MMM dd, yyyy")
+                                </div>
+                            }
+                        </div>
+                    </div>
+                }
+
+                <!-- Root Cause -->
+                @if (!string.IsNullOrEmpty(issue.RootCause))
+                {
+                    <div class="card mb-4">
+                        <div class="card-header">
+                            <h5 class="mb-0"><i class="bi bi-search"></i> Root Cause</h5>
+                        </div>
+                        <div class="card-body">
+                            <p class="text-muted mb-0">@issue.RootCause</p>
+                        </div>
+                    </div>
+                }
+
+                <!-- Notes -->
+                @if (!string.IsNullOrEmpty(issue.Notes))
+                {
+                    <div class="card mb-4">
+                        <div class="card-header">
+                            <h5 class="mb-0"><i class="bi bi-sticky"></i> Notes</h5>
+                        </div>
+                        <div class="card-body">
+                            <p class="text-muted mb-0">@issue.Notes</p>
+                        </div>
+                    </div>
+                }
+            </div>
+
+            <div class="col-lg-4">
+                <!-- Issue Metadata -->
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="mb-0"><i class="bi bi-info-circle"></i> Issue Details</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <strong>Issue ID:</strong>
+                            <br />
+                            <code class="small">@issue.IssueId</code>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <strong>Opened Date:</strong>
+                            <br />
+                            <span>@issue.OpenedDate?.ToString("MMM dd, yyyy")</span>
+                        </div>
+
+                        @if (issue.DueDate.HasValue)
+                        {
+                            var isOverdue = issue.DueDate.Value < DateOnly.FromDateTime(DateTime.Today) && issue.Status != "Resolved";
+                            <div class="mb-3">
+                                <strong>Due Date:</strong>
+                                <br />
+                                <span class="@(isOverdue ? "text-danger fw-bold" : "")">
+                                    @issue.DueDate.Value.ToString("MMM dd, yyyy")
+                                    @if (isOverdue)
+                                    {
+                                        <i class="bi bi-exclamation-triangle text-danger"></i>
+                                    }
+                                </span>
+                            </div>
+                        }
+
+                        <div class="mb-3">
+                            <strong>Created:</strong>
+                            <br />
+                            <span>@issue.CreatedAt.ToString("MMM dd, yyyy HH:mm")</span>
+                        </div>
+
+                        <div class="mb-3">
+                            <strong>Last Updated:</strong>
+                            <br />
+                            <span>@issue.UpdatedAt.ToString("MMM dd, yyyy HH:mm")</span>
+                        </div>
+
+                        @if (issue.Tenant != null)
+                        {
+                            <div class="mb-3">
+                                <strong>Organization:</strong>
+                                <br />
+                                <span>@issue.Tenant.OrganizationName</span>
+                            </div>
+                        }
+                    </div>
+                </div>
+
+                <!-- Quick Actions -->
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0"><i class="bi bi-lightning"></i> Quick Actions</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="d-grid gap-2">
+                            <a href="/issues/@issue.IssueId/edit" class="btn btn-primary">
+                                <i class="bi bi-pencil"></i> Edit Issue
+                            </a>
+                            @if (issue.Project != null)
+                            {
+                                <a href="/projects/@issue.Project.ProjectId" class="btn btn-outline-info">
+                                    <i class="bi bi-folder"></i> View Project
+                                </a>
+                            }
+                            @if (issue.Task != null)
+                            {
+                                <a href="/tasks/@issue.Task.TaskId" class="btn btn-outline-secondary">
+                                    <i class="bi bi-list-task"></i> View Task
+                                </a>
+                            }
+                            @if (issue.AssignedToUser != null)
+                            {
+                                <a href="/users/@issue.AssignedToUser.UserId" class="btn btn-outline-success">
+                                    <i class="bi bi-person"></i> View User
+                                </a>
+                            }
+                            <a href="/issues" class="btn btn-outline-dark">
+                                <i class="bi bi-arrow-left"></i> Back to Issues
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter]
+    public Guid IssueId { get; set; }
+
+    private IssueDto? issue;
+    private bool isLoading = true;
+    private string? errorMessage;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadIssue();
+    }
+
+    private async Task LoadIssue()
+    {
+        try
+        {
+            isLoading = true;
+            errorMessage = null;
+            issue = await IssueService.GetIssueAsync(IssueId);
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Error loading issue: {ex.Message}";
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private async Task DeleteIssue(Guid id)
+    {
+        if (await IssueService.DeleteIssueAsync(id))
+        {
+            Navigation.NavigateTo("/issues");
+        }
+        else
+        {
+            errorMessage = "Failed to delete issue";
+        }
+    }
+
+    private string GetIssueStatusBadgeClass(string status)
+    {
+        return status.ToLower() switch
+        {
+            "open" => "bg-warning",
+            "in progress" => "bg-info",
+            "resolved" => "bg-success",
+            "closed" => "bg-secondary",
+            "on hold" => "bg-dark",
+            _ => "bg-secondary"
+        };
+    }
+
+    private string GetPriorityBadgeClass(string priority)
+    {
+        return priority.ToLower() switch
+        {
+            "low" => "bg-success",
+            "medium" => "bg-warning",
+            "high" => "bg-danger",
+            "urgent" => "bg-dark",
+            _ => "bg-secondary"
+        };
+    }
+
+    private string GetSeverityBadgeClass(string severity)
+    {
+        return severity.ToLower() switch
+        {
+            "low" => "bg-success",
+            "medium" => "bg-warning",
+            "high" => "bg-danger",
+            "critical" => "bg-dark",
+            _ => "bg-secondary"
+        };
+    }
+} 

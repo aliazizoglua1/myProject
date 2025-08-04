@@ -110,6 +110,57 @@ namespace MyProject.WebAPI.Controllers
             return Ok(resourceDtos);
         }
 
+        [HttpGet("tenant/{tenantId}")]
+        public async Task<ActionResult<IEnumerable<ResourceDto>>> GetResourcesByTenant(Guid tenantId)
+        {
+            var resources = await _resourceRepository.GetByTenantIdAsync(tenantId);
+            var resourceDtos = resources.Select(MapToDto);
+            return Ok(resourceDtos);
+        }
+
+        [HttpGet("user/{userId}")]
+        public async Task<ActionResult<IEnumerable<ResourceDto>>> GetResourcesByUser(Guid userId)
+        {
+            var resources = await _resourceRepository.GetByUserIdAsync(userId);
+            var resourceDtos = resources.Select(MapToDto);
+            return Ok(resourceDtos);
+        }
+
+        [HttpGet("tenant/{tenantId}/status/{status}")]
+        public async Task<ActionResult<IEnumerable<ResourceDto>>> GetResourcesByTenantAndStatus(Guid tenantId, string status)
+        {
+            var resources = await _resourceRepository.GetByTenantAndStatusAsync(tenantId, status);
+            var resourceDtos = resources.Select(MapToDto);
+            return Ok(resourceDtos);
+        }
+
+        [HttpGet("tenant/{tenantId}/department/{department}")]
+        public async Task<ActionResult<IEnumerable<ResourceDto>>> GetResourcesByTenantAndDepartment(Guid tenantId, string department)
+        {
+            var resources = await _resourceRepository.GetByTenantAndDepartmentAsync(tenantId, department);
+            var resourceDtos = resources.Select(MapToDto);
+            return Ok(resourceDtos);
+        }
+
+        [HttpGet("tenant/{tenantId}/role/{roleTitle}")]
+        public async Task<ActionResult<IEnumerable<ResourceDto>>> GetResourcesByTenantAndRole(Guid tenantId, string roleTitle)
+        {
+            var resources = await _resourceRepository.GetByTenantAndRoleAsync(tenantId, roleTitle);
+            var resourceDtos = resources.Select(MapToDto);
+            return Ok(resourceDtos);
+        }
+
+        [HttpGet("user/{userId}/tenant/{tenantId}")]
+        public async Task<ActionResult<ResourceDto>> GetResourceByUserAndTenant(Guid userId, Guid tenantId)
+        {
+            var resource = await _resourceRepository.GetByUserAndTenantAsync(userId, tenantId);
+            if (resource == null)
+            {
+                return NotFound();
+            }
+            return Ok(MapToDto(resource));
+        }
+
         [HttpPost]
         public async Task<ActionResult<ResourceDto>> CreateResource(CreateResourceDto createDto)
         {
@@ -195,7 +246,11 @@ namespace MyProject.WebAPI.Controllers
                 EndDateEmployment = resource.EndDateEmployment,
                 CreatedAt = resource.CreatedAt,
                 UpdatedAt = resource.UpdatedAt,
-                FullName = resource.FullName
+                UserId = resource.UserId,
+                TenantId = resource.TenantId,
+                FullName = resource.FullName,
+                User = resource.User != null ? MapUserToDto(resource.User) : null,
+                Tenant = resource.Tenant != null ? MapOrganizationToDto(resource.Tenant) : null
             };
         }
 
@@ -216,7 +271,37 @@ namespace MyProject.WebAPI.Controllers
                 Location = dto.Location,
                 EmploymentStatus = dto.EmploymentStatus,
                 StartDateEmployment = dto.StartDateEmployment,
-                EndDateEmployment = dto.EndDateEmployment
+                EndDateEmployment = dto.EndDateEmployment,
+                UserId = dto.UserId,
+                TenantId = dto.TenantId
+            };
+        }
+
+        private static UserDto MapUserToDto(User user)
+        {
+            return new UserDto
+            {
+                UserId = user.UserId,
+                Email = user.Email,
+                FirstName = user.FirstName,
+                LastName = user.LastName,
+                IsActive = user.IsActive,
+                CreatedAt = user.CreatedAt,
+                UpdatedAt = user.UpdatedAt
+            };
+        }
+
+        private static OrganizationDto MapOrganizationToDto(Organization organization)
+        {
+            return new OrganizationDto
+            {
+                OrganizationId = organization.OrganizationId,
+                OrganizationName = organization.OrganizationName,
+                Status = organization.Status,
+                BillingPlan = organization.BillingPlan,
+                ContactEmail = organization.ContactEmail,
+                CreatedAt = organization.CreatedAt,
+                UpdatedAt = organization.UpdatedAt
             };
         }
 

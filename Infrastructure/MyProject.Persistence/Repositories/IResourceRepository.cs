@@ -19,6 +19,13 @@ namespace MyProject.Persistence.Repositories
         Task<bool> DeleteAsync(Guid id);
         Task<bool> ExistsAsync(Guid id);
         Task<bool> EmailExistsAsync(string email);
+        Task<bool> ExistsByUserAndTenantAsync(Guid userId, Guid tenantId, Guid? excludeResourceId = null);
+        Task<IEnumerable<Resource>> GetByTenantIdAsync(Guid tenantId);
+        Task<IEnumerable<Resource>> GetByUserIdAsync(Guid userId);
+        Task<IEnumerable<Resource>> GetByTenantAndStatusAsync(Guid tenantId, string status);
+        Task<IEnumerable<Resource>> GetByTenantAndDepartmentAsync(Guid tenantId, string department);
+        Task<IEnumerable<Resource>> GetByTenantAndRoleAsync(Guid tenantId, string roleTitle);
+        Task<Resource?> GetByUserAndTenantAsync(Guid userId, Guid tenantId);
         Task<IEnumerable<Resource>> SearchByNameAsync(string searchTerm);
     }
 } 

@@ -82,10 +82,33 @@ namespace MyProject.Persistence.Configurations
                 .HasColumnName("updated_at")
                 .HasDefaultValueSql("now()");
 
-            // Unique constraint on email
+            builder.Property(r => r.UserId)
+                .HasColumnName("user_id")
+                .IsRequired();
+
+            builder.Property(r => r.TenantId)
+                .HasColumnName("tenant_id")
+                .IsRequired();
+
+            // Foreign key relationships
+            builder.HasOne(r => r.User)
+                .WithMany()
+                .HasForeignKey(r => r.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            builder.HasOne(r => r.Tenant)
+                .WithMany()
+                .HasForeignKey(r => r.TenantId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            // Unique constraints
             builder.HasIndex(r => r.Email)
                 .IsUnique()
                 .HasDatabaseName("resource_email_key");
+
+            builder.HasIndex(r => new { r.UserId, r.TenantId })
+                .IsUnique()
+                .HasDatabaseName("uq_user_tenant");
 
             // Indexes
             builder.HasIndex(r => r.Department)
@@ -106,6 +129,12 @@ namespace MyProject.Persistence.Configurations
             builder.HasIndex(r => r.Skills)
                 .HasDatabaseName("idx_resources_skills")
                 .HasMethod("gin");
+
+            builder.HasIndex(r => r.UserId)
+                .HasDatabaseName("idx_resources_user_id");
+
+            builder.HasIndex(r => r.TenantId)
+                .HasDatabaseName("idx_resources_tenant_id");
 
             // Check constraints (these will be handled by the database)
             // The actual constraints are defined in the PostgreSQL table

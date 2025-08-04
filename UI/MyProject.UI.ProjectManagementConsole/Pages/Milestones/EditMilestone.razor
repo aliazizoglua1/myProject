@@ -1,0 +1,306 @@
+@page "/milestones/{Id:guid}/edit"
+@using MyProject.UI.ProjectManagementConsole.Models
+@using MyProject.UI.ProjectManagementConsole.Services
+@inject IMilestoneService MilestoneService
+@inject IUserService UserService
+@inject NavigationManager Navigation
+
+<PageTitle>Edit Milestone</PageTitle>
+
+<div class="container-fluid">
+    <div class="row mb-3">
+        <div class="col">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="/milestones">Milestones</a></li>
+                    <li class="breadcrumb-item"><a href="/milestones/@Id">Milestone Details</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">Edit Milestone</li>
+                </ol>
+            </nav>
+        </div>
+    </div>
+
+    @if (isLoading)
+    {
+        <div class="text-center">
+            <div class="spinner-border" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+        </div>
+    }
+    else if (errorMessage != null)
+    {
+        <div class="alert alert-danger" role="alert">
+            @errorMessage
+        </div>
+    }
+    else if (milestone == null)
+    {
+        <div class="alert alert-warning" role="alert">
+            Milestone not found.
+        </div>
+    }
+    else
+    {
+        <div class="row">
+            <div class="col-lg-8">
+                <div class="card">
+                    <div class="card-header">
+                        <h2>Edit Milestone</h2>
+                    </div>
+                    <div class="card-body">
+                        <EditForm Model="updateDto" OnValidSubmit="HandleValidSubmit">
+                            <DataAnnotationsValidator />
+
+                            @if (errorMessage != null)
+                            {
+                                <div class="alert alert-danger" role="alert">
+                                    @errorMessage
+                                </div>
+                            }
+
+                            <div class="mb-3">
+                                <label for="milestoneName" class="form-label">Milestone Name</label>
+                                <InputText id="milestoneName" class="form-control" @bind-Value="updateDto.MilestoneName" />
+                                <ValidationMessage For="@(() => updateDto.MilestoneName)" />
+                                <div class="form-text">Current value: <strong>@milestone.MilestoneName</strong></div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="description" class="form-label">Description</label>
+                                <InputTextArea id="description" class="form-control" rows="3" @bind-Value="updateDto.Description" />
+                                <ValidationMessage For="@(() => updateDto.Description)" />
+                                <div class="form-text">Current value: <strong>@(milestone.Description ?? "Not set")</strong></div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="targetDate" class="form-label">Target Date</label>
+                                        <InputDate id="targetDate" class="form-control" @bind-Value="updateDto.TargetDate" />
+                                        <ValidationMessage For="@(() => updateDto.TargetDate)" />
+                                        <div class="form-text">Current value: <strong>@(milestone.TargetDate?.ToString("MMM dd, yyyy") ?? "Not set")</strong></div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="achievedDate" class="form-label">Achieved Date</label>
+                                        <InputDate id="achievedDate" class="form-control" @bind-Value="updateDto.AchievedDate" />
+                                        <ValidationMessage For="@(() => updateDto.AchievedDate)" />
+                                        <div class="form-text">Current value: <strong>@(milestone.AchievedDate?.ToString("MMM dd, yyyy") ?? "Not achieved")</strong></div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="notes" class="form-label">Notes</label>
+                                <InputTextArea id="notes" class="form-control" rows="3" @bind-Value="updateDto.Notes" />
+                                <ValidationMessage For="@(() => updateDto.Notes)" />
+                                <div class="form-text">Current value: <strong>@(milestone.Notes ?? "Not set")</strong></div>
+                            </div>
+
+                            <div class="d-flex gap-2">
+                                <button type="submit" class="btn btn-primary" disabled="@isSubmitting">
+                                    @if (isSubmitting)
+                                    {
+                                        <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                                        <span class="ms-1">Updating...</span>
+                                    }
+                                    else
+                                    {
+                                        <i class="bi bi-check-circle"></i>
+                                        <span class="ms-1">Update Milestone</span>
+                                    }
+                                </button>
+                                <a href="/milestones/@Id" class="btn btn-secondary">
+                                    <i class="bi bi-x-circle"></i>
+                                    <span class="ms-1">Cancel</span>
+                                </a>
+                            </div>
+                        </EditForm>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-4">
+                <div class="card">
+                    <div class="card-header">
+                        <h5>Current Milestone Details</h5>
+                    </div>
+                    <div class="card-body">
+                        <dl class="row">
+                            <dt class="col-sm-4">Name</dt>
+                            <dd class="col-sm-8">@milestone.MilestoneName</dd>
+
+                            <dt class="col-sm-4">Project</dt>
+                            <dd class="col-sm-8">
+                                @if (milestone.Project != null)
+                                {
+                                    <span class="badge bg-info">@milestone.Project.ProjectName</span>
+                                }
+                                else
+                                {
+                                    <span class="text-muted">No project assigned</span>
+                                }
+                            </dd>
+
+                            <dt class="col-sm-4">Target Date</dt>
+                            <dd class="col-sm-8">
+                                @if (milestone.TargetDate.HasValue)
+                                {
+                                    <span>@milestone.TargetDate.Value.ToString("MMM dd, yyyy")</span>
+                                }
+                                else
+                                {
+                                    <span class="text-muted">Not set</span>
+                                }
+                            </dd>
+
+                            <dt class="col-sm-4">Achieved Date</dt>
+                            <dd class="col-sm-8">
+                                @if (milestone.AchievedDate.HasValue)
+                                {
+                                    <span>@milestone.AchievedDate.Value.ToString("MMM dd, yyyy")</span>
+                                }
+                                else
+                                {
+                                    <span class="text-muted">Not achieved</span>
+                                }
+                            </dd>
+
+                            <dt class="col-sm-4">Is Achieved</dt>
+                            <dd class="col-sm-8">
+                                @if (milestone.IsAchieved)
+                                {
+                                    <span class="badge bg-success">Achieved</span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-warning">Pending</span>
+                                }
+                            </dd>
+
+                            <dt class="col-sm-4">Days Remaining</dt>
+                            <dd class="col-sm-8">@GetDaysRemaining()</dd>
+                        </dl>
+                    </div>
+                </div>
+
+                <div class="card mt-3">
+                    <div class="card-header">
+                        <h5>Quick Actions</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="d-grid gap-2">
+                            <a href="/milestones/@Id" class="btn btn-outline-primary">
+                                <i class="bi bi-eye"></i> View Milestone
+                            </a>
+                            <a href="/milestones" class="btn btn-outline-secondary">
+                                <i class="bi bi-arrow-left"></i> Back to Milestones
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card mt-3">
+                    <div class="card-header">
+                        <h5>Update Notes</h5>
+                    </div>
+                    <div class="card-body">
+                        <ul class="small text-muted">
+                            <li>Only changed fields will be updated</li>
+                            <li>Target date changes affect timeline</li>
+                            <li>Achieved dates record actual completion</li>
+                            <li>Notes help track milestone details</li>
+                            <li>Changes take effect immediately</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter]
+    public Guid Id { get; set; }
+
+    private MilestoneDto? milestone;
+    private UpdateMilestoneDto updateDto = new();
+    private List<UserDto>? users;
+    private bool isLoading = true;
+    private bool isSubmitting = false;
+    private string? errorMessage;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadData();
+    }
+
+    private async Task LoadData()
+    {
+        try
+        {
+            isLoading = true;
+            errorMessage = null;
+            
+            // Load milestone and users in parallel
+            var milestoneTask = MilestoneService.GetMilestoneAsync(Id);
+            var userTask = UserService.GetUsersAsync();
+            
+            await Task.WhenAll(milestoneTask, userTask);
+            
+            milestone = await milestoneTask;
+            users = await userTask;
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Error loading data: {ex.Message}";
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private async Task HandleValidSubmit()
+    {
+        try
+        {
+            isSubmitting = true;
+            errorMessage = null;
+
+            // Only update fields that have been changed
+            var updateData = new UpdateMilestoneDto();
+            if (!string.IsNullOrWhiteSpace(updateDto.MilestoneName))
+                updateData.MilestoneName = updateDto.MilestoneName;
+            if (!string.IsNullOrWhiteSpace(updateDto.Description))
+                updateData.Description = updateDto.Description;
+            if (updateDto.TargetDate.HasValue)
+                updateData.TargetDate = updateDto.TargetDate;
+            if (updateDto.AchievedDate.HasValue)
+                updateData.AchievedDate = updateDto.AchievedDate;
+            if (!string.IsNullOrWhiteSpace(updateDto.Notes))
+                updateData.Notes = updateDto.Notes;
+
+            var updatedMilestone = await MilestoneService.UpdateMilestoneAsync(Id, updateData);
+            Navigation.NavigateTo($"/milestones/{updatedMilestone.MilestoneId}");
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Error updating milestone: {ex.Message}";
+        }
+        finally
+        {
+            isSubmitting = false;
+        }
+    }
+
+    private int GetDaysRemaining()
+    {
+        if (!milestone.TargetDate.HasValue)
+            return 0;
+
+        return milestone.TargetDate.Value.DayNumber - DateOnly.FromDateTime(DateTime.Today).DayNumber;
+    }
+} 

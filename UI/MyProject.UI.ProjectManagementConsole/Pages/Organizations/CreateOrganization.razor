@@ -1,0 +1,153 @@
+@page "/organizations/create"
+@using MyProject.UI.ProjectManagementConsole.Models
+@using MyProject.UI.ProjectManagementConsole.Services
+@inject IOrganizationService OrganizationService
+@inject NavigationManager Navigation
+
+<PageTitle>Create Organization</PageTitle>
+
+<div class="container-fluid">
+    <div class="row mb-3">
+        <div class="col">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="/organizations">Organizations</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">Create Organization</li>
+                </ol>
+            </nav>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-8 col-lg-6">
+            <div class="card">
+                <div class="card-header">
+                    <h2>Create New Organization</h2>
+                </div>
+                <div class="card-body">
+                    <EditForm Model="organization" OnValidSubmit="HandleValidSubmit">
+                        <DataAnnotationsValidator />
+
+                        @if (errorMessage != null)
+                        {
+                            <div class="alert alert-danger" role="alert">
+                                @errorMessage
+                            </div>
+                        }
+
+                        <div class="mb-3">
+                            <label for="organizationName" class="form-label">Organization Name *</label>
+                            <InputText id="organizationName" class="form-control" @bind-Value="organization.OrganizationName" />
+                            <ValidationMessage For="@(() => organization.OrganizationName)" />
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="status" class="form-label">Status *</label>
+                            <InputSelect id="status" class="form-select" @bind-Value="organization.Status">
+                                <option value="">Select Status</option>
+                                <option value="Active">Active</option>
+                                <option value="Inactive">Inactive</option>
+                                <option value="Pending">Pending</option>
+                                <option value="Suspended">Suspended</option>
+                            </InputSelect>
+                            <ValidationMessage For="@(() => organization.Status)" />
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="billingPlan" class="form-label">Billing Plan *</label>
+                            <InputSelect id="billingPlan" class="form-select" @bind-Value="organization.BillingPlan">
+                                <option value="">Select Billing Plan</option>
+                                <option value="Basic">Basic</option>
+                                <option value="Professional">Professional</option>
+                                <option value="Enterprise">Enterprise</option>
+                                <option value="Custom">Custom</option>
+                            </InputSelect>
+                            <ValidationMessage For="@(() => organization.BillingPlan)" />
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="contactEmail" class="form-label">Contact Email *</label>
+                            <InputText id="contactEmail" type="email" class="form-control" @bind-Value="organization.ContactEmail" />
+                            <ValidationMessage For="@(() => organization.ContactEmail)" />
+                        </div>
+
+                        <div class="d-flex gap-2">
+                            <button type="submit" class="btn btn-primary" disabled="@isSubmitting">
+                                @if (isSubmitting)
+                                {
+                                    <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                                    <span class="ms-1">Creating...</span>
+                                }
+                                else
+                                {
+                                    <i class="bi bi-check-circle"></i>
+                                    <span class="ms-1">Create Organization</span>
+                                }
+                            </button>
+                            <a href="/organizations" class="btn btn-secondary">
+                                <i class="bi bi-x-circle"></i>
+                                <span class="ms-1">Cancel</span>
+                            </a>
+                        </div>
+                    </EditForm>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4 col-lg-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5>Organization Information</h5>
+                </div>
+                <div class="card-body">
+                    <p class="text-muted">
+                        Organizations are the top-level entities in your project management system. 
+                        Each organization can contain multiple projects, users, and resources.
+                    </p>
+                    
+                    <h6>Required Fields:</h6>
+                    <ul class="small text-muted">
+                        <li><strong>Organization Name:</strong> The display name for your organization</li>
+                        <li><strong>Status:</strong> Current status of the organization</li>
+                        <li><strong>Billing Plan:</strong> The subscription plan for this organization</li>
+                        <li><strong>Contact Email:</strong> Primary contact email for the organization</li>
+                    </ul>
+
+                    <h6>Status Options:</h6>
+                    <ul class="small text-muted">
+                        <li><span class="badge bg-success">Active</span> - Organization is active and operational</li>
+                        <li><span class="badge bg-secondary">Inactive</span> - Organization is temporarily disabled</li>
+                        <li><span class="badge bg-info">Pending</span> - Organization is awaiting approval</li>
+                        <li><span class="badge bg-warning">Suspended</span> - Organization is suspended due to issues</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    private CreateOrganizationDto organization = new();
+    private bool isSubmitting = false;
+    private string? errorMessage;
+
+    private async Task HandleValidSubmit()
+    {
+        try
+        {
+            isSubmitting = true;
+            errorMessage = null;
+
+            var createdOrganization = await OrganizationService.CreateOrganizationAsync(organization);
+            Navigation.NavigateTo($"/organizations/{createdOrganization.OrganizationId}");
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Error creating organization: {ex.Message}";
+        }
+        finally
+        {
+            isSubmitting = false;
+        }
+    }
+} 

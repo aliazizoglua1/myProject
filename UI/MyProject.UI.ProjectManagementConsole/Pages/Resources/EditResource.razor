@@ -1,0 +1,412 @@
+@page "/resources/{Id:guid}/edit"
+@using MyProject.UI.ProjectManagementConsole.Models
+@using MyProject.UI.ProjectManagementConsole.Services
+@inject IResourceService ResourceService
+@inject NavigationManager Navigation
+
+<PageTitle>Edit Resource</PageTitle>
+
+<div class="container-fluid">
+    <div class="row mb-3">
+        <div class="col">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="/resources">Resources</a></li>
+                    <li class="breadcrumb-item"><a href="/resources/@Id">Resource Details</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">Edit Resource</li>
+                </ol>
+            </nav>
+        </div>
+    </div>
+
+    @if (isLoading)
+    {
+        <div class="text-center">
+            <div class="spinner-border" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+        </div>
+    }
+    else if (errorMessage != null)
+    {
+        <div class="alert alert-danger" role="alert">
+            @errorMessage
+        </div>
+    }
+    else if (resource == null)
+    {
+        <div class="alert alert-warning" role="alert">
+            Resource not found.
+        </div>
+    }
+    else
+    {
+        <div class="row">
+            <div class="col-lg-8">
+                <div class="card">
+                    <div class="card-header">
+                        <h2>Edit Resource</h2>
+                    </div>
+                    <div class="card-body">
+                        <EditForm Model="updateDto" OnValidSubmit="HandleValidSubmit">
+                            <DataAnnotationsValidator />
+
+                            @if (errorMessage != null)
+                            {
+                                <div class="alert alert-danger" role="alert">
+                                    @errorMessage
+                                </div>
+                            }
+
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="firstName" class="form-label">First Name</label>
+                                        <InputText id="firstName" class="form-control" @bind-Value="updateDto.FirstName" />
+                                        <ValidationMessage For="@(() => updateDto.FirstName)" />
+                                        <div class="form-text">Current value: <strong>@resource.FirstName</strong></div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="lastName" class="form-label">Last Name</label>
+                                        <InputText id="lastName" class="form-control" @bind-Value="updateDto.LastName" />
+                                        <ValidationMessage For="@(() => updateDto.LastName)" />
+                                        <div class="form-text">Current value: <strong>@resource.LastName</strong></div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="email" class="form-label">Email Address</label>
+                                        <InputText id="email" type="email" class="form-control" @bind-Value="updateDto.Email" />
+                                        <ValidationMessage For="@(() => updateDto.Email)" />
+                                        <div class="form-text">Current value: <strong>@resource.Email</strong></div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="phoneNumber" class="form-label">Phone Number</label>
+                                        <InputText id="phoneNumber" class="form-control" @bind-Value="updateDto.PhoneNumber" />
+                                        <ValidationMessage For="@(() => updateDto.PhoneNumber)" />
+                                        <div class="form-text">Current value: <strong>@(resource.PhoneNumber ?? "Not set")</strong></div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="department" class="form-label">Department</label>
+                                        <InputSelect id="department" class="form-select" @bind-Value="updateDto.Department">
+                                            <option value="">Keep Current Department</option>
+                                            <option value="Engineering">Engineering</option>
+                                            <option value="Marketing">Marketing</option>
+                                            <option value="Sales">Sales</option>
+                                            <option value="Human Resources">Human Resources</option>
+                                            <option value="Finance">Finance</option>
+                                            <option value="Operations">Operations</option>
+                                            <option value="Customer Support">Customer Support</option>
+                                            <option value="Product Management">Product Management</option>
+                                            <option value="Quality Assurance">Quality Assurance</option>
+                                            <option value="Research & Development">Research & Development</option>
+                                        </InputSelect>
+                                        <ValidationMessage For="@(() => updateDto.Department)" />
+                                        <div class="form-text">Current value: <span class="badge bg-info">@resource.Department</span></div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="jobTitle" class="form-label">Job Title</label>
+                                        <InputText id="jobTitle" class="form-control" @bind-Value="updateDto.JobTitle" />
+                                        <ValidationMessage For="@(() => updateDto.JobTitle)" />
+                                        <div class="form-text">Current value: <strong>@resource.JobTitle</strong></div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="employmentStatus" class="form-label">Employment Status</label>
+                                        <InputSelect id="employmentStatus" class="form-select" @bind-Value="updateDto.EmploymentStatus">
+                                            <option value="">Keep Current Status</option>
+                                            <option value="Full-time">Full-time</option>
+                                            <option value="Part-time">Part-time</option>
+                                            <option value="Contract">Contract</option>
+                                            <option value="Temporary">Temporary</option>
+                                            <option value="Intern">Intern</option>
+                                        </InputSelect>
+                                        <ValidationMessage For="@(() => updateDto.EmploymentStatus)" />
+                                        <div class="form-text">Current value: <span class="badge @GetEmploymentStatusBadgeClass(resource.EmploymentStatus)">@resource.EmploymentStatus</span></div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="salary" class="form-label">Salary</label>
+                                        <InputNumber id="salary" class="form-control" @bind-Value="updateDto.Salary" />
+                                        <ValidationMessage For="@(() => updateDto.Salary)" />
+                                        <div class="form-text">Current value: <strong>@(resource.Salary?.ToString("C") ?? "Not set")</strong></div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="hireDate" class="form-label">Hire Date</label>
+                                        <InputDate id="hireDate" class="form-control" @bind-Value="updateDto.HireDate" />
+                                        <ValidationMessage For="@(() => updateDto.HireDate)" />
+                                        <div class="form-text">Current value: <strong>@(resource.HireDate?.ToString("MMM dd, yyyy") ?? "Not set")</strong></div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="terminationDate" class="form-label">Termination Date</label>
+                                        <InputDate id="terminationDate" class="form-control" @bind-Value="updateDto.TerminationDate" />
+                                        <ValidationMessage For="@(() => updateDto.TerminationDate)" />
+                                        <div class="form-text">Current value: <strong>@(resource.TerminationDate?.ToString("MMM dd, yyyy") ?? "Not set")</strong></div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="skills" class="form-label">Skills</label>
+                                <InputTextArea id="skills" class="form-control" rows="3" @bind-Value="updateDto.Skills" />
+                                <ValidationMessage For="@(() => updateDto.Skills)" />
+                                <div class="form-text">Current value: <strong>@(resource.Skills ?? "Not set")</strong></div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="certifications" class="form-label">Certifications</label>
+                                        <InputTextArea id="certifications" class="form-control" rows="2" @bind-Value="updateDto.Certifications" />
+                                        <ValidationMessage For="@(() => updateDto.Certifications)" />
+                                        <div class="form-text">Current value: <strong>@(resource.Certifications ?? "Not set")</strong></div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="education" class="form-label">Education</label>
+                                        <InputTextArea id="education" class="form-control" rows="2" @bind-Value="updateDto.Education" />
+                                        <ValidationMessage For="@(() => updateDto.Education)" />
+                                        <div class="form-text">Current value: <strong>@(resource.Education ?? "Not set")</strong></div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="experience" class="form-label">Experience</label>
+                                <InputTextArea id="experience" class="form-control" rows="3" @bind-Value="updateDto.Experience" />
+                                <ValidationMessage For="@(() => updateDto.Experience)" />
+                                <div class="form-text">Current value: <strong>@(resource.Experience ?? "Not set")</strong></div>
+                            </div>
+
+                            <div class="d-flex gap-2">
+                                <button type="submit" class="btn btn-primary" disabled="@isSubmitting">
+                                    @if (isSubmitting)
+                                    {
+                                        <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                                        <span class="ms-1">Updating...</span>
+                                    }
+                                    else
+                                    {
+                                        <i class="bi bi-check-circle"></i>
+                                        <span class="ms-1">Update Resource</span>
+                                    }
+                                </button>
+                                <a href="/resources/@Id" class="btn btn-secondary">
+                                    <i class="bi bi-x-circle"></i>
+                                    <span class="ms-1">Cancel</span>
+                                </a>
+                            </div>
+                        </EditForm>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-4">
+                <div class="card">
+                    <div class="card-header">
+                        <h5>Current Resource Details</h5>
+                    </div>
+                    <div class="card-body">
+                        <dl class="row">
+                            <dt class="col-sm-4">Name</dt>
+                            <dd class="col-sm-8">@resource.FirstName @resource.LastName</dd>
+
+                            <dt class="col-sm-4">Email</dt>
+                            <dd class="col-sm-8">@resource.Email</dd>
+
+                            <dt class="col-sm-4">Department</dt>
+                            <dd class="col-sm-8">
+                                <span class="badge bg-info">@resource.Department</span>
+                            </dd>
+
+                            <dt class="col-sm-4">Job Title</dt>
+                            <dd class="col-sm-8">@resource.JobTitle</dd>
+
+                            <dt class="col-sm-4">Status</dt>
+                            <dd class="col-sm-8">
+                                <span class="badge @GetEmploymentStatusBadgeClass(resource.EmploymentStatus)">
+                                    @resource.EmploymentStatus
+                                </span>
+                            </dd>
+
+                            <dt class="col-sm-4">Tenant</dt>
+                            <dd class="col-sm-8">
+                                @if (resource.Tenant != null)
+                                {
+                                    <span>@resource.Tenant.OrganizationName</span>
+                                }
+                                else
+                                {
+                                    <span class="text-muted">No tenant assigned</span>
+                                }
+                            </dd>
+
+                            <dt class="col-sm-4">Hire Date</dt>
+                            <dd class="col-sm-8">@(resource.HireDate?.ToString("MMM dd, yyyy") ?? "Not set")</dd>
+
+                            <dt class="col-sm-4">Salary</dt>
+                            <dd class="col-sm-8">@(resource.Salary?.ToString("C") ?? "Not set")</dd>
+                        </dl>
+                    </div>
+                </div>
+
+                <div class="card mt-3">
+                    <div class="card-header">
+                        <h5>Quick Actions</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="d-grid gap-2">
+                            <a href="/resources/@Id" class="btn btn-outline-primary">
+                                <i class="bi bi-eye"></i> View Resource
+                            </a>
+                            <a href="/resources" class="btn btn-outline-secondary">
+                                <i class="bi bi-arrow-left"></i> Back to Resources
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card mt-3">
+                    <div class="card-header">
+                        <h5>Update Notes</h5>
+                    </div>
+                    <div class="card-body">
+                        <ul class="small text-muted">
+                            <li>Only changed fields will be updated</li>
+                            <li>Employment status changes affect resource availability</li>
+                            <li>Termination dates are used for historical tracking</li>
+                            <li>Skills and certifications help with resource allocation</li>
+                            <li>Changes take effect immediately</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter]
+    public Guid Id { get; set; }
+
+    private ResourceDto? resource;
+    private UpdateResourceDto updateDto = new();
+    private bool isLoading = true;
+    private bool isSubmitting = false;
+    private string? errorMessage;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadResource();
+    }
+
+    private async Task LoadResource()
+    {
+        try
+        {
+            isLoading = true;
+            errorMessage = null;
+            resource = await ResourceService.GetResourceAsync(Id);
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Error loading resource: {ex.Message}";
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private async Task HandleValidSubmit()
+    {
+        try
+        {
+            isSubmitting = true;
+            errorMessage = null;
+
+            // Only update fields that have been changed
+            var updateData = new UpdateResourceDto();
+            if (!string.IsNullOrWhiteSpace(updateDto.FirstName))
+                updateData.FirstName = updateDto.FirstName;
+            if (!string.IsNullOrWhiteSpace(updateDto.LastName))
+                updateData.LastName = updateDto.LastName;
+            if (!string.IsNullOrWhiteSpace(updateDto.Email))
+                updateData.Email = updateDto.Email;
+            if (!string.IsNullOrWhiteSpace(updateDto.PhoneNumber))
+                updateData.PhoneNumber = updateDto.PhoneNumber;
+            if (!string.IsNullOrWhiteSpace(updateDto.Department))
+                updateData.Department = updateDto.Department;
+            if (!string.IsNullOrWhiteSpace(updateDto.JobTitle))
+                updateData.JobTitle = updateDto.JobTitle;
+            if (!string.IsNullOrWhiteSpace(updateDto.EmploymentStatus))
+                updateData.EmploymentStatus = updateDto.EmploymentStatus;
+            if (updateDto.HireDate.HasValue)
+                updateData.HireDate = updateDto.HireDate;
+            if (updateDto.TerminationDate.HasValue)
+                updateData.TerminationDate = updateDto.TerminationDate;
+            if (updateDto.Salary.HasValue)
+                updateData.Salary = updateDto.Salary;
+            if (!string.IsNullOrWhiteSpace(updateDto.Skills))
+                updateData.Skills = updateDto.Skills;
+            if (!string.IsNullOrWhiteSpace(updateDto.Certifications))
+                updateData.Certifications = updateDto.Certifications;
+            if (!string.IsNullOrWhiteSpace(updateDto.Experience))
+                updateData.Experience = updateDto.Experience;
+            if (!string.IsNullOrWhiteSpace(updateDto.Education))
+                updateData.Education = updateDto.Education;
+
+            var updatedResource = await ResourceService.UpdateResourceAsync(Id, updateData);
+            Navigation.NavigateTo($"/resources/{updatedResource.ResourceId}");
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Error updating resource: {ex.Message}";
+        }
+        finally
+        {
+            isSubmitting = false;
+        }
+    }
+
+    private string GetEmploymentStatusBadgeClass(string status)
+    {
+        return status.ToLower() switch
+        {
+            "full-time" => "bg-success",
+            "part-time" => "bg-info",
+            "contract" => "bg-warning",
+            "temporary" => "bg-secondary",
+            "intern" => "bg-primary",
+            "terminated" => "bg-danger",
+            _ => "bg-secondary"
+        };
+    }
+} 

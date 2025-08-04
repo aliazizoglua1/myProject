@@ -1,0 +1,112 @@
+### Get all change requests
+GET {{baseUrl}}/api/changerequests
+
+### Get change request by ID
+GET {{baseUrl}}/api/changerequests/{{changeRequestId}}
+
+### Get change requests by project
+GET {{baseUrl}}/api/changerequests/project/{{projectId}}
+
+### Get change requests by status
+GET {{baseUrl}}/api/changerequests/status/{{status}}
+
+### Get change requests by tenant
+GET {{baseUrl}}/api/changerequests/tenant/{{tenantId}}
+
+### Get change requests by milestone
+GET {{baseUrl}}/api/changerequests/milestone/{{milestoneId}}
+
+### Get change requests by tenant and status
+GET {{baseUrl}}/api/changerequests/tenant/{{tenantId}}/status/{{status}}
+
+### Get change requests by project and status
+GET {{baseUrl}}/api/changerequests/project/{{projectId}}/status/{{status}}
+
+### Get change requests by requestor
+GET {{baseUrl}}/api/changerequests/requested-by/{{userId}}
+
+### Get change requests by approver
+GET {{baseUrl}}/api/changerequests/approved-by/{{userId}}
+
+### Get pending change requests
+GET {{baseUrl}}/api/changerequests/pending
+
+### Get approved change requests
+GET {{baseUrl}}/api/changerequests/approved
+
+### Get rejected change requests
+GET {{baseUrl}}/api/changerequests/rejected
+
+### Get change requests by date range
+GET {{baseUrl}}/api/changerequests/date-range?startDate=2024-01-01&endDate=2024-12-31
+
+### Get change requests by version
+GET {{baseUrl}}/api/changerequests/version/{{version}}
+
+### Search change requests
+GET {{baseUrl}}/api/changerequests/search?searchTerm={{searchTerm}}
+
+### Create a new change request
+POST {{baseUrl}}/api/changerequests
+Content-Type: application/json
+
+{
+  "projectId": "{{projectId}}",
+  "requestTitle": "Update User Interface",
+  "requestDescription": "Update the user interface to improve user experience",
+  "reasonForChange": "User feedback indicates the current interface is confusing",
+  "estimatedImpactOnScope": "Minor scope increase",
+  "estimatedImpactOnScheduleDays": 5,
+  "estimatedImpactOnBudgetUsd": 2500.00,
+  "estimatedImpactOnQuality": "Improved user experience",
+  "requestedByUserId": "{{userId}}",
+  "requestDate": "2024-12-01",
+  "approvalStatus": "Pending",
+  "versionAffected": "v2.1",
+  "tenantId": "{{tenantId}}",
+  "milestoneId": "{{milestoneId}}"
+}
+
+### Update a change request
+PUT {{baseUrl}}/api/changerequests/{{changeRequestId}}
+Content-Type: application/json
+
+{
+  "requestTitle": "Updated User Interface",
+  "requestDescription": "Updated description for the user interface change",
+  "reasonForChange": "Updated reason for the change",
+  "estimatedImpactOnScheduleDays": 7,
+  "estimatedImpactOnBudgetUsd": 3000.00,
+  "approvalStatus": "Approved",
+  "approvedByUserId": "{{approverId}}",
+  "approvalDate": "2024-12-02",
+  "approvalNotes": "Approved after review",
+  "actualImpactOnScheduleDays": 6,
+  "actualImpactOnBudgetUsd": 2800.00,
+  "milestoneId": "{{milestoneId}}"
+}
+
+### Approve a change request
+PUT {{baseUrl}}/api/changerequests/{{changeRequestId}}
+Content-Type: application/json
+
+{
+  "approvalStatus": "Approved",
+  "approvedByUserId": "{{approverId}}",
+  "approvalDate": "2024-12-02",
+  "approvalNotes": "Approved after technical review"
+}
+
+### Reject a change request
+PUT {{baseUrl}}/api/changerequests/{{changeRequestId}}
+Content-Type: application/json
+
+{
+  "approvalStatus": "Rejected",
+  "approvedByUserId": "{{approverId}}",
+  "approvalDate": "2024-12-02",
+  "approvalNotes": "Rejected due to budget constraints"
+}
+
+### Delete a change request
+DELETE {{baseUrl}}/api/changerequests/{{changeRequestId}} 

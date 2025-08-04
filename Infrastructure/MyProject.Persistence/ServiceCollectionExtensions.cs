@@ -18,6 +18,11 @@ namespace MyProject.Persistence
             services.AddScoped<IIssueRepository, IssueRepository>();
             services.AddScoped<IChangeRequestRepository, ChangeRequestRepository>();
             services.AddScoped<IQualityAssuranceRepository, QualityAssuranceRepository>();
+            services.AddScoped<IOrganizationRepository, OrganizationRepository>();
+            services.AddScoped<IUserRepository, UserRepository>();
+            services.AddScoped<IMilestoneRepository, MilestoneRepository>();
+            services.AddScoped<IOrganizationUserRepository, OrganizationUserRepository>();
+            services.AddScoped<ITaskTimeLogRepository, TaskTimeLogRepository>();
 
             return services;
         }

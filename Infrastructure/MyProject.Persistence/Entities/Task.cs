@@ -11,6 +11,7 @@ namespace MyProject.Persistence.Entities
         public Guid TaskId { get; set; } = Guid.NewGuid();
 
         [Column("project_id")]
+        [Required]
         public Guid ProjectId { get; set; }
 
         [Column("task_name")]
@@ -39,8 +40,8 @@ namespace MyProject.Persistence.Entities
         [Range(0, double.MaxValue)]
         public decimal? ActualEffortHours { get; set; }
 
-        [Column("planned_start_date")]
-        public DateOnly PlannedStartDate { get; set; }
+        [Column("planned_start_date")] 
+        public DateOnly? PlannedStartDate { get; set; }
 
         [Column("planned_end_date")]
         public DateOnly? PlannedEndDate { get; set; }
@@ -52,10 +53,12 @@ namespace MyProject.Persistence.Entities
         public DateOnly? ActualEndDate { get; set; }
 
         [Column("task_status")]
+        [Required]
         [MaxLength(50)]
         public string TaskStatus { get; set; } = "To Do";
 
         [Column("priority")]
+        [Required]
         [MaxLength(50)]
         public string Priority { get; set; } = "Medium";
 
@@ -74,9 +77,23 @@ namespace MyProject.Persistence.Entities
         [Column("updated_at")]
         public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
 
+        [Column("tenant_id")]
+        [Required]
+        public Guid TenantId { get; set; }
+
+        [Column("milestone_id")]
+        public Guid? MilestoneId { get; set; }
+
+        [Column("issue_id")]
+        public Guid? IssueId { get; set; }
+
         // Navigation properties
         public Project? Project { get; set; }
         public Task? ParentTask { get; set; }
         public ICollection<Task>? Subtasks { get; set; }
+        public User? AssignedToUser { get; set; }
+        public Organization? Tenant { get; set; }
+        public Milestone? Milestone { get; set; }
+        public Issue? Issue { get; set; }
     }
 } 

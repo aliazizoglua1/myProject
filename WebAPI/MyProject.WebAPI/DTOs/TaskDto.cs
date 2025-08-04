@@ -12,7 +12,7 @@ namespace MyProject.WebAPI.DTOs
         public Guid? ParentTaskId { get; set; }
         public decimal? PlannedEffortHours { get; set; }
         public decimal? ActualEffortHours { get; set; }
-        public DateOnly PlannedStartDate { get; set; }
+        public DateOnly? PlannedStartDate { get; set; }
         public DateOnly? PlannedEndDate { get; set; }
         public DateOnly? ActualStartDate { get; set; }
         public DateOnly? ActualEndDate { get; set; }
@@ -23,9 +23,14 @@ namespace MyProject.WebAPI.DTOs
         public string? Comments { get; set; }
         public DateTime CreatedAt { get; set; }
         public DateTime UpdatedAt { get; set; }
+        public Guid TenantId { get; set; }
+        public Guid? MilestoneId { get; set; }
         public ProjectDto? Project { get; set; }
         public TaskDto? ParentTask { get; set; }
         public ICollection<TaskDto>? Subtasks { get; set; }
+        public UserDto? AssignedToUser { get; set; }
+        public OrganizationDto? Tenant { get; set; }
+        public MilestoneDto? Milestone { get; set; }
     }
 
     public class CreateTaskDto
@@ -71,6 +76,11 @@ namespace MyProject.WebAPI.DTOs
         public string? Description { get; set; }
 
         public string? Comments { get; set; }
+
+        [Required]
+        public Guid TenantId { get; set; }
+
+        public Guid? MilestoneId { get; set; }
     }
 
     public class UpdateTaskDto

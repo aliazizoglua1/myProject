@@ -1,0 +1,541 @@
+@page "/risks/{Id:guid}"
+@using MyProject.UI.ProjectManagementConsole.Models
+@using MyProject.UI.ProjectManagementConsole.Services
+@inject IRiskService RiskService
+@inject NavigationManager Navigation
+
+<PageTitle>Risk Details</PageTitle>
+
+<div class="container-fluid">
+    <div class="row mb-3">
+        <div class="col">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="/risks">Risks</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">Risk Details</li>
+                </ol>
+            </nav>
+        </div>
+    </div>
+
+    @if (isLoading)
+    {
+        <div class="text-center">
+            <div class="spinner-border" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+        </div>
+    }
+    else if (errorMessage != null)
+    {
+        <div class="alert alert-danger" role="alert">
+            @errorMessage
+        </div>
+    }
+    else if (risk == null)
+    {
+        <div class="alert alert-warning" role="alert">
+            Risk not found.
+        </div>
+    }
+    else
+    {
+        <div class="row">
+            <div class="col-lg-8">
+                <div class="card">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h2>@risk.RiskName</h2>
+                        <div class="btn-group">
+                            <a href="/risks/@risk.RiskId/edit" class="btn btn-primary">
+                                <i class="bi bi-pencil"></i> Edit
+                            </a>
+                            <button type="button" class="btn btn-danger" @onclick="DeleteRisk">
+                                <i class="bi bi-trash"></i> Delete
+                            </button>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        @if (!string.IsNullOrEmpty(risk.Description))
+                        {
+                            <div class="mb-4">
+                                <h5>Description</h5>
+                                <p class="text-muted">@risk.Description</p>
+                            </div>
+                        }
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <h5>Basic Information</h5>
+                                <dl class="row">
+                                    <dt class="col-sm-4">Risk ID</dt>
+                                    <dd class="col-sm-8">
+                                        <code>@risk.RiskId</code>
+                                    </dd>
+
+                                    <dt class="col-sm-4">Project</dt>
+                                    <dd class="col-sm-8">
+                                        @if (risk.Project != null)
+                                        {
+                                            <span class="badge bg-info">@risk.Project.ProjectName</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="text-muted">No project assigned</span>
+                                        }
+                                    </dd>
+
+                                    <dt class="col-sm-4">Category</dt>
+                                    <dd class="col-sm-8">
+                                        <span class="badge bg-secondary">@risk.RiskCategory</span>
+                                    </dd>
+
+                                    <dt class="col-sm-4">Status</dt>
+                                    <dd class="col-sm-8">
+                                        <span class="badge @GetRiskStatusBadgeClass(risk.RiskStatus)">
+                                            @risk.RiskStatus
+                                        </span>
+                                    </dd>
+
+                                    <dt class="col-sm-4">Level</dt>
+                                    <dd class="col-sm-8">
+                                        <span class="badge @GetRiskLevelBadgeClass(risk.RiskLevel)">
+                                            @risk.RiskLevel
+                                        </span>
+                                    </dd>
+
+                                    <dt class="col-sm-4">Owner</dt>
+                                    <dd class="col-sm-8">
+                                        @if (risk.RiskOwner != null)
+                                        {
+                                            <span>@risk.RiskOwner.FirstName @risk.RiskOwner.LastName</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="text-muted">Unassigned</span>
+                                        }
+                                    </dd>
+                                </dl>
+                            </div>
+                            <div class="col-md-6">
+                                <h5>Risk Assessment</h5>
+                                <dl class="row">
+                                    <dt class="col-sm-4">Probability</dt>
+                                    <dd class="col-sm-8">
+                                        <div class="d-flex align-items-center">
+                                            <div class="me-2">
+                                                <strong class="@GetScoreClass(risk.ProbabilityScore)">
+                                                    @risk.ProbabilityScore/10
+                                                </strong>
+                                            </div>
+                                            <div class="flex-grow-1">
+                                                <div class="progress" style="height: 8px;">
+                                                    <div class="progress-bar @GetScoreProgressBarClass(risk.ProbabilityScore)" 
+                                                         role="progressbar" 
+                                                         style="width: @(risk.ProbabilityScore * 10)%"
+                                                         aria-valuenow="@risk.ProbabilityScore" 
+                                                         aria-valuemin="0" 
+                                                         aria-valuemax="10">
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </dd>
+
+                                    <dt class="col-sm-4">Impact</dt>
+                                    <dd class="col-sm-8">
+                                        <div class="d-flex align-items-center">
+                                            <div class="me-2">
+                                                <strong class="@GetScoreClass(risk.ImpactScore)">
+                                                    @risk.ImpactScore/10
+                                                </strong>
+                                            </div>
+                                            <div class="flex-grow-1">
+                                                <div class="progress" style="height: 8px;">
+                                                    <div class="progress-bar @GetScoreProgressBarClass(risk.ImpactScore)" 
+                                                         role="progressbar" 
+                                                         style="width: @(risk.ImpactScore * 10)%"
+                                                         aria-valuenow="@risk.ImpactScore" 
+                                                         aria-valuemin="0" 
+                                                         aria-valuemax="10">
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </dd>
+
+                                    <dt class="col-sm-4">Exposure</dt>
+                                    <dd class="col-sm-8">
+                                        <div class="d-flex align-items-center">
+                                            <div class="me-2">
+                                                <strong class="@GetExposureScoreClass(risk.ExposureScore)">
+                                                    @risk.ExposureScore
+                                                </strong>
+                                            </div>
+                                            <div class="flex-grow-1">
+                                                <div class="progress" style="height: 8px;">
+                                                    <div class="progress-bar @GetExposureProgressBarClass(risk.ExposureScore)" 
+                                                         role="progressbar" 
+                                                         style="width: @(risk.ExposureScore * 10)%"
+                                                         aria-valuenow="@risk.ExposureScore" 
+                                                         aria-valuemin="0" 
+                                                         aria-valuemax="100">
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </dd>
+                                </dl>
+                            </div>
+                        </div>
+
+                        <div class="row mt-3">
+                            <div class="col-md-6">
+                                <h5>Timeline</h5>
+                                <dl class="row">
+                                    <dt class="col-sm-4">Identified</dt>
+                                    <dd class="col-sm-8">
+                                        @if (risk.IdentifiedDate.HasValue)
+                                        {
+                                            <span>@risk.IdentifiedDate.Value.ToString("MMM dd, yyyy")</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="text-muted">Not set</span>
+                                        }
+                                    </dd>
+
+                                    <dt class="col-sm-4">Mitigation Date</dt>
+                                    <dd class="col-sm-8">
+                                        @if (risk.MitigationDate.HasValue)
+                                        {
+                                            <span class="text-success">@risk.MitigationDate.Value.ToString("MMM dd, yyyy")</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="text-muted">Not set</span>
+                                        }
+                                    </dd>
+
+                                    <dt class="col-sm-4">Last Review</dt>
+                                    <dd class="col-sm-8">
+                                        @if (risk.LastReviewDate.HasValue)
+                                        {
+                                            <span>@risk.LastReviewDate.Value.ToString("MMM dd, yyyy")</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="text-muted">Not reviewed</span>
+                                        }
+                                    </dd>
+
+                                    <dt class="col-sm-4">Days Since ID</dt>
+                                    <dd class="col-sm-8">@GetDaysSinceIdentified()</dd>
+                                </dl>
+                            </div>
+                            <div class="col-md-6">
+                                <h5>Risk Management</h5>
+                                <dl class="row">
+                                    <dt class="col-sm-4">Priority</dt>
+                                    <dd class="col-sm-8">
+                                        @if (risk.ExposureScore >= 80)
+                                        {
+                                            <span class="badge bg-danger">Critical Priority</span>
+                                        }
+                                        else if (risk.ExposureScore >= 60)
+                                        {
+                                            <span class="badge bg-warning">High Priority</span>
+                                        }
+                                        else if (risk.ExposureScore >= 40)
+                                        {
+                                            <span class="badge bg-info">Medium Priority</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge bg-success">Low Priority</span>
+                                        }
+                                    </dd>
+
+                                    <dt class="col-sm-4">Action Required</dt>
+                                    <dd class="col-sm-8">
+                                        @if (risk.RiskStatus == "Open" && risk.ExposureScore >= 60)
+                                        {
+                                            <span class="badge bg-danger">Immediate Action</span>
+                                        }
+                                        else if (risk.RiskStatus == "Open")
+                                        {
+                                            <span class="badge bg-warning">Action Required</span>
+                                        }
+                                        else if (risk.RiskStatus == "Mitigated")
+                                        {
+                                            <span class="badge bg-success">Under Control</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge bg-secondary">No Action</span>
+                                        }
+                                    </dd>
+                                </dl>
+                            </div>
+                        </div>
+
+                        @if (!string.IsNullOrEmpty(risk.MitigationStrategy))
+                        {
+                            <div class="row mt-3">
+                                <div class="col-12">
+                                    <h5>Mitigation Strategy</h5>
+                                    <p class="text-muted">@risk.MitigationStrategy</p>
+                                </div>
+                            </div>
+                        }
+
+                        @if (!string.IsNullOrEmpty(risk.ContingencyPlan))
+                        {
+                            <div class="row mt-3">
+                                <div class="col-12">
+                                    <h5>Contingency Plan</h5>
+                                    <p class="text-muted">@risk.ContingencyPlan</p>
+                                </div>
+                            </div>
+                        }
+
+                        @if (!string.IsNullOrEmpty(risk.Notes))
+                        {
+                            <div class="row mt-3">
+                                <div class="col-12">
+                                    <h5>Notes</h5>
+                                    <p class="text-muted">@risk.Notes</p>
+                                </div>
+                            </div>
+                        }
+
+                        <div class="row mt-3">
+                            <div class="col-md-6">
+                                <h5>Account Information</h5>
+                                <dl class="row">
+                                    <dt class="col-sm-4">Created</dt>
+                                    <dd class="col-sm-8">@risk.CreatedAt.ToString("MMM dd, yyyy 'at' HH:mm")</dd>
+
+                                    <dt class="col-sm-4">Last Updated</dt>
+                                    <dd class="col-sm-8">@risk.UpdatedAt.ToString("MMM dd, yyyy 'at' HH:mm")</dd>
+                                </dl>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-4">
+                <div class="card">
+                    <div class="card-header">
+                        <h5>Risk Summary</h5>
+                    </div>
+                    <div class="card-body text-center">
+                        <div class="mb-3">
+                            <i class="bi bi-exclamation-triangle display-1 @GetRiskIconClass()"></i>
+                        </div>
+                        <h5>@risk.RiskName</h5>
+                        <p class="text-muted">@risk.RiskCategory</p>
+                        <div class="mb-3">
+                            <span class="badge @GetRiskLevelBadgeClass(risk.RiskLevel) fs-6">
+                                @risk.RiskLevel Risk
+                            </span>
+                        </div>
+                        @if (risk.Project != null)
+                        {
+                            <p class="text-muted small">@risk.Project.ProjectName</p>
+                        }
+                    </div>
+                </div>
+
+                <div class="card mt-3">
+                    <div class="card-header">
+                        <h5>Quick Actions</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="d-grid gap-2">
+                            <a href="/risks/@risk.RiskId/edit" class="btn btn-primary">
+                                <i class="bi bi-pencil"></i> Edit Risk
+                            </a>
+                            <a href="/risks" class="btn btn-outline-secondary">
+                                <i class="bi bi-arrow-left"></i> Back to Risks
+                            </a>
+                            <button type="button" class="btn btn-outline-danger" @onclick="DeleteRisk">
+                                <i class="bi bi-trash"></i> Delete Risk
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card mt-3">
+                    <div class="card-header">
+                        <h5>Risk Assessment</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row text-center">
+                            <div class="col-6">
+                                <div class="border-end">
+                                    <h4 class="text-primary">@risk.ProbabilityScore</h4>
+                                    <small class="text-muted">Probability</small>
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <h4 class="text-warning">@risk.ImpactScore</h4>
+                                <small class="text-muted">Impact</small>
+                            </div>
+                        </div>
+                        <div class="mt-3">
+                            <div class="progress" style="height: 20px;">
+                                <div class="progress-bar @GetExposureProgressBarClass(risk.ExposureScore)" 
+                                     role="progressbar" 
+                                     style="width: @(risk.ExposureScore * 10)%"
+                                     aria-valuenow="@risk.ExposureScore" 
+                                     aria-valuemin="0" 
+                                     aria-valuemax="100">
+                                    @risk.ExposureScore
+                                </div>
+                            </div>
+                            <small class="text-muted">Exposure Score</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter]
+    public Guid Id { get; set; }
+
+    private RiskDto? risk;
+    private bool isLoading = true;
+    private string? errorMessage;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadRisk();
+    }
+
+    private async Task LoadRisk()
+    {
+        try
+        {
+            isLoading = true;
+            errorMessage = null;
+            risk = await RiskService.GetRiskAsync(Id);
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Error loading risk: {ex.Message}";
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private async Task DeleteRisk()
+    {
+        if (risk != null && await RiskService.DeleteRiskAsync(risk.RiskId))
+        {
+            Navigation.NavigateTo("/risks");
+        }
+        else
+        {
+            errorMessage = "Failed to delete risk";
+        }
+    }
+
+    private string GetRiskStatusBadgeClass(string status)
+    {
+        return status.ToLower() switch
+        {
+            "open" => "bg-warning",
+            "mitigated" => "bg-success",
+            "closed" => "bg-secondary",
+            "monitoring" => "bg-info",
+            "escalated" => "bg-danger",
+            _ => "bg-secondary"
+        };
+    }
+
+    private string GetRiskLevelBadgeClass(string level)
+    {
+        return level.ToLower() switch
+        {
+            "low" => "bg-success",
+            "medium" => "bg-warning",
+            "high" => "bg-danger",
+            "critical" => "bg-dark",
+            _ => "bg-secondary"
+        };
+    }
+
+    private string GetScoreClass(int score)
+    {
+        return score switch
+        {
+            >= 8 => "text-danger fw-bold",
+            >= 6 => "text-warning fw-bold",
+            >= 4 => "text-info fw-bold",
+            >= 2 => "text-success",
+            _ => "text-muted"
+        };
+    }
+
+    private string GetScoreProgressBarClass(int score)
+    {
+        return score switch
+        {
+            >= 8 => "bg-danger",
+            >= 6 => "bg-warning",
+            >= 4 => "bg-info",
+            >= 2 => "bg-success",
+            _ => "bg-secondary"
+        };
+    }
+
+    private string GetExposureScoreClass(int score)
+    {
+        return score switch
+        {
+            >= 80 => "text-danger fw-bold",
+            >= 60 => "text-warning fw-bold",
+            >= 40 => "text-info fw-bold",
+            >= 20 => "text-success",
+            _ => "text-muted"
+        };
+    }
+
+    private string GetExposureProgressBarClass(int score)
+    {
+        return score switch
+        {
+            >= 80 => "bg-danger",
+            >= 60 => "bg-warning",
+            >= 40 => "bg-info",
+            >= 20 => "bg-success",
+            _ => "bg-secondary"
+        };
+    }
+
+    private string GetRiskIconClass()
+    {
+        return risk.ExposureScore switch
+        {
+            >= 80 => "text-danger",
+            >= 60 => "text-warning",
+            >= 40 => "text-info",
+            >= 20 => "text-success",
+            _ => "text-muted"
+        };
+    }
+
+    private int GetDaysSinceIdentified()
+    {
+        if (!risk.IdentifiedDate.HasValue)
+            return 0;
+
+        return DateOnly.FromDateTime(DateTime.Today).DayNumber - risk.IdentifiedDate.Value.DayNumber;
+    }
+} 

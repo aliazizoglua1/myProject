@@ -1,0 +1,317 @@
+@page "/organizationusers/{OrganizationId:guid}/{UserId:guid}/edit"
+@using MyProject.UI.ProjectManagementConsole.Models
+@using MyProject.UI.ProjectManagementConsole.Services
+@inject IOrganizationUserService OrganizationUserService
+@inject NavigationManager Navigation
+
+<PageTitle>Edit Organization User</PageTitle>
+
+<div class="container-fluid">
+    <div class="row mb-3">
+        <div class="col">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="/organizationusers">Organization Users</a></li>
+                    <li class="breadcrumb-item"><a href="/organizationusers/@OrganizationId/@UserId">Organization User Details</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">Edit Organization User</li>
+                </ol>
+            </nav>
+        </div>
+    </div>
+
+    @if (isLoading)
+    {
+        <div class="text-center">
+            <div class="spinner-border" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+        </div>
+    }
+    else if (errorMessage != null)
+    {
+        <div class="alert alert-danger" role="alert">
+            @errorMessage
+        </div>
+    }
+    else if (organizationUser == null)
+    {
+        <div class="alert alert-warning" role="alert">
+            Organization User not found.
+        </div>
+    }
+    else
+    {
+        <div class="row">
+            <div class="col-lg-8">
+                <div class="card">
+                    <div class="card-header">
+                        <h2>Edit Organization User</h2>
+                    </div>
+                    <div class="card-body">
+                        <EditForm Model="updateDto" OnValidSubmit="HandleValidSubmit">
+                            <DataAnnotationsValidator />
+
+                            @if (errorMessage != null)
+                            {
+                                <div class="alert alert-danger" role="alert">
+                                    @errorMessage
+                                </div>
+                            }
+
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="role" class="form-label">Role</label>
+                                        <InputSelect id="role" class="form-select" @bind-Value="updateDto.Role">
+                                            <option value="">Keep Current Role</option>
+                                            <option value="Admin">Admin</option>
+                                            <option value="Manager">Manager</option>
+                                            <option value="Member">Member</option>
+                                            <option value="Viewer">Viewer</option>
+                                            <option value="Guest">Guest</option>
+                                        </InputSelect>
+                                        <ValidationMessage For="@(() => updateDto.Role)" />
+                                        <div class="form-text">Current role: <span class="badge bg-info">@organizationUser.Role</span></div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="accessLevel" class="form-label">Access Level</label>
+                                        <InputSelect id="accessLevel" class="form-select" @bind-Value="updateDto.AccessLevel">
+                                            <option value="">Keep Current Access Level</option>
+                                            <option value="Admin">Admin</option>
+                                            <option value="Manager">Manager</option>
+                                            <option value="Member">Member</option>
+                                            <option value="Viewer">Viewer</option>
+                                            <option value="Guest">Guest</option>
+                                        </InputSelect>
+                                        <ValidationMessage For="@(() => updateDto.AccessLevel)" />
+                                        <div class="form-text">Current access level: <span class="badge @GetAccessLevelBadgeClass(organizationUser.AccessLevel)">@organizationUser.AccessLevel</span></div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="joinedDate" class="form-label">Joined Date</label>
+                                        <InputDate id="joinedDate" class="form-control" @bind-Value="updateDto.JoinedDate" />
+                                        <ValidationMessage For="@(() => updateDto.JoinedDate)" />
+                                        <div class="form-text">Current joined date: @organizationUser.JoinedDate.ToString("MMM dd, yyyy")</div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <div class="form-check">
+                                            <InputCheckbox id="isActive" class="form-check-input" @bind-Value="isActiveChecked" />
+                                            <label class="form-check-label" for="isActive">
+                                                Active Member
+                                            </label>
+                                        </div>
+                                        <div class="form-text">Current status: <span class="badge @(organizationUser.IsActive ? "bg-success" : "bg-secondary")">@(organizationUser.IsActive ? "Active" : "Inactive")</span></div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="d-flex gap-2">
+                                <button type="submit" class="btn btn-primary" disabled="@isSubmitting">
+                                    @if (isSubmitting)
+                                    {
+                                        <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                                        <span class="ms-1">Updating...</span>
+                                    }
+                                    else
+                                    {
+                                        <i class="bi bi-check-circle"></i>
+                                        <span class="ms-1">Update Membership</span>
+                                    }
+                                </button>
+                                <a href="/organizationusers/@OrganizationId/@UserId" class="btn btn-secondary">
+                                    <i class="bi bi-x-circle"></i>
+                                    <span class="ms-1">Cancel</span>
+                                </a>
+                            </div>
+                        </EditForm>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-4">
+                <div class="card">
+                    <div class="card-header">
+                        <h5>Current Membership Details</h5>
+                    </div>
+                    <div class="card-body">
+                        <dl class="row">
+                            <dt class="col-sm-4">User</dt>
+                            <dd class="col-sm-8">
+                                @if (organizationUser.User != null)
+                                {
+                                    <span>@organizationUser.User.FirstName @organizationUser.User.LastName</span>
+                                }
+                                else
+                                {
+                                    <span class="text-muted">User not found</span>
+                                }
+                            </dd>
+
+                            <dt class="col-sm-4">Organization</dt>
+                            <dd class="col-sm-8">
+                                @if (organizationUser.Organization != null)
+                                {
+                                    <span>@organizationUser.Organization.OrganizationName</span>
+                                }
+                                else
+                                {
+                                    <span class="text-muted">Organization not found</span>
+                                }
+                            </dd>
+
+                            <dt class="col-sm-4">Role</dt>
+                            <dd class="col-sm-8">
+                                <span class="badge bg-info">@organizationUser.Role</span>
+                            </dd>
+
+                            <dt class="col-sm-4">Access Level</dt>
+                            <dd class="col-sm-8">
+                                <span class="badge @GetAccessLevelBadgeClass(organizationUser.AccessLevel)">
+                                    @organizationUser.AccessLevel
+                                </span>
+                            </dd>
+
+                            <dt class="col-sm-4">Status</dt>
+                            <dd class="col-sm-8">
+                                <span class="badge @(organizationUser.IsActive ? "bg-success" : "bg-secondary")">
+                                    @(organizationUser.IsActive ? "Active" : "Inactive")
+                                </span>
+                            </dd>
+
+                            <dt class="col-sm-4">Joined</dt>
+                            <dd class="col-sm-8">@organizationUser.JoinedDate.ToString("MMM dd, yyyy")</dd>
+                        </dl>
+                    </div>
+                </div>
+
+                <div class="card mt-3">
+                    <div class="card-header">
+                        <h5>Quick Actions</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="d-grid gap-2">
+                            <a href="/organizationusers/@OrganizationId/@UserId" class="btn btn-outline-primary">
+                                <i class="bi bi-eye"></i> View Membership
+                            </a>
+                            <a href="/organizationusers" class="btn btn-outline-secondary">
+                                <i class="bi bi-arrow-left"></i> Back to Organization Users
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card mt-3">
+                    <div class="card-header">
+                        <h5>Update Notes</h5>
+                    </div>
+                    <div class="card-body">
+                        <ul class="small text-muted">
+                            <li>Only changed fields will be updated</li>
+                            <li>Role changes affect permissions</li>
+                            <li>Access level changes affect system access</li>
+                            <li>Inactive members cannot access the organization</li>
+                            <li>Changes take effect immediately</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter]
+    public Guid OrganizationId { get; set; }
+
+    [Parameter]
+    public Guid UserId { get; set; }
+
+    private OrganizationUserDto? organizationUser;
+    private UpdateOrganizationUserDto updateDto = new();
+    private bool isActiveChecked = true; // New property for checkbox binding
+    private bool isLoading = true;
+    private bool isSubmitting = false;
+    private string? errorMessage;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadOrganizationUser();
+    }
+
+    private async Task LoadOrganizationUser()
+    {
+        try
+        {
+            isLoading = true;
+            errorMessage = null;
+            organizationUser = await OrganizationUserService.GetOrganizationUserAsync(OrganizationId, UserId);
+            if (organizationUser != null)
+            {
+                isActiveChecked = organizationUser.IsActive; // Initialize checkbox from user data
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Error loading organization user: {ex.Message}";
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private async Task HandleValidSubmit()
+    {
+        try
+        {
+            isSubmitting = true;
+            errorMessage = null;
+
+            // Only update fields that have been changed
+            var updateData = new UpdateOrganizationUserDto();
+            if (!string.IsNullOrWhiteSpace(updateDto.Role))
+                updateData.Role = updateDto.Role;
+            if (!string.IsNullOrWhiteSpace(updateDto.AccessLevel))
+                updateData.AccessLevel = updateDto.AccessLevel;
+            // Always set IsActive if the checkbox value differs from the current user's status
+            if (organizationUser != null && isActiveChecked != organizationUser.IsActive)
+            {
+                updateData.IsActive = isActiveChecked;
+            }
+            if (updateDto.JoinedDate.HasValue)
+                updateData.JoinedDate = updateDto.JoinedDate;
+
+            var updatedOrgUser = await OrganizationUserService.UpdateOrganizationUserAsync(OrganizationId, UserId, updateData);
+            Navigation.NavigateTo($"/organizationusers/{updatedOrgUser.OrganizationId}/{updatedOrgUser.UserId}");
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Error updating organization user: {ex.Message}";
+        }
+        finally
+        {
+            isSubmitting = false;
+        }
+    }
+
+    private string GetAccessLevelBadgeClass(string accessLevel)
+    {
+        return accessLevel.ToLower() switch
+        {
+            "admin" => "bg-danger",
+            "manager" => "bg-warning",
+            "member" => "bg-success",
+            "viewer" => "bg-info",
+            "guest" => "bg-secondary",
+            _ => "bg-secondary"
+        };
+    }
+} 

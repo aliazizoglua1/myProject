@@ -17,6 +17,11 @@ namespace MyProject.Persistence
         public DbSet<Issue> Issues { get; set; }
         public DbSet<ChangeRequest> ChangeRequests { get; set; }
         public DbSet<QualityAssurance> QualityAssurances { get; set; }
+        public DbSet<Organization> Organizations { get; set; }
+        public DbSet<User> Users { get; set; }
+        public DbSet<Milestone> Milestones { get; set; }
+        public DbSet<OrganizationUser> OrganizationUsers { get; set; }
+        public DbSet<TaskTimeLog> TaskTimeLogs { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -30,6 +35,11 @@ namespace MyProject.Persistence
             modelBuilder.ApplyConfiguration(new IssueConfiguration());
             modelBuilder.ApplyConfiguration(new ChangeRequestConfiguration());
             modelBuilder.ApplyConfiguration(new QualityAssuranceConfiguration());
+            modelBuilder.ApplyConfiguration(new OrganizationConfiguration());
+            modelBuilder.ApplyConfiguration(new UserConfiguration());
+            modelBuilder.ApplyConfiguration(new MilestoneConfiguration());
+            modelBuilder.ApplyConfiguration(new OrganizationUserConfiguration());
+            modelBuilder.ApplyConfiguration(new TaskTimeLogConfiguration());
 
             // Configure the update trigger behavior
             modelBuilder.Entity<Project>()
@@ -58,6 +68,26 @@ namespace MyProject.Persistence
 
             modelBuilder.Entity<QualityAssurance>()
                 .Property(qa => qa.UpdatedAt)
+                .HasDefaultValueSql("now()");
+
+            modelBuilder.Entity<Organization>()
+                .Property(o => o.UpdatedAt)
+                .HasDefaultValueSql("now()");
+
+            modelBuilder.Entity<User>()
+                .Property(u => u.UpdatedAt)
+                .HasDefaultValueSql("now()");
+
+            modelBuilder.Entity<Milestone>()
+                .Property(m => m.UpdatedAt)
+                .HasDefaultValueSql("now()");
+
+            modelBuilder.Entity<OrganizationUser>()
+                .Property(ou => ou.UpdatedAt)
+                .HasDefaultValueSql("now()");
+
+            modelBuilder.Entity<TaskTimeLog>()
+                .Property(t => t.UpdatedAt)
                 .HasDefaultValueSql("now()");
         }
 

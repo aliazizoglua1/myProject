@@ -18,5 +18,14 @@ namespace MyProject.Persistence.Repositories
         Task<bool> DeleteAsync(Guid id);
         Task<bool> ExistsAsync(Guid id);
         Task<IEnumerable<Task>> GetTasksWithSubtasksAsync();
+        Task<IEnumerable<Task>> GetByTenantIdAsync(Guid tenantId);
+        Task<IEnumerable<Task>> GetByTenantAndStatusAsync(Guid tenantId, string status);
+        Task<IEnumerable<Task>> GetByTenantAndPriorityAsync(Guid tenantId, string priority);
+        Task<IEnumerable<Task>> GetByProjectAndStatusAsync(Guid projectId, string status);
+        Task<IEnumerable<Task>> GetByMilestoneIdAsync(Guid milestoneId);
+        Task<IEnumerable<Task>> GetByIssueIdAsync(Guid issueId);
+        Task<IEnumerable<Task>> GetByTenantAndUserAsync(Guid tenantId, Guid userId);
+        Task<IEnumerable<Task>> GetOverdueTasksByTenantAsync(Guid tenantId);
+        Task<IEnumerable<Task>> GetMilestonesByTenantAsync(Guid tenantId);
     }
 } 

@@ -1,0 +1,326 @@
+@page "/change-requests/create"
+@using MyProject.UI.ProjectManagementConsole.Models
+@using MyProject.UI.ProjectManagementConsole.Services
+@inject IChangeRequestService ChangeRequestService
+@inject IProjectService ProjectService
+@inject IUserService UserService
+@inject NavigationManager Navigation
+
+<PageTitle>Add Change Request</PageTitle>
+
+<div class="container-fluid">
+    <div class="row mb-3">
+        <div class="col">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="/change-requests">Change Requests</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">Add Change Request</li>
+                </ol>
+            </nav>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-header">
+                    <h2>Add New Change Request</h2>
+                </div>
+                <div class="card-body">
+                    <EditForm Model="changeRequest" OnValidSubmit="HandleValidSubmit">
+                        <DataAnnotationsValidator />
+
+                        @if (errorMessage != null)
+                        {
+                            <div class="alert alert-danger" role="alert">
+                                @errorMessage
+                            </div>
+                        }
+
+                        <div class="mb-3">
+                            <label for="changeRequestTitle" class="form-label">Change Request Title *</label>
+                            <InputText id="changeRequestTitle" class="form-control" @bind-Value="changeRequest.ChangeRequestTitle" />
+                            <ValidationMessage For="@(() => changeRequest.ChangeRequestTitle)" />
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="description" class="form-label">Description</label>
+                            <InputTextArea id="description" class="form-control" rows="3" @bind-Value="changeRequest.Description" />
+                            <ValidationMessage For="@(() => changeRequest.Description)" />
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="projectId" class="form-label">Project *</label>
+                                    <InputSelect id="projectId" class="form-select" @bind-Value="changeRequest.ProjectId">
+                                        <option value="">Select Project</option>
+                                        @if (projects != null)
+                                        {
+                                            @foreach (var project in projects)
+                                            {
+                                                <option value="@project.ProjectId">@project.ProjectName</option>
+                                            }
+                                        }
+                                    </InputSelect>
+                                    <ValidationMessage For="@(() => changeRequest.ProjectId)" />
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="requestedByUserId" class="form-label">Requested By</label>
+                                    <InputSelect id="requestedByUserId" class="form-select" @bind-Value="changeRequest.RequestedByUserId">
+                                        <option value="">Select User (Optional)</option>
+                                        @if (users != null)
+                                        {
+                                            @foreach (var user in users)
+                                            {
+                                                <option value="@user.UserId">@user.FirstName @user.LastName</option>
+                                            }
+                                        }
+                                    </InputSelect>
+                                    <ValidationMessage For="@(() => changeRequest.RequestedByUserId)" />
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="changeType" class="form-label">Change Type</label>
+                                    <InputSelect id="changeType" class="form-select" @bind-Value="changeRequest.ChangeType">
+                                        <option value="">Select Change Type</option>
+                                        <option value="Feature">Feature</option>
+                                        <option value="Bug Fix">Bug Fix</option>
+                                        <option value="Enhancement">Enhancement</option>
+                                        <option value="Infrastructure">Infrastructure</option>
+                                        <option value="Security">Security</option>
+                                        <option value="Performance">Performance</option>
+                                        <option value="Compliance">Compliance</option>
+                                        <option value="Documentation">Documentation</option>
+                                    </InputSelect>
+                                    <ValidationMessage For="@(() => changeRequest.ChangeType)" />
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="priority" class="form-label">Priority</label>
+                                    <InputSelect id="priority" class="form-select" @bind-Value="changeRequest.Priority">
+                                        <option value="Low">Low</option>
+                                        <option value="Medium">Medium</option>
+                                        <option value="High">High</option>
+                                        <option value="Critical">Critical</option>
+                                    </InputSelect>
+                                    <ValidationMessage For="@(() => changeRequest.Priority)" />
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="approvalStatus" class="form-label">Approval Status</label>
+                                    <InputSelect id="approvalStatus" class="form-select" @bind-Value="changeRequest.ApprovalStatus">
+                                        <option value="Pending">Pending</option>
+                                        <option value="Under Review">Under Review</option>
+                                        <option value="Approved">Approved</option>
+                                        <option value="Rejected">Rejected</option>
+                                        <option value="Implemented">Implemented</option>
+                                        <option value="Cancelled">Cancelled</option>
+                                    </InputSelect>
+                                    <ValidationMessage For="@(() => changeRequest.ApprovalStatus)" />
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="requestDate" class="form-label">Request Date *</label>
+                                    <InputDate id="requestDate" class="form-control" @bind-Value="changeRequest.RequestDate" />
+                                    <ValidationMessage For="@(() => changeRequest.RequestDate)" />
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="approvalDate" class="form-label">Approval Date</label>
+                                    <InputDate id="approvalDate" class="form-control" @bind-Value="changeRequest.ApprovalDate" />
+                                    <ValidationMessage For="@(() => changeRequest.ApprovalDate)" />
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="businessJustification" class="form-label">Business Justification</label>
+                            <InputTextArea id="businessJustification" class="form-control" rows="3" @bind-Value="changeRequest.BusinessJustification" />
+                            <ValidationMessage For="@(() => changeRequest.BusinessJustification)" />
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="technicalImpact" class="form-label">Technical Impact</label>
+                            <InputTextArea id="technicalImpact" class="form-control" rows="3" @bind-Value="changeRequest.TechnicalImpact" />
+                            <ValidationMessage For="@(() => changeRequest.TechnicalImpact)" />
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="implementationPlan" class="form-label">Implementation Plan</label>
+                            <InputTextArea id="implementationPlan" class="form-control" rows="3" @bind-Value="changeRequest.ImplementationPlan" />
+                            <ValidationMessage For="@(() => changeRequest.ImplementationPlan)" />
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="riskAssessment" class="form-label">Risk Assessment</label>
+                            <InputTextArea id="riskAssessment" class="form-control" rows="3" @bind-Value="changeRequest.RiskAssessment" />
+                            <ValidationMessage For="@(() => changeRequest.RiskAssessment)" />
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="notes" class="form-label">Notes</label>
+                            <InputTextArea id="notes" class="form-control" rows="3" @bind-Value="changeRequest.Notes" />
+                            <ValidationMessage For="@(() => changeRequest.Notes)" />
+                        </div>
+
+                        <div class="d-flex gap-2">
+                            <button type="submit" class="btn btn-primary" disabled="@isSubmitting">
+                                @if (isSubmitting)
+                                {
+                                    <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                                    <span class="ms-1">Adding...</span>
+                                }
+                                else
+                                {
+                                    <i class="bi bi-check-circle"></i>
+                                    <span class="ms-1">Add Change Request</span>
+                                }
+                            </button>
+                            <a href="/change-requests" class="btn btn-secondary">
+                                <i class="bi bi-x-circle"></i>
+                                <span class="ms-1">Cancel</span>
+                            </a>
+                        </div>
+                    </EditForm>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5>Change Request Information</h5>
+                </div>
+                <div class="card-body">
+                    <p class="text-muted">
+                        Change requests document proposed modifications to project scope, schedule, budget, or other aspects. 
+                        They go through a formal review and approval process.
+                    </p>
+                    
+                    <h6>Required Fields:</h6>
+                    <ul class="small text-muted">
+                        <li><strong>Change Request Name:</strong> A clear, descriptive name for the change</li>
+                        <li><strong>Project:</strong> The project this change affects</li>
+                        <li><strong>Requested Date:</strong> When the change was requested</li>
+                    </ul>
+
+                    <h6>Change Request Types:</h6>
+                    <ul class="small text-muted">
+                        <li><strong>Scope:</strong> Changes to project deliverables</li>
+                        <li><strong>Schedule:</strong> Timeline modifications</li>
+                        <li><strong>Budget:</strong> Cost adjustments</li>
+                        <li><strong>Quality:</strong> Quality standard changes</li>
+                        <li><strong>Resource:</strong> Personnel or resource changes</li>
+                        <li><strong>Technology:</strong> Technical approach changes</li>
+                        <li><strong>Process:</strong> Methodology or process changes</li>
+                        <li><strong>Risk:</strong> Risk mitigation changes</li>
+                    </ul>
+
+                    <h6>Change Request Status:</h6>
+                    <ul class="small text-muted">
+                        <li><span class="badge bg-warning">Pending</span> - Awaiting review</li>
+                        <li><span class="badge bg-info">Under Review</span> - Being evaluated</li>
+                        <li><span class="badge bg-success">Approved</span> - Change approved</li>
+                        <li><span class="badge bg-danger">Rejected</span> - Change denied</li>
+                        <li><span class="badge bg-primary">Implemented</span> - Change completed</li>
+                        <li><span class="badge bg-secondary">Cancelled</span> - Request withdrawn</li>
+                    </ul>
+
+                    <h6>Priority Levels:</h6>
+                    <ul class="small text-muted">
+                        <li><span class="badge bg-success">Low</span> - Minimal impact</li>
+                        <li><span class="badge bg-warning">Medium</span> - Moderate impact</li>
+                        <li><span class="badge bg-danger">High</span> - Significant impact</li>
+                        <li><span class="badge bg-dark">Critical</span> - Major impact</li>
+                    </ul>
+
+                    <h6>Notes:</h6>
+                    <ul class="small text-muted">
+                        <li>Business justification is required for approval</li>
+                        <li>Impact analysis helps assess consequences</li>
+                        <li>Cost and effort estimates inform decisions</li>
+                        <li>Implementation plans detail execution</li>
+                        <li>Risk assessment identifies potential issues</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    private CreateChangeRequestDto changeRequest = new();
+    private List<ProjectDto>? projects;
+    private List<UserDto>? users;
+    private bool isLoading = true;
+    private bool isSubmitting = false;
+    private string? errorMessage;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadData();
+    }
+
+    private async Task LoadData()
+    {
+        try
+        {
+            isLoading = true;
+            errorMessage = null;
+            
+            // Load data in parallel
+            var projectTask = ProjectService.GetProjectsAsync();
+            var userTask = UserService.GetUsersAsync();
+            
+            await Task.WhenAll(projectTask, userTask);
+            
+            projects = await projectTask;
+            users = await userTask;
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Error loading data: {ex.Message}";
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private async Task HandleValidSubmit()
+    {
+        try
+        {
+            isSubmitting = true;
+            errorMessage = null;
+
+            var createdChangeRequest = await ChangeRequestService.CreateChangeRequestAsync(changeRequest);
+            Navigation.NavigateTo($"/change-requests/{createdChangeRequest.ChangeRequestId}");
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Error adding change request: {ex.Message}";
+        }
+        finally
+        {
+            isSubmitting = false;
+        }
+    }
+} 

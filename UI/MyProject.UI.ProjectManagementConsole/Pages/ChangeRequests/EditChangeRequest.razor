@@ -1,0 +1,416 @@
+@page "/change-requests/{Id:guid}/edit"
+@using MyProject.UI.ProjectManagementConsole.Models
+@using MyProject.UI.ProjectManagementConsole.Services
+@inject IChangeRequestService ChangeRequestService
+@inject IUserService UserService
+@inject NavigationManager Navigation
+
+<PageTitle>Edit Change Request</PageTitle>
+
+<div class="container-fluid">
+    <div class="row mb-3">
+        <div class="col">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="/change-requests">Change Requests</a></li>
+                    <li class="breadcrumb-item"><a href="/change-requests/@Id">Change Request Details</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">Edit Change Request</li>
+                </ol>
+            </nav>
+        </div>
+    </div>
+
+    @if (isLoading)
+    {
+        <div class="text-center">
+            <div class="spinner-border" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+        </div>
+    }
+    else if (errorMessage != null)
+    {
+        <div class="alert alert-danger" role="alert">
+            @errorMessage
+        </div>
+    }
+    else if (changeRequest == null)
+    {
+        <div class="alert alert-warning" role="alert">
+            Change Request not found.
+        </div>
+    }
+    else
+    {
+        <div class="row">
+            <div class="col-lg-8">
+                <div class="card">
+                    <div class="card-header">
+                        <h2>Edit Change Request</h2>
+                    </div>
+                    <div class="card-body">
+                        <EditForm Model="updateDto" OnValidSubmit="HandleValidSubmit">
+                            <DataAnnotationsValidator />
+
+                            @if (errorMessage != null)
+                            {
+                                <div class="alert alert-danger" role="alert">
+                                    @errorMessage
+                                </div>
+                            }
+
+                            <div class="mb-3">
+                                <label for="changeRequestTitle" class="form-label">Change Request Title</label>
+                                <InputText id="changeRequestTitle" class="form-control" @bind-Value="updateDto.ChangeRequestTitle" />
+                                <ValidationMessage For="@(() => updateDto.ChangeRequestTitle)" />
+                                <div class="form-text">Current value: <strong>@changeRequest.ChangeRequestTitle</strong></div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="description" class="form-label">Description</label>
+                                <InputTextArea id="description" class="form-control" rows="3" @bind-Value="updateDto.Description" />
+                                <ValidationMessage For="@(() => updateDto.Description)" />
+                                <div class="form-text">Current value: <strong>@(changeRequest.Description ?? "Not set")</strong></div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="changeType" class="form-label">Change Type</label>
+                                        <InputSelect id="changeType" class="form-select" @bind-Value="updateDto.ChangeType">
+                                            <option value="">Keep Current Type</option>
+                                            <option value="Feature">Feature</option>
+                                            <option value="Bug Fix">Bug Fix</option>
+                                            <option value="Enhancement">Enhancement</option>
+                                            <option value="Infrastructure">Infrastructure</option>
+                                            <option value="Security">Security</option>
+                                            <option value="Performance">Performance</option>
+                                            <option value="Compliance">Compliance</option>
+                                            <option value="Documentation">Documentation</option>
+                                        </InputSelect>
+                                        <ValidationMessage For="@(() => updateDto.ChangeType)" />
+                                        <div class="form-text">Current value: <span class="badge bg-secondary">@changeRequest.ChangeType</span></div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="status" class="form-label">Status</label>
+                                        <InputSelect id="status" class="form-select" @bind-Value="updateDto.ApprovalStatus">
+                                            <option value="">Keep Current Status</option>
+                                            <option value="Pending">Pending</option>
+                                            <option value="Under Review">Under Review</option>
+                                            <option value="Approved">Approved</option>
+                                            <option value="Rejected">Rejected</option>
+                                            <option value="Implemented">Implemented</option>
+                                            <option value="Cancelled">Cancelled</option>
+                                        </InputSelect>
+                                        <ValidationMessage For="@(() => updateDto.ApprovalStatus)" />
+                                        <div class="form-text">Current value: <span class="badge @GetChangeRequestStatusBadgeClass(changeRequest.ApprovalStatus)">@changeRequest.ApprovalStatus</span></div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="priority" class="form-label">Priority</label>
+                                        <InputSelect id="priority" class="form-select" @bind-Value="updateDto.Priority">
+                                            <option value="">Keep Current Priority</option>
+                                            <option value="Low">Low</option>
+                                            <option value="Medium">Medium</option>
+                                            <option value="High">High</option>
+                                            <option value="Critical">Critical</option>
+                                        </InputSelect>
+                                        <ValidationMessage For="@(() => updateDto.Priority)" />
+                                        <div class="form-text">Current value: <span class="badge @GetPriorityBadgeClass(changeRequest.Priority)">@changeRequest.Priority</span></div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="approvalDate" class="form-label">Approval Date</label>
+                                        <InputDate id="approvalDate" class="form-control" @bind-Value="updateDto.ApprovalDate" />
+                                        <ValidationMessage For="@(() => updateDto.ApprovalDate)" />
+                                        <div class="form-text">Current value: <strong>@(changeRequest.ApprovalDate?.ToString("MMM dd, yyyy") ?? "Not approved")</strong></div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="businessJustification" class="form-label">Business Justification</label>
+                                <InputTextArea id="businessJustification" class="form-control" rows="3" @bind-Value="updateDto.BusinessJustification" />
+                                <ValidationMessage For="@(() => updateDto.BusinessJustification)" />
+                                <div class="form-text">Current value: <strong>@(changeRequest.BusinessJustification ?? "Not set")</strong></div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="technicalImpact" class="form-label">Technical Impact</label>
+                                <InputTextArea id="technicalImpact" class="form-control" rows="3" @bind-Value="updateDto.TechnicalImpact" />
+                                <ValidationMessage For="@(() => updateDto.TechnicalImpact)" />
+                                <div class="form-text">Current value: <strong>@(changeRequest.TechnicalImpact ?? "Not set")</strong></div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="implementationPlan" class="form-label">Implementation Plan</label>
+                                <InputTextArea id="implementationPlan" class="form-control" rows="3" @bind-Value="updateDto.ImplementationPlan" />
+                                <ValidationMessage For="@(() => updateDto.ImplementationPlan)" />
+                                <div class="form-text">Current value: <strong>@(changeRequest.ImplementationPlan ?? "Not set")</strong></div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="riskAssessment" class="form-label">Risk Assessment</label>
+                                <InputTextArea id="riskAssessment" class="form-control" rows="3" @bind-Value="updateDto.RiskAssessment" />
+                                <ValidationMessage For="@(() => updateDto.RiskAssessment)" />
+                                <div class="form-text">Current value: <strong>@(changeRequest.RiskAssessment ?? "Not set")</strong></div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="notes" class="form-label">Notes</label>
+                                <InputTextArea id="notes" class="form-control" rows="3" @bind-Value="updateDto.Notes" />
+                                <ValidationMessage For="@(() => updateDto.Notes)" />
+                                <div class="form-text">Current value: <strong>@(changeRequest.Notes ?? "Not set")</strong></div>
+                            </div>
+
+                            <div class="d-flex gap-2">
+                                <button type="submit" class="btn btn-primary" disabled="@isSubmitting">
+                                    @if (isSubmitting)
+                                    {
+                                        <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                                        <span class="ms-1">Updating...</span>
+                                    }
+                                    else
+                                    {
+                                        <i class="bi bi-check-circle"></i>
+                                        <span class="ms-1">Update Change Request</span>
+                                    }
+                                </button>
+                                <a href="/change-requests/@Id" class="btn btn-secondary">
+                                    <i class="bi bi-x-circle"></i>
+                                    <span class="ms-1">Cancel</span>
+                                </a>
+                            </div>
+                        </EditForm>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-4">
+                <div class="card">
+                    <div class="card-header">
+                        <h5>Current Change Request Details</h5>
+                    </div>
+                    <div class="card-body">
+                        <dl class="row">
+                            <dt class="col-sm-4">Name</dt>
+                            <dd class="col-sm-8">@changeRequest.ChangeRequestTitle</dd>
+
+                            <dt class="col-sm-4">Project</dt>
+                            <dd class="col-sm-8">
+                                @if (changeRequest.Project != null)
+                                {
+                                    <span class="badge bg-info">@changeRequest.Project.ProjectName</span>
+                                }
+                                else
+                                {
+                                    <span class="text-muted">No project assigned</span>
+                                }
+                            </dd>
+
+                            <dt class="col-sm-4">Type</dt>
+                            <dd class="col-sm-8">
+                                <span class="badge bg-secondary">@changeRequest.ChangeType</span>
+                            </dd>
+
+                            <dt class="col-sm-4">Status</dt>
+                            <dd class="col-sm-8">
+                                <span class="badge @GetChangeRequestStatusBadgeClass(changeRequest.ApprovalStatus)">
+                                    @changeRequest.ApprovalStatus
+                                </span>
+                            </dd>
+
+                            <dt class="col-sm-4">Priority</dt>
+                            <dd class="col-sm-8">
+                                <span class="badge @GetPriorityBadgeClass(changeRequest.Priority)">
+                                    @changeRequest.Priority
+                                </span>
+                            </dd>
+
+                            <dt class="col-sm-4">Requested By</dt>
+                            <dd class="col-sm-8">
+                                @if (changeRequest.RequestedByUser != null)
+                                {
+                                    <span>@changeRequest.RequestedByUser.FirstName @changeRequest.RequestedByUser.LastName</span>
+                                }
+                                else
+                                {
+                                    <span class="text-muted">Unknown</span>
+                                }
+                            </dd>
+
+                            <dt class="col-sm-4">Requested</dt>
+                            <dd class="col-sm-8">@changeRequest.RequestDate.ToString("MMM dd, yyyy")</dd>
+
+                            <dt class="col-sm-4">Approved</dt>
+                            <dd class="col-sm-8">
+                                @if (changeRequest.ApprovalDate.HasValue)
+                                {
+                                    <span>@changeRequest.ApprovalDate.Value.ToString("MMM dd, yyyy")</span>
+                                }
+                                else
+                                {
+                                    <span class="text-muted">Not approved</span>
+                                }
+                            </dd>
+                        </dl>
+                    </div>
+                </div>
+
+                <div class="card mt-3">
+                    <div class="card-header">
+                        <h5>Quick Actions</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="d-grid gap-2">
+                            <a href="/change-requests/@Id" class="btn btn-outline-primary">
+                                <i class="bi bi-eye"></i> View Change Request
+                            </a>
+                            <a href="/change-requests" class="btn btn-outline-secondary">
+                                <i class="bi bi-arrow-left"></i> Back to Change Requests
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card mt-3">
+                    <div class="card-header">
+                        <h5>Update Notes</h5>
+                    </div>
+                    <div class="card-body">
+                        <ul class="small text-muted">
+                            <li>Only changed fields will be updated</li>
+                            <li>Status changes affect workflow</li>
+                            <li>Approval dates track decisions</li>
+                            <li>Cost and effort estimates inform decisions</li>
+                            <li>Implementation plans detail execution</li>
+                            <li>Risk assessments identify potential issues</li>
+                            <li>Changes take effect immediately</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter]
+    public Guid Id { get; set; }
+
+    private ChangeRequestDto? changeRequest;
+    private UpdateChangeRequestDto updateDto = new();
+    private List<UserDto>? users;
+    private bool isLoading = true;
+    private bool isSubmitting = false;
+    private string? errorMessage;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadData();
+    }
+
+    private async Task LoadData()
+    {
+        try
+        {
+            isLoading = true;
+            errorMessage = null;
+            
+            // Load change request and users in parallel
+            var changeRequestTask = ChangeRequestService.GetChangeRequestAsync(Id);
+            var userTask = UserService.GetUsersAsync();
+            
+            await Task.WhenAll(changeRequestTask, userTask);
+            
+            changeRequest = await changeRequestTask;
+            users = await userTask;
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Error loading data: {ex.Message}";
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private async Task HandleValidSubmit()
+    {
+        try
+        {
+            isSubmitting = true;
+            errorMessage = null;
+
+            // Only update fields that have been changed
+            var updateData = new UpdateChangeRequestDto();
+            if (!string.IsNullOrWhiteSpace(updateDto.ChangeRequestTitle))
+                updateData.ChangeRequestTitle = updateDto.ChangeRequestTitle;
+            if (!string.IsNullOrWhiteSpace(updateDto.Description))
+                updateData.Description = updateDto.Description;
+            if (!string.IsNullOrWhiteSpace(updateDto.ChangeType))
+                updateData.ChangeType = updateDto.ChangeType;
+            if (!string.IsNullOrWhiteSpace(updateDto.ApprovalStatus))
+                updateData.ApprovalStatus = updateDto.ApprovalStatus;
+            if (!string.IsNullOrWhiteSpace(updateDto.Priority))
+                updateData.Priority = updateDto.Priority;
+            if (updateDto.ApprovalDate.HasValue)
+                updateData.ApprovalDate = updateDto.ApprovalDate;
+            if (!string.IsNullOrWhiteSpace(updateDto.BusinessJustification))
+                updateData.BusinessJustification = updateDto.BusinessJustification;
+            if (!string.IsNullOrWhiteSpace(updateDto.TechnicalImpact))
+                updateData.TechnicalImpact = updateDto.TechnicalImpact;
+            if (!string.IsNullOrWhiteSpace(updateDto.ImplementationPlan))
+                updateData.ImplementationPlan = updateDto.ImplementationPlan;
+            if (!string.IsNullOrWhiteSpace(updateDto.RiskAssessment))
+                updateData.RiskAssessment = updateDto.RiskAssessment;
+            if (!string.IsNullOrWhiteSpace(updateDto.Notes))
+                updateData.Notes = updateDto.Notes;
+
+            var updatedChangeRequest = await ChangeRequestService.UpdateChangeRequestAsync(Id, updateData);
+            Navigation.NavigateTo($"/change-requests/{updatedChangeRequest.ChangeRequestId}");
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Error updating change request: {ex.Message}";
+        }
+        finally
+        {
+            isSubmitting = false;
+        }
+    }
+
+    private string GetChangeRequestStatusBadgeClass(string status)
+    {
+        return status.ToLower() switch
+        {
+            "pending" => "bg-warning",
+            "under review" => "bg-info",
+            "approved" => "bg-success",
+            "rejected" => "bg-danger",
+            "implemented" => "bg-primary",
+            "cancelled" => "bg-secondary",
+            _ => "bg-secondary"
+        };
+    }
+
+    private string GetPriorityBadgeClass(string priority)
+    {
+        return priority.ToLower() switch
+        {
+            "low" => "bg-success",
+            "medium" => "bg-warning",
+            "high" => "bg-danger",
+            "critical" => "bg-dark",
+            _ => "bg-secondary"
+        };
+    }
+} 

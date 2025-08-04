@@ -18,6 +18,10 @@ namespace MyProject.Persistence.Repositories
                 .Include(t => t.Project)
                 .Include(t => t.ParentTask)
                 .Include(t => t.Subtasks)
+                .Include(t => t.AssignedToUser)
+                .Include(t => t.Tenant)
+                .Include(t => t.Milestone)
+                .Include(t => t.Issue)
                 .ToListAsync();
         }
 
@@ -27,6 +31,10 @@ namespace MyProject.Persistence.Repositories
                 .Include(t => t.Project)
                 .Include(t => t.ParentTask)
                 .Include(t => t.Subtasks)
+                .Include(t => t.AssignedToUser)
+                .Include(t => t.Tenant)
+                .Include(t => t.Milestone)
+                .Include(t => t.Issue)
                 .FirstOrDefaultAsync(t => t.TaskId == id);
         }
 
@@ -36,6 +44,10 @@ namespace MyProject.Persistence.Repositories
                 .Include(t => t.Project)
                 .Include(t => t.ParentTask)
                 .Include(t => t.Subtasks)
+                .Include(t => t.AssignedToUser)
+                .Include(t => t.Tenant)
+                .Include(t => t.Milestone)
+                .Include(t => t.Issue)
                 .Where(t => t.ProjectId == projectId)
                 .ToListAsync();
         }
@@ -46,6 +58,10 @@ namespace MyProject.Persistence.Repositories
                 .Include(t => t.Project)
                 .Include(t => t.ParentTask)
                 .Include(t => t.Subtasks)
+                .Include(t => t.AssignedToUser)
+                .Include(t => t.Tenant)
+                .Include(t => t.Milestone)
+                .Include(t => t.Issue)
                 .Where(t => t.TaskStatus == status)
                 .ToListAsync();
         }
@@ -56,6 +72,10 @@ namespace MyProject.Persistence.Repositories
                 .Include(t => t.Project)
                 .Include(t => t.ParentTask)
                 .Include(t => t.Subtasks)
+                .Include(t => t.AssignedToUser)
+                .Include(t => t.Tenant)
+                .Include(t => t.Milestone)
+                .Include(t => t.Issue)
                 .Where(t => t.Priority == priority)
                 .ToListAsync();
         }
@@ -66,6 +86,10 @@ namespace MyProject.Persistence.Repositories
                 .Include(t => t.Project)
                 .Include(t => t.ParentTask)
                 .Include(t => t.Subtasks)
+                .Include(t => t.AssignedToUser)
+                .Include(t => t.Tenant)
+                .Include(t => t.Milestone)
+                .Include(t => t.Issue)
                 .Where(t => t.AssignedToUserId == userId)
                 .ToListAsync();
         }
@@ -76,6 +100,10 @@ namespace MyProject.Persistence.Repositories
                 .Include(t => t.Project)
                 .Include(t => t.ParentTask)
                 .Include(t => t.Subtasks)
+                .Include(t => t.AssignedToUser)
+                .Include(t => t.Tenant)
+                .Include(t => t.Milestone)
+                .Include(t => t.Issue)
                 .Where(t => t.ParentTaskId == parentTaskId)
                 .ToListAsync();
         }
@@ -86,6 +114,10 @@ namespace MyProject.Persistence.Repositories
                 .Include(t => t.Project)
                 .Include(t => t.ParentTask)
                 .Include(t => t.Subtasks)
+                .Include(t => t.AssignedToUser)
+                .Include(t => t.Tenant)
+                .Include(t => t.Milestone)
+                .Include(t => t.Issue)
                 .Where(t => t.IsMilestone)
                 .ToListAsync();
         }
@@ -97,6 +129,9 @@ namespace MyProject.Persistence.Repositories
                 .Include(t => t.Project)
                 .Include(t => t.ParentTask)
                 .Include(t => t.Subtasks)
+                .Include(t => t.AssignedToUser)
+                .Include(t => t.Tenant)
+                .Include(t => t.Milestone)
                 .Where(t => t.PlannedEndDate.HasValue && t.PlannedEndDate < today && t.TaskStatus != "Completed")
                 .ToListAsync();
         }
@@ -138,7 +173,130 @@ namespace MyProject.Persistence.Repositories
                 .Include(t => t.Project)
                 .Include(t => t.ParentTask)
                 .Include(t => t.Subtasks)
+                .Include(t => t.AssignedToUser)
+                .Include(t => t.Tenant)
+                .Include(t => t.Milestone)
                 .Where(t => t.Subtasks != null && t.Subtasks.Any())
+                .ToListAsync();
+        }
+
+        public async Task<IEnumerable<Task>> GetByTenantIdAsync(Guid tenantId)
+        {
+            return await _context.Tasks
+                .Include(t => t.Project)
+                .Include(t => t.ParentTask)
+                .Include(t => t.Subtasks)
+                .Include(t => t.AssignedToUser)
+                .Include(t => t.Tenant)
+                .Include(t => t.Milestone)
+                .Where(t => t.TenantId == tenantId)
+                .ToListAsync();
+        }
+
+        public async Task<IEnumerable<Task>> GetByTenantAndStatusAsync(Guid tenantId, string status)
+        {
+            return await _context.Tasks
+                .Include(t => t.Project)
+                .Include(t => t.ParentTask)
+                .Include(t => t.Subtasks)
+                .Include(t => t.AssignedToUser)
+                .Include(t => t.Tenant)
+                .Include(t => t.Milestone)
+                .Where(t => t.TenantId == tenantId && t.TaskStatus == status)
+                .ToListAsync();
+        }
+
+        public async Task<IEnumerable<Task>> GetByTenantAndPriorityAsync(Guid tenantId, string priority)
+        {
+            return await _context.Tasks
+                .Include(t => t.Project)
+                .Include(t => t.ParentTask)
+                .Include(t => t.Subtasks)
+                .Include(t => t.AssignedToUser)
+                .Include(t => t.Tenant)
+                .Include(t => t.Milestone)
+                .Where(t => t.TenantId == tenantId && t.Priority == priority)
+                .ToListAsync();
+        }
+
+        public async Task<IEnumerable<Task>> GetByProjectAndStatusAsync(Guid projectId, string status)
+        {
+            return await _context.Tasks
+                .Include(t => t.Project)
+                .Include(t => t.ParentTask)
+                .Include(t => t.Subtasks)
+                .Include(t => t.AssignedToUser)
+                .Include(t => t.Tenant)
+                .Include(t => t.Milestone)
+                .Where(t => t.ProjectId == projectId && t.TaskStatus == status)
+                .ToListAsync();
+        }
+
+        public async Task<IEnumerable<Task>> GetByMilestoneIdAsync(Guid milestoneId)
+        {
+            return await _context.Tasks
+                .Include(t => t.Project)
+                .Include(t => t.ParentTask)
+                .Include(t => t.Subtasks)
+                .Include(t => t.AssignedToUser)
+                .Include(t => t.Tenant)
+                .Include(t => t.Milestone)
+                .Include(t => t.Issue)
+                .Where(t => t.MilestoneId == milestoneId)
+                .ToListAsync();
+        }
+
+        public async Task<IEnumerable<Task>> GetByIssueIdAsync(Guid issueId)
+        {
+            return await _context.Tasks
+                .Include(t => t.Project)
+                .Include(t => t.ParentTask)
+                .Include(t => t.Subtasks)
+                .Include(t => t.AssignedToUser)
+                .Include(t => t.Tenant)
+                .Include(t => t.Milestone)
+                .Include(t => t.Issue)
+                .Where(t => t.IssueId == issueId)
+                .ToListAsync();
+        }
+
+        public async Task<IEnumerable<Task>> GetByTenantAndUserAsync(Guid tenantId, Guid userId)
+        {
+            return await _context.Tasks
+                .Include(t => t.Project)
+                .Include(t => t.ParentTask)
+                .Include(t => t.Subtasks)
+                .Include(t => t.AssignedToUser)
+                .Include(t => t.Tenant)
+                .Include(t => t.Milestone)
+                .Where(t => t.TenantId == tenantId && t.AssignedToUserId == userId)
+                .ToListAsync();
+        }
+
+        public async Task<IEnumerable<Task>> GetOverdueTasksByTenantAsync(Guid tenantId)
+        {
+            var today = DateOnly.FromDateTime(DateTime.Today);
+            return await _context.Tasks
+                .Include(t => t.Project)
+                .Include(t => t.ParentTask)
+                .Include(t => t.Subtasks)
+                .Include(t => t.AssignedToUser)
+                .Include(t => t.Tenant)
+                .Include(t => t.Milestone)
+                .Where(t => t.TenantId == tenantId && t.PlannedEndDate.HasValue && t.PlannedEndDate < today && t.TaskStatus != "Completed")
+                .ToListAsync();
+        }
+
+        public async Task<IEnumerable<Task>> GetMilestonesByTenantAsync(Guid tenantId)
+        {
+            return await _context.Tasks
+                .Include(t => t.Project)
+                .Include(t => t.ParentTask)
+                .Include(t => t.Subtasks)
+                .Include(t => t.AssignedToUser)
+                .Include(t => t.Tenant)
+                .Include(t => t.Milestone)
+                .Where(t => t.TenantId == tenantId && t.IsMilestone)
                 .ToListAsync();
         }
     }

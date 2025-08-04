@@ -87,6 +87,13 @@ namespace MyProject.Persistence.Configurations
                 .HasColumnName("updated_at")
                 .HasDefaultValueSql("now()");
 
+            builder.Property(i => i.TenantId)
+                .HasColumnName("tenant_id")
+                .IsRequired();
+
+            builder.Property(i => i.MilestoneId)
+                .HasColumnName("milestone_id");
+
             // Foreign key relationships
             builder.HasOne(i => i.Project)
                 .WithMany()
@@ -96,6 +103,21 @@ namespace MyProject.Persistence.Configurations
             builder.HasOne(i => i.Task)
                 .WithMany()
                 .HasForeignKey(i => i.TaskId)
+                .OnDelete(DeleteBehavior.SetNull);
+
+            builder.HasOne(i => i.AssignedToUser)
+                .WithMany()
+                .HasForeignKey(i => i.AssignedToUserId)
+                .OnDelete(DeleteBehavior.SetNull);
+
+            builder.HasOne(i => i.Tenant)
+                .WithMany()
+                .HasForeignKey(i => i.TenantId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            builder.HasOne(i => i.Milestone)
+                .WithMany()
+                .HasForeignKey(i => i.MilestoneId)
                 .OnDelete(DeleteBehavior.SetNull);
 
             // Indexes
@@ -119,6 +141,12 @@ namespace MyProject.Persistence.Configurations
 
             builder.HasIndex(i => i.TaskId)
                 .HasDatabaseName("idx_issues_task_id");
+
+            builder.HasIndex(i => i.TenantId)
+                .HasDatabaseName("idx_issues_tenant_id");
+
+            builder.HasIndex(i => i.MilestoneId)
+                .HasDatabaseName("idx_issues_milestone_id");
 
             // Check constraints (these will be handled by the database)
             // The actual constraints are defined in the PostgreSQL table

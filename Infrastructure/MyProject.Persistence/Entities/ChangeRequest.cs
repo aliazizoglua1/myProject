@@ -12,6 +12,7 @@ namespace MyProject.Persistence.Entities
         public Guid ChangeRequestId { get; set; } = Guid.NewGuid();
 
         [Column("project_id")]
+        [Required]
         public Guid ProjectId { get; set; }
 
         [Column("request_title")]
@@ -41,12 +42,15 @@ namespace MyProject.Persistence.Entities
         public string? EstimatedImpactOnQuality { get; set; }
 
         [Column("requested_by_user_id")]
+        [Required]
         public Guid RequestedByUserId { get; set; }
 
         [Column("request_date")]
+        [Required]
         public DateOnly RequestDate { get; set; } = DateOnly.FromDateTime(DateTime.Today);
 
         [Column("approval_status")]
+        [Required]
         [MaxLength(50)]
         public string ApprovalStatus { get; set; } = "Pending";
 
@@ -76,7 +80,18 @@ namespace MyProject.Persistence.Entities
         [Column("updated_at")]
         public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
 
+        [Column("tenant_id")]
+        [Required]
+        public Guid TenantId { get; set; }
+
+        [Column("milestone_id")]
+        public Guid? MilestoneId { get; set; }
+
         // Navigation properties
         public Project? Project { get; set; }
+        public User? RequestedByUser { get; set; }
+        public User? ApprovedByUser { get; set; }
+        public Organization? Tenant { get; set; }
+        public Milestone? Milestone { get; set; }
     }
 } 

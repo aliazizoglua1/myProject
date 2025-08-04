@@ -123,6 +123,54 @@ namespace MyProject.WebAPI.Controllers
             return Ok(issueDtos);
         }
 
+        [HttpGet("tenant/{tenantId}")]
+        public async Task<ActionResult<IEnumerable<IssueDto>>> GetIssuesByTenant(Guid tenantId)
+        {
+            var issues = await _issueRepository.GetByTenantIdAsync(tenantId);
+            var issueDtos = issues.Select(MapToDto);
+            return Ok(issueDtos);
+        }
+
+        [HttpGet("milestone/{milestoneId}")]
+        public async Task<ActionResult<IEnumerable<IssueDto>>> GetIssuesByMilestone(Guid milestoneId)
+        {
+            var issues = await _issueRepository.GetByMilestoneIdAsync(milestoneId);
+            var issueDtos = issues.Select(MapToDto);
+            return Ok(issueDtos);
+        }
+
+        [HttpGet("tenant/{tenantId}/status/{status}")]
+        public async Task<ActionResult<IEnumerable<IssueDto>>> GetIssuesByTenantAndStatus(Guid tenantId, string status)
+        {
+            var issues = await _issueRepository.GetByTenantAndStatusAsync(tenantId, status);
+            var issueDtos = issues.Select(MapToDto);
+            return Ok(issueDtos);
+        }
+
+        [HttpGet("project/{projectId}/status/{status}")]
+        public async Task<ActionResult<IEnumerable<IssueDto>>> GetIssuesByProjectAndStatus(Guid projectId, string status)
+        {
+            var issues = await _issueRepository.GetByProjectAndStatusAsync(projectId, status);
+            var issueDtos = issues.Select(MapToDto);
+            return Ok(issueDtos);
+        }
+
+        [HttpGet("tenant/{tenantId}/priority/{priority}")]
+        public async Task<ActionResult<IEnumerable<IssueDto>>> GetIssuesByTenantAndPriority(Guid tenantId, string priority)
+        {
+            var issues = await _issueRepository.GetByTenantAndPriorityAsync(tenantId, priority);
+            var issueDtos = issues.Select(MapToDto);
+            return Ok(issueDtos);
+        }
+
+        [HttpGet("tenant/{tenantId}/severity/{severity}")]
+        public async Task<ActionResult<IEnumerable<IssueDto>>> GetIssuesByTenantAndSeverity(Guid tenantId, string severity)
+        {
+            var issues = await _issueRepository.GetByTenantAndSeverityAsync(tenantId, severity);
+            var issueDtos = issues.Select(MapToDto);
+            return Ok(issueDtos);
+        }
+
         [HttpPost]
         public async Task<ActionResult<IssueDto>> CreateIssue(CreateIssueDto createDto)
         {
@@ -191,8 +239,13 @@ namespace MyProject.WebAPI.Controllers
                 ClosedDate = issue.ClosedDate,
                 CreatedAt = issue.CreatedAt,
                 UpdatedAt = issue.UpdatedAt,
+                TenantId = issue.TenantId,
+                MilestoneId = issue.MilestoneId,
                 Project = issue.Project != null ? MapProjectToDto(issue.Project) : null,
-                Task = issue.Task != null ? MapTaskToDto(issue.Task) : null
+                Task = issue.Task != null ? MapTaskToDto(issue.Task) : null,
+                AssignedToUser = issue.AssignedToUser != null ? MapUserToDto(issue.AssignedToUser) : null,
+                Tenant = issue.Tenant != null ? MapOrganizationToDto(issue.Tenant) : null,
+                Milestone = issue.Milestone != null ? MapMilestoneToDto(issue.Milestone) : null
             };
         }
 
@@ -250,6 +303,51 @@ namespace MyProject.WebAPI.Controllers
             };
         }
 
+        private static UserDto MapUserToDto(User user)
+        {
+            return new UserDto
+            {
+                UserId = user.UserId,
+                Email = user.Email,
+                FirstName = user.FirstName,
+                LastName = user.LastName,
+                IsActive = user.IsActive,
+                CreatedAt = user.CreatedAt,
+                UpdatedAt = user.UpdatedAt
+            };
+        }
+
+        private static OrganizationDto MapOrganizationToDto(Organization organization)
+        {
+            return new OrganizationDto
+            {
+                OrganizationId = organization.OrganizationId,
+                OrganizationName = organization.OrganizationName,
+                Status = organization.Status,
+                BillingPlan = organization.BillingPlan,
+                ContactEmail = organization.ContactEmail,
+                CreatedAt = organization.CreatedAt,
+                UpdatedAt = organization.UpdatedAt
+            };
+        }
+
+        private static MilestoneDto MapMilestoneToDto(Milestone milestone)
+        {
+            return new MilestoneDto
+            {
+                MilestoneId = milestone.MilestoneId,
+                ProjectId = milestone.ProjectId,
+                MilestoneName = milestone.MilestoneName,
+                Description = milestone.Description,
+                DueDate = milestone.DueDate,
+                IsAchieved = milestone.IsAchieved,
+                CompletionDate = milestone.CompletionDate,
+                TenantId = milestone.TenantId,
+                CreatedAt = milestone.CreatedAt,
+                UpdatedAt = milestone.UpdatedAt
+            };
+        }
+
         private static Issue MapToEntity(CreateIssueDto dto)
         {
             return new Issue
@@ -270,7 +368,9 @@ namespace MyProject.WebAPI.Controllers
                 AssignedToUserId = dto.AssignedToUserId,
                 Status = dto.Status,
                 OpenedDate = dto.OpenedDate,
-                ClosedDate = dto.ClosedDate
+                ClosedDate = dto.ClosedDate,
+                TenantId = dto.TenantId,
+                MilestoneId = dto.MilestoneId
             };
         }
 
@@ -308,6 +408,8 @@ namespace MyProject.WebAPI.Controllers
                 issue.OpenedDate = dto.OpenedDate.Value;
             if (dto.ClosedDate.HasValue)
                 issue.ClosedDate = dto.ClosedDate;
+            if (dto.MilestoneId.HasValue)
+                issue.MilestoneId = dto.MilestoneId;
         }
     }
 } 

@@ -1,0 +1,507 @@
+@page "/issues/{Id:guid}/edit"
+@using MyProject.UI.ProjectManagementConsole.Models
+@using MyProject.UI.ProjectManagementConsole.Services
+@inject IIssueService IssueService
+@inject IUserService UserService
+@inject ITaskService TaskService
+@inject IMilestoneService MilestoneService
+@inject NavigationManager Navigation
+
+<PageTitle>Edit Issue</PageTitle>
+
+<div class="container-fluid">
+    <div class="row mb-3">
+        <div class="col">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="/issues">Issues</a></li>
+                    <li class="breadcrumb-item"><a href="/issues/@Id">Issue Details</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">Edit Issue</li>
+                </ol>
+            </nav>
+        </div>
+    </div>
+
+    @if (isLoading)
+    {
+        <div class="text-center">
+            <div class="spinner-border" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+        </div>
+    }
+    else if (errorMessage != null)
+    {
+        <div class="alert alert-danger" role="alert">
+            @errorMessage
+        </div>
+    }
+    else if (issue == null)
+    {
+        <div class="alert alert-warning" role="alert">
+            Issue not found.
+        </div>
+    }
+    else
+    {
+        <div class="row">
+            <div class="col-lg-8">
+                <div class="card">
+                    <div class="card-header">
+                        <h2>Edit Issue</h2>
+                    </div>
+                    <div class="card-body">
+                        <EditForm Model="updateDto" OnValidSubmit="HandleValidSubmit">
+                            <DataAnnotationsValidator />
+
+                            @if (errorMessage != null)
+                            {
+                                <div class="alert alert-danger" role="alert">
+                                    @errorMessage
+                                </div>
+                            }
+
+                            <div class="mb-3">
+                                <label for="issueName" class="form-label">Issue Name</label>
+                                <InputText id="issueName" class="form-control" @bind-Value="updateDto.IssueName" />
+                                <ValidationMessage For="@(() => updateDto.IssueName)" />
+                                <div class="form-text">Current value: <strong>@issue.IssueName</strong></div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="description" class="form-label">Description</label>
+                                <InputTextArea id="description" class="form-control" rows="3" @bind-Value="updateDto.Description" />
+                                <ValidationMessage For="@(() => updateDto.Description)" />
+                                <div class="form-text">Current value: <strong>@(issue.Description ?? "Not set")</strong></div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="taskId" class="form-label">Related Task</label>
+                                        <InputSelect id="taskId" class="form-select" @bind-Value="updateDto.TaskId">
+                                            <option value="">Select Task (Optional)</option>
+                                            @if (tasks != null)
+                                            {
+                                                @foreach (var task in tasks)
+                                                {
+                                                    <option value="@task.TaskId">@task.TaskName</option>
+                                                }
+                                            }
+                                        </InputSelect>
+                                        <ValidationMessage For="@(() => updateDto.TaskId)" />
+                                        <div class="form-text">Current value: <strong>@(issue.Task?.TaskName ?? "No task linked")</strong></div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="assignedToUserId" class="form-label">Assigned To</label>
+                                        <InputSelect id="assignedToUserId" class="form-select" @bind-Value="updateDto.AssignedToUserId">
+                                            <option value="">Select User (Optional)</option>
+                                            @if (users != null)
+                                            {
+                                                @foreach (var user in users)
+                                                {
+                                                    <option value="@user.UserId">@user.FirstName @user.LastName</option>
+                                                }
+                                            }
+                                        </InputSelect>
+                                        <ValidationMessage For="@(() => updateDto.AssignedToUserId)" />
+                                        <div class="form-text">Current value: <strong>@(issue.AssignedToUser?.FirstName + " " + issue.AssignedToUser?.LastName ?? "Unassigned")</strong></div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="milestoneId" class="form-label">Milestone</label>
+                                        <InputSelect id="milestoneId" class="form-select" @bind-Value="updateDto.MilestoneId">
+                                            <option value="">Select Milestone (Optional)</option>
+                                            @if (milestones != null)
+                                            {
+                                                @foreach (var milestone in milestones)
+                                                {
+                                                    <option value="@milestone.MilestoneId">@milestone.MilestoneName</option>
+                                                }
+                                            }
+                                        </InputSelect>
+                                        <ValidationMessage For="@(() => updateDto.MilestoneId)" />
+                                        <div class="form-text">Current value: <strong>@(issue.Milestone?.MilestoneName ?? "No milestone")</strong></div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="status" class="form-label">Status</label>
+                                        <InputSelect id="status" class="form-select" @bind-Value="updateDto.Status">
+                                            <option value="">Keep Current Status</option>
+                                            <option value="Open">Open</option>
+                                            <option value="In Progress">In Progress</option>
+                                            <option value="Resolved">Resolved</option>
+                                            <option value="Closed">Closed</option>
+                                            <option value="On Hold">On Hold</option>
+                                        </InputSelect>
+                                        <ValidationMessage For="@(() => updateDto.Status)" />
+                                        <div class="form-text">Current value: <span class="badge @GetIssueStatusBadgeClass(issue.Status)">@issue.Status</span></div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="priority" class="form-label">Priority</label>
+                                        <InputSelect id="priority" class="form-select" @bind-Value="updateDto.Priority">
+                                            <option value="">Keep Current Priority</option>
+                                            <option value="Low">Low</option>
+                                            <option value="Medium">Medium</option>
+                                            <option value="High">High</option>
+                                            <option value="Urgent">Urgent</option>
+                                        </InputSelect>
+                                        <ValidationMessage For="@(() => updateDto.Priority)" />
+                                        <div class="form-text">Current value: <span class="badge @GetPriorityBadgeClass(issue.Priority)">@issue.Priority</span></div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="severity" class="form-label">Severity</label>
+                                        <InputSelect id="severity" class="form-select" @bind-Value="updateDto.Severity">
+                                            <option value="">Keep Current Severity</option>
+                                            <option value="Low">Low</option>
+                                            <option value="Medium">Medium</option>
+                                            <option value="High">High</option>
+                                            <option value="Critical">Critical</option>
+                                        </InputSelect>
+                                        <ValidationMessage For="@(() => updateDto.Severity)" />
+                                        <div class="form-text">Current value: <span class="badge @GetSeverityBadgeClass(issue.Severity)">@issue.Severity</span></div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="openedDate" class="form-label">Opened Date</label>
+                                        <InputDate id="openedDate" class="form-control" @bind-Value="updateDto.OpenedDate" />
+                                        <ValidationMessage For="@(() => updateDto.OpenedDate)" />
+                                        <div class="form-text">Current value: <strong>@issue.OpenedDate?.ToString("MMM dd, yyyy")</strong></div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="dueDate" class="form-label">Due Date</label>
+                                        <InputDate id="dueDate" class="form-control" @bind-Value="updateDto.DueDate" />
+                                        <ValidationMessage For="@(() => updateDto.DueDate)" />
+                                        <div class="form-text">Current value: <strong>@(issue.DueDate?.ToString("MMM dd, yyyy") ?? "Not set")</strong></div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="resolvedDate" class="form-label">Resolved Date</label>
+                                <InputDate id="resolvedDate" class="form-control" @bind-Value="updateDto.ResolvedDate" />
+                                <ValidationMessage For="@(() => updateDto.ResolvedDate)" />
+                                <div class="form-text">Current value: <strong>@(issue.ResolvedDate?.ToString("MMM dd, yyyy") ?? "Not resolved")</strong></div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="resolution" class="form-label">Resolution</label>
+                                <InputTextArea id="resolution" class="form-control" rows="3" @bind-Value="updateDto.Resolution" />
+                                <ValidationMessage For="@(() => updateDto.Resolution)" />
+                                <div class="form-text">Current value: <strong>@(issue.Resolution ?? "Not set")</strong></div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="rootCause" class="form-label">Root Cause</label>
+                                <InputTextArea id="rootCause" class="form-control" rows="3" @bind-Value="updateDto.RootCause" />
+                                <ValidationMessage For="@(() => updateDto.RootCause)" />
+                                <div class="form-text">Current value: <strong>@(issue.RootCause ?? "Not set")</strong></div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="notes" class="form-label">Notes</label>
+                                <InputTextArea id="notes" class="form-control" rows="3" @bind-Value="updateDto.Notes" />
+                                <ValidationMessage For="@(() => updateDto.Notes)" />
+                                <div class="form-text">Current value: <strong>@(issue.Notes ?? "Not set")</strong></div>
+                            </div>
+
+                            <div class="d-flex gap-2">
+                                <button type="submit" class="btn btn-primary" disabled="@isSubmitting">
+                                    @if (isSubmitting)
+                                    {
+                                        <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                                        <span class="ms-1">Updating...</span>
+                                    }
+                                    else
+                                    {
+                                        <i class="bi bi-check-circle"></i>
+                                        <span class="ms-1">Update Issue</span>
+                                    }
+                                </button>
+                                <a href="/issues/@Id" class="btn btn-secondary">
+                                    <i class="bi bi-x-circle"></i>
+                                    <span class="ms-1">Cancel</span>
+                                </a>
+                            </div>
+                        </EditForm>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-4">
+                <div class="card">
+                    <div class="card-header">
+                        <h5>Current Issue Details</h5>
+                    </div>
+                    <div class="card-body">
+                        <dl class="row">
+                            <dt class="col-sm-4">Name</dt>
+                            <dd class="col-sm-8">@issue.IssueName</dd>
+
+                            <dt class="col-sm-4">Project</dt>
+                            <dd class="col-sm-8">
+                                @if (issue.Project != null)
+                                {
+                                    <span class="badge bg-info">@issue.Project.ProjectName</span>
+                                }
+                                else
+                                {
+                                    <span class="text-muted">No project assigned</span>
+                                }
+                            </dd>
+
+                            <dt class="col-sm-4">Status</dt>
+                            <dd class="col-sm-8">
+                                <span class="badge @GetIssueStatusBadgeClass(issue.Status)">
+                                    @issue.Status
+                                </span>
+                            </dd>
+
+                            <dt class="col-sm-4">Priority</dt>
+                            <dd class="col-sm-8">
+                                <span class="badge @GetPriorityBadgeClass(issue.Priority)">
+                                    @issue.Priority
+                                </span>
+                            </dd>
+
+                            <dt class="col-sm-4">Severity</dt>
+                            <dd class="col-sm-8">
+                                <span class="badge @GetSeverityBadgeClass(issue.Severity)">
+                                    @issue.Severity
+                                </span>
+                            </dd>
+
+                            <dt class="col-sm-4">Assigned To</dt>
+                            <dd class="col-sm-8">
+                                @if (issue.AssignedToUser != null)
+                                {
+                                    <span>@issue.AssignedToUser.FirstName @issue.AssignedToUser.LastName</span>
+                                }
+                                else
+                                {
+                                    <span class="text-muted">Unassigned</span>
+                                }
+                            </dd>
+
+                            <dt class="col-sm-4">Opened</dt>
+                            <dd class="col-sm-8">@issue.OpenedDate?.ToString("MMM dd, yyyy")</dd>
+
+                            <dt class="col-sm-4">Due Date</dt>
+                            <dd class="col-sm-8">
+                                @if (issue.DueDate.HasValue)
+                                {
+                                    <span>@issue.DueDate.Value.ToString("MMM dd, yyyy")</span>
+                                }
+                                else
+                                {
+                                    <span class="text-muted">Not set</span>
+                                }
+                            </dd>
+
+                            <dt class="col-sm-4">Days Open</dt>
+                            <dd class="col-sm-8">@GetDaysSinceOpened()</dd>
+                        </dl>
+                    </div>
+                </div>
+
+                <div class="card mt-3">
+                    <div class="card-header">
+                        <h5>Quick Actions</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="d-grid gap-2">
+                            <a href="/issues/@Id" class="btn btn-outline-primary">
+                                <i class="bi bi-eye"></i> View Issue
+                            </a>
+                            <a href="/issues" class="btn btn-outline-secondary">
+                                <i class="bi bi-arrow-left"></i> Back to Issues
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card mt-3">
+                    <div class="card-header">
+                        <h5>Update Notes</h5>
+                    </div>
+                    <div class="card-body">
+                        <ul class="small text-muted">
+                            <li>Only changed fields will be updated</li>
+                            <li>Status changes affect issue visibility</li>
+                            <li>Priority changes impact workflow</li>
+                            <li>Resolution details help prevent similar issues</li>
+                            <li>Root cause analysis improves processes</li>
+                            <li>Due dates help prioritize resolution</li>
+                            <li>Changes take effect immediately</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter]
+    public Guid Id { get; set; }
+
+    private IssueDto? issue;
+    private UpdateIssueDto updateDto = new();
+    private List<UserDto>? users;
+    private List<TaskDto>? tasks;
+    private List<MilestoneDto>? milestones;
+    private bool isLoading = true;
+    private bool isSubmitting = false;
+    private string? errorMessage;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadData();
+    }
+
+    private async Task LoadData()
+    {
+        try
+        {
+            isLoading = true;
+            errorMessage = null;
+            
+            // Load issue and related data in parallel
+            var issueTask = IssueService.GetIssueAsync(Id);
+            var userTask = UserService.GetUsersAsync();
+            var taskTask = TaskService.GetTasksAsync();
+            var milestoneTask = MilestoneService.GetMilestonesAsync();
+            
+            await Task.WhenAll(issueTask, userTask, taskTask, milestoneTask);
+            
+            issue = await issueTask;
+            users = await userTask;
+            tasks = await taskTask;
+            milestones = await milestoneTask;
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Error loading data: {ex.Message}";
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private async Task HandleValidSubmit()
+    {
+        try
+        {
+            isSubmitting = true;
+            errorMessage = null;
+
+            // Only update fields that have been changed
+            var updateData = new UpdateIssueDto();
+            if (!string.IsNullOrWhiteSpace(updateDto.IssueName))
+                updateData.IssueName = updateDto.IssueName;
+            if (!string.IsNullOrWhiteSpace(updateDto.Description))
+                updateData.Description = updateDto.Description;
+            if (updateDto.TaskId.HasValue)
+                updateData.TaskId = updateDto.TaskId;
+            if (updateDto.AssignedToUserId.HasValue)
+                updateData.AssignedToUserId = updateDto.AssignedToUserId;
+            if (updateDto.MilestoneId.HasValue)
+                updateData.MilestoneId = updateDto.MilestoneId;
+            if (!string.IsNullOrWhiteSpace(updateDto.Status))
+                updateData.Status = updateDto.Status;
+            if (!string.IsNullOrWhiteSpace(updateDto.Priority))
+                updateData.Priority = updateDto.Priority;
+            if (!string.IsNullOrWhiteSpace(updateDto.Severity))
+                updateData.Severity = updateDto.Severity;
+            if (updateDto.OpenedDate.HasValue)
+                updateData.OpenedDate = updateDto.OpenedDate;
+            if (updateDto.DueDate.HasValue)
+                updateData.DueDate = updateDto.DueDate;
+            if (updateDto.ResolvedDate.HasValue)
+                updateData.ResolvedDate = updateDto.ResolvedDate;
+            if (!string.IsNullOrWhiteSpace(updateDto.Resolution))
+                updateData.Resolution = updateDto.Resolution;
+            if (!string.IsNullOrWhiteSpace(updateDto.RootCause))
+                updateData.RootCause = updateDto.RootCause;
+            if (!string.IsNullOrWhiteSpace(updateDto.Notes))
+                updateData.Notes = updateDto.Notes;
+
+            var updatedIssue = await IssueService.UpdateIssueAsync(Id, updateData);
+            Navigation.NavigateTo($"/issues/{updatedIssue.IssueId}");
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Error updating issue: {ex.Message}";
+        }
+        finally
+        {
+            isSubmitting = false;
+        }
+    }
+
+    private string GetIssueStatusBadgeClass(string status)
+    {
+        return status.ToLower() switch
+        {
+            "open" => "bg-warning",
+            "in progress" => "bg-info",
+            "resolved" => "bg-success",
+            "closed" => "bg-secondary",
+            "on hold" => "bg-dark",
+            _ => "bg-secondary"
+        };
+    }
+
+    private string GetPriorityBadgeClass(string priority)
+    {
+        return priority.ToLower() switch
+        {
+            "low" => "bg-success",
+            "medium" => "bg-warning",
+            "high" => "bg-danger",
+            "urgent" => "bg-dark",
+            _ => "bg-secondary"
+        };
+    }
+
+    private string GetSeverityBadgeClass(string severity)
+    {
+        return severity.ToLower() switch
+        {
+            "low" => "bg-success",
+            "medium" => "bg-warning",
+            "high" => "bg-danger",
+            "critical" => "bg-dark",
+            _ => "bg-secondary"
+        };
+    }
+
+    private int GetDaysSinceOpened()
+    {
+        if (!issue.OpenedDate.HasValue)
+            return 0;
+
+        return DateOnly.FromDateTime(DateTime.Today).DayNumber - issue.OpenedDate.Value.DayNumber;
+    }
+} 

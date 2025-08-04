@@ -24,7 +24,13 @@ namespace MyProject.WebAPI.DTOs
         public decimal? ActualImpactOnBudgetUsd { get; set; }
         public DateTime CreatedAt { get; set; }
         public DateTime UpdatedAt { get; set; }
+        public Guid TenantId { get; set; }
+        public Guid? MilestoneId { get; set; }
         public ProjectDto? Project { get; set; }
+        public UserDto? RequestedByUser { get; set; }
+        public UserDto? ApprovedByUser { get; set; }
+        public OrganizationDto? Tenant { get; set; }
+        public MilestoneDto? Milestone { get; set; }
     }
 
     public class CreateChangeRequestDto
@@ -74,6 +80,11 @@ namespace MyProject.WebAPI.DTOs
 
         [Range(0, double.MaxValue)]
         public decimal? ActualImpactOnBudgetUsd { get; set; }
+
+        [Required]
+        public Guid TenantId { get; set; }
+
+        public Guid? MilestoneId { get; set; }
     }
 
     public class UpdateChangeRequestDto
@@ -112,5 +123,7 @@ namespace MyProject.WebAPI.DTOs
 
         [Range(0, double.MaxValue)]
         public decimal? ActualImpactOnBudgetUsd { get; set; }
+
+        public Guid? MilestoneId { get; set; }
     }
 } 

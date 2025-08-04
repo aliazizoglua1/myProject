@@ -11,6 +11,7 @@ namespace MyProject.Persistence.Entities
         public Guid IssueId { get; set; } = Guid.NewGuid();
 
         [Column("project_id")]
+        [Required]
         public Guid ProjectId { get; set; }
 
         [Column("task_id")]
@@ -62,10 +63,12 @@ namespace MyProject.Persistence.Entities
         public Guid? AssignedToUserId { get; set; }
 
         [Column("status")]
+        [Required]
         [MaxLength(50)]
         public string Status { get; set; } = "Open";
 
         [Column("opened_date")]
+        [Required]
         public DateOnly OpenedDate { get; set; } = DateOnly.FromDateTime(DateTime.Today);
 
         [Column("closed_date")]
@@ -77,8 +80,18 @@ namespace MyProject.Persistence.Entities
         [Column("updated_at")]
         public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
 
+        [Column("tenant_id")]
+        [Required]
+        public Guid TenantId { get; set; }
+
+        [Column("milestone_id")]
+        public Guid? MilestoneId { get; set; }
+
         // Navigation properties
         public Project? Project { get; set; }
         public Task? Task { get; set; }
+        public User? AssignedToUser { get; set; }
+        public Organization? Tenant { get; set; }
+        public Milestone? Milestone { get; set; }
     }
 } 

@@ -1,0 +1,265 @@
+@page "/users/{Id:guid}/edit"
+@using MyProject.UI.ProjectManagementConsole.Models
+@using MyProject.UI.ProjectManagementConsole.Services
+@inject IUserService UserService
+@inject NavigationManager Navigation
+
+<PageTitle>Edit User</PageTitle>
+
+<div class="container-fluid">
+    <div class="row mb-3">
+        <div class="col">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="/users">Users</a></li>
+                    <li class="breadcrumb-item"><a href="/users/@Id">User Details</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">Edit User</li>
+                </ol>
+            </nav>
+        </div>
+    </div>
+
+    @if (isLoading)
+    {
+        <div class="text-center">
+            <div class="spinner-border" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+        </div>
+    }
+    else if (errorMessage != null)
+    {
+        <div class="alert alert-danger" role="alert">
+            @errorMessage
+        </div>
+    }
+    else if (user == null)
+    {
+        <div class="alert alert-warning" role="alert">
+            User not found.
+        </div>
+    }
+    else
+    {
+        <div class="row">
+            <div class="col-lg-8">
+                <div class="card">
+                    <div class="card-header">
+                        <h2>Edit User</h2>
+                    </div>
+                    <div class="card-body">
+                        <EditForm Model="updateDto" OnValidSubmit="HandleValidSubmit">
+                            <DataAnnotationsValidator />
+
+                            @if (errorMessage != null)
+                            {
+                                <div class="alert alert-danger" role="alert">
+                                    @errorMessage
+                                </div>
+                            }
+
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="firstName" class="form-label">First Name</label>
+                                        <InputText id="firstName" class="form-control" @bind-Value="updateDto.FirstName" />
+                                        <ValidationMessage For="@(() => updateDto.FirstName)" />
+                                        <div class="form-text">Leave empty to keep the current value: <strong>@user.FirstName</strong></div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="lastName" class="form-label">Last Name</label>
+                                        <InputText id="lastName" class="form-control" @bind-Value="updateDto.LastName" />
+                                        <ValidationMessage For="@(() => updateDto.LastName)" />
+                                        <div class="form-text">Leave empty to keep the current value: <strong>@user.LastName</strong></div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="email" class="form-label">Email Address</label>
+                                <InputText id="email" type="email" class="form-control" @bind-Value="updateDto.Email" />
+                                <ValidationMessage For="@(() => updateDto.Email)" />
+                                <div class="form-text">Leave empty to keep the current value: <strong>@user.Email</strong></div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="password" class="form-label">Password</label>
+                                <InputText id="password" type="password" class="form-control" @bind-Value="updateDto.Password" />
+                                <ValidationMessage For="@(() => updateDto.Password)" />
+                                <div class="form-text">Leave empty to keep the current password. Must be at least 6 characters if changed.</div>
+                            </div>
+
+                            <div class="mb-3">
+                                <div class="form-check">
+                                    <InputCheckbox id="isActive" class="form-check-input" @bind-Value="isActiveChecked" />
+                                    <label class="form-check-label" for="isActive">
+                                        Active User
+                                    </label>
+                                </div>
+                                <div class="form-text">Current status: <span class="badge @(user.IsActive ? "bg-success" : "bg-secondary")">@(user.IsActive ? "Active" : "Inactive")</span></div>
+                            </div>
+
+                            <div class="d-flex gap-2">
+                                <button type="submit" class="btn btn-primary" disabled="@isSubmitting">
+                                    @if (isSubmitting)
+                                    {
+                                        <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                                        <span class="ms-1">Updating...</span>
+                                    }
+                                    else
+                                    {
+                                        <i class="bi bi-check-circle"></i>
+                                        <span class="ms-1">Update User</span>
+                                    }
+                                </button>
+                                <a href="/users/@Id" class="btn btn-secondary">
+                                    <i class="bi bi-x-circle"></i>
+                                    <span class="ms-1">Cancel</span>
+                                </a>
+                            </div>
+                        </EditForm>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-4">
+                <div class="card">
+                    <div class="card-header">
+                        <h5>Current User Details</h5>
+                    </div>
+                    <div class="card-body">
+                        <dl class="row">
+                            <dt class="col-sm-4">Name</dt>
+                            <dd class="col-sm-8">@user.FirstName @user.LastName</dd>
+
+                            <dt class="col-sm-4">Email</dt>
+                            <dd class="col-sm-8">@user.Email</dd>
+
+                            <dt class="col-sm-4">Status</dt>
+                            <dd class="col-sm-8">
+                                <span class="badge @(user.IsActive ? "bg-success" : "bg-secondary")">
+                                    @(user.IsActive ? "Active" : "Inactive")
+                                </span>
+                            </dd>
+
+                            <dt class="col-sm-4">Created</dt>
+                            <dd class="col-sm-8">@user.CreatedAt.ToString("MMM dd, yyyy")</dd>
+
+                            <dt class="col-sm-4">Last Updated</dt>
+                            <dd class="col-sm-8">@user.UpdatedAt.ToString("MMM dd, yyyy")</dd>
+                        </dl>
+                    </div>
+                </div>
+
+                <div class="card mt-3">
+                    <div class="card-header">
+                        <h5>Quick Actions</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="d-grid gap-2">
+                            <a href="/users/@Id" class="btn btn-outline-primary">
+                                <i class="bi bi-eye"></i> View User
+                            </a>
+                            <a href="/users" class="btn btn-outline-secondary">
+                                <i class="bi bi-arrow-left"></i> Back to Users
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card mt-3">
+                    <div class="card-header">
+                        <h5>Update Notes</h5>
+                    </div>
+                    <div class="card-body">
+                        <ul class="small text-muted">
+                            <li>Only changed fields will be updated</li>
+                            <li>Email addresses must be unique</li>
+                            <li>Passwords are securely hashed</li>
+                            <li>Inactive users cannot log in</li>
+                            <li>Changes take effect immediately</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter]
+    public Guid Id { get; set; }
+
+    private UserDto? user;
+    private UpdateUserDto updateDto = new();
+    private bool isActiveChecked = true;
+    private bool isLoading = true;
+    private bool isSubmitting = false;
+    private string? errorMessage;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadUser();
+    }
+
+    private async Task LoadUser()
+    {
+        try
+        {
+            isLoading = true;
+            errorMessage = null;
+            user = await UserService.GetUserAsync(Id);
+            if (user != null)
+            {
+                isActiveChecked = user.IsActive;
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Error loading user: {ex.Message}";
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private async Task HandleValidSubmit()
+    {
+        try
+        {
+            isSubmitting = true;
+            errorMessage = null;
+
+            // Only update fields that have been changed
+            var updateData = new UpdateUserDto();
+            if (!string.IsNullOrWhiteSpace(updateDto.FirstName))
+                updateData.FirstName = updateDto.FirstName;
+            if (!string.IsNullOrWhiteSpace(updateDto.LastName))
+                updateData.LastName = updateDto.LastName;
+            if (!string.IsNullOrWhiteSpace(updateDto.Email))
+                updateData.Email = updateDto.Email;
+            if (!string.IsNullOrWhiteSpace(updateDto.Password))
+                updateData.Password = updateDto.Password;
+            
+            // Always set IsActive if the checkbox value differs from the current user's status
+            if (user != null && isActiveChecked != user.IsActive)
+            {
+                updateData.IsActive = isActiveChecked;
+            }
+
+            var updatedUser = await UserService.UpdateUserAsync(Id, updateData);
+            Navigation.NavigateTo($"/users/{updatedUser.UserId}");
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Error updating user: {ex.Message}";
+        }
+        finally
+        {
+            isSubmitting = false;
+        }
+    }
+} 

@@ -1,0 +1,220 @@
+@page "/organizations/{Id:guid}"
+@using MyProject.UI.ProjectManagementConsole.Models
+@using MyProject.UI.ProjectManagementConsole.Services
+@inject IOrganizationService OrganizationService
+@inject NavigationManager Navigation
+
+<PageTitle>Organization Details</PageTitle>
+
+<div class="container-fluid">
+    <div class="row mb-3">
+        <div class="col">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="/organizations">Organizations</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">Organization Details</li>
+                </ol>
+            </nav>
+        </div>
+    </div>
+
+    @if (isLoading)
+    {
+        <div class="text-center">
+            <div class="spinner-border" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+        </div>
+    }
+    else if (errorMessage != null)
+    {
+        <div class="alert alert-danger" role="alert">
+            @errorMessage
+        </div>
+    }
+    else if (organization == null)
+    {
+        <div class="alert alert-warning" role="alert">
+            Organization not found.
+        </div>
+    }
+    else
+    {
+        <div class="row">
+            <div class="col-lg-8">
+                <div class="card">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h2>@organization.OrganizationName</h2>
+                        <div class="btn-group">
+                            <a href="/organizations/@organization.OrganizationId/edit" class="btn btn-primary">
+                                <i class="bi bi-pencil"></i> Edit
+                            </a>
+                            <button type="button" class="btn btn-danger" @onclick="DeleteOrganization">
+                                <i class="bi bi-trash"></i> Delete
+                            </button>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <h5>Basic Information</h5>
+                                <dl class="row">
+                                    <dt class="col-sm-4">Organization ID</dt>
+                                    <dd class="col-sm-8">
+                                        <code>@organization.OrganizationId</code>
+                                    </dd>
+
+                                    <dt class="col-sm-4">Name</dt>
+                                    <dd class="col-sm-8">@organization.OrganizationName</dd>
+
+                                    <dt class="col-sm-4">Status</dt>
+                                    <dd class="col-sm-8">
+                                        <span class="badge @GetStatusBadgeClass(organization.Status)">
+                                            @organization.Status
+                                        </span>
+                                    </dd>
+
+                                    <dt class="col-sm-4">Billing Plan</dt>
+                                    <dd class="col-sm-8">@organization.BillingPlan</dd>
+
+                                    <dt class="col-sm-4">Contact Email</dt>
+                                    <dd class="col-sm-8">
+                                        <a href="mailto:@organization.ContactEmail">@organization.ContactEmail</a>
+                                    </dd>
+                                </dl>
+                            </div>
+                            <div class="col-md-6">
+                                <h5>Timestamps</h5>
+                                <dl class="row">
+                                    <dt class="col-sm-4">Created</dt>
+                                    <dd class="col-sm-8">@organization.CreatedAt.ToString("MMM dd, yyyy 'at' HH:mm")</dd>
+
+                                    <dt class="col-sm-4">Last Updated</dt>
+                                    <dd class="col-sm-8">@organization.UpdatedAt.ToString("MMM dd, yyyy 'at' HH:mm")</dd>
+                                </dl>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-4">
+                <div class="card">
+                    <div class="card-header">
+                        <h5>Quick Actions</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="d-grid gap-2">
+                            <a href="/organizations/@organization.OrganizationId/edit" class="btn btn-primary">
+                                <i class="bi bi-pencil"></i> Edit Organization
+                            </a>
+                            <a href="/organizations" class="btn btn-outline-secondary">
+                                <i class="bi bi-arrow-left"></i> Back to Organizations
+                            </a>
+                            <button type="button" class="btn btn-outline-danger" @onclick="DeleteOrganization">
+                                <i class="bi bi-trash"></i> Delete Organization
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card mt-3">
+                    <div class="card-header">
+                        <h5>Organization Status</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="text-center">
+                            <div class="display-4 mb-2">
+                                <i class="bi bi-building @GetStatusIconClass(organization.Status)"></i>
+                            </div>
+                            <h6>@organization.Status</h6>
+                            <p class="text-muted small">
+                                @GetStatusDescription(organization.Status)
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter]
+    public Guid Id { get; set; }
+
+    private OrganizationDto? organization;
+    private bool isLoading = true;
+    private string? errorMessage;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadOrganization();
+    }
+
+    private async Task LoadOrganization()
+    {
+        try
+        {
+            isLoading = true;
+            errorMessage = null;
+            organization = await OrganizationService.GetOrganizationAsync(Id);
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Error loading organization: {ex.Message}";
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private async Task DeleteOrganization()
+    {
+        if (organization != null && await OrganizationService.DeleteOrganizationAsync(organization.OrganizationId))
+        {
+            Navigation.NavigateTo("/organizations");
+        }
+        else
+        {
+            errorMessage = "Failed to delete organization";
+        }
+    }
+
+    private string GetStatusBadgeClass(string status)
+    {
+        return status.ToLower() switch
+        {
+            "active" => "bg-success",
+            "inactive" => "bg-secondary",
+            "suspended" => "bg-warning",
+            "pending" => "bg-info",
+            _ => "bg-secondary"
+        };
+    }
+
+    private string GetStatusIconClass(string status)
+    {
+        return status.ToLower() switch
+        {
+            "active" => "text-success",
+            "inactive" => "text-secondary",
+            "suspended" => "text-warning",
+            "pending" => "text-info",
+            _ => "text-secondary"
+        };
+    }
+
+    private string GetStatusDescription(string status)
+    {
+        return status.ToLower() switch
+        {
+            "active" => "This organization is active and operational.",
+            "inactive" => "This organization is temporarily disabled.",
+            "suspended" => "This organization is suspended due to issues.",
+            "pending" => "This organization is awaiting approval.",
+            _ => "Status information not available."
+        };
+    }
+} 

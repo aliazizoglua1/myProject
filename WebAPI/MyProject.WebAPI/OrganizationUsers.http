@@ -1,0 +1,60 @@
+### Get all organization users
+GET {{baseUrl}}/api/organizationusers
+
+### Get specific organization user
+GET {{baseUrl}}/api/organizationusers/organization/{{organizationId}}/user/{{userId}}
+
+### Get all users in an organization
+GET {{baseUrl}}/api/organizationusers/organization/{{organizationId}}
+
+### Get all organizations for a user
+GET {{baseUrl}}/api/organizationusers/user/{{userId}}
+
+### Get active users in an organization
+GET {{baseUrl}}/api/organizationusers/organization/{{organizationId}}/active
+
+### Get active organizations for a user
+GET {{baseUrl}}/api/organizationusers/user/{{userId}}/active
+
+### Get organization users by role
+GET {{baseUrl}}/api/organizationusers/role/Admin
+
+### Get organization users by organization and role
+GET {{baseUrl}}/api/organizationusers/organization/{{organizationId}}/role/Admin
+
+### Get organization users with details
+GET {{baseUrl}}/api/organizationusers/organization/{{organizationId}}/with-details
+
+### Create organization user
+POST {{baseUrl}}/api/organizationusers
+Content-Type: application/json
+
+{
+  "organizationId": "{{organizationId}}",
+  "userId": "{{userId}}",
+  "role": "Member",
+  "isActive": true
+}
+
+### Update organization user
+PUT {{baseUrl}}/api/organizationusers/organization/{{organizationId}}/user/{{userId}}
+Content-Type: application/json
+
+{
+  "role": "Admin",
+  "isActive": true
+}
+
+### Deactivate organization user
+PUT {{baseUrl}}/api/organizationusers/organization/{{organizationId}}/user/{{userId}}
+Content-Type: application/json
+
+{
+  "isActive": false
+}
+
+### Check if user is active in organization
+GET {{baseUrl}}/api/organizationusers/organization/{{organizationId}}/user/{{userId}}/is-active
+
+### Delete organization user
+DELETE {{baseUrl}}/api/organizationusers/organization/{{organizationId}}/user/{{userId}} 

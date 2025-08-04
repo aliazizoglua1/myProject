@@ -1,0 +1,351 @@
+@page "/tasks/create"
+@using MyProject.UI.ProjectManagementConsole.Models
+@using MyProject.UI.ProjectManagementConsole.Services
+@inject ITaskService TaskService
+@inject IProjectService ProjectService
+@inject IUserService UserService
+@inject IMilestoneService MilestoneService
+@inject NavigationManager Navigation
+
+<PageTitle>Add Task</PageTitle>
+
+<div class="container-fluid">
+    <div class="row mb-3">
+        <div class="col">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="/tasks">Tasks</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">Add Task</li>
+                </ol>
+            </nav>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-header">
+                    <h2>Add New Task</h2>
+                </div>
+                <div class="card-body">
+                    <EditForm Model="task" OnValidSubmit="HandleValidSubmit">
+                        <DataAnnotationsValidator />
+
+                        @if (errorMessage != null)
+                        {
+                            <div class="alert alert-danger" role="alert">
+                                @errorMessage
+                            </div>
+                        }
+
+                        <div class="mb-3">
+                            <label for="taskName" class="form-label">Task Name *</label>
+                            <InputText id="taskName" class="form-control" @bind-Value="task.TaskName" />
+                            <ValidationMessage For="@(() => task.TaskName)" />
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="description" class="form-label">Description</label>
+                            <InputTextArea id="description" class="form-control" rows="3" @bind-Value="task.Description" />
+                            <ValidationMessage For="@(() => task.Description)" />
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="projectId" class="form-label">Project *</label>
+                                    <InputSelect id="projectId" class="form-select" @bind-Value="task.ProjectId">
+                                        <option value="">Select Project</option>
+                                        @if (projects != null)
+                                        {
+                                            @foreach (var project in projects)
+                                            {
+                                                <option value="@project.ProjectId">@project.ProjectName</option>
+                                            }
+                                        }
+                                    </InputSelect>
+                                    <ValidationMessage For="@(() => task.ProjectId)" />
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="milestoneId" class="form-label">Milestone</label>
+                                    <InputSelect id="milestoneId" class="form-select" @bind-Value="task.MilestoneId">
+                                        <option value="">Select Milestone (Optional)</option>
+                                        @if (milestones != null)
+                                        {
+                                            @foreach (var milestone in milestones)
+                                            {
+                                                <option value="@milestone.MilestoneId">@milestone.MilestoneName</option>
+                                            }
+                                        }
+                                    </InputSelect>
+                                    <ValidationMessage For="@(() => task.MilestoneId)" />
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="parentTaskId" class="form-label">Parent Task</label>
+                                    <InputSelect id="parentTaskId" class="form-select" @bind-Value="task.ParentTaskId">
+                                        <option value="">Select Parent Task (Optional)</option>
+                                        @if (parentTasks != null)
+                                        {
+                                            @foreach (var parentTask in parentTasks)
+                                            {
+                                                <option value="@parentTask.TaskId">@parentTask.TaskName</option>
+                                            }
+                                        }
+                                    </InputSelect>
+                                    <ValidationMessage For="@(() => task.ParentTaskId)" />
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="assignedToUserId" class="form-label">Assigned To</label>
+                                    <InputSelect id="assignedToUserId" class="form-select" @bind-Value="task.AssignedToUserId">
+                                        <option value="">Select User (Optional)</option>
+                                        @if (users != null)
+                                        {
+                                            @foreach (var user in users)
+                                            {
+                                                <option value="@user.UserId">@user.FirstName @user.LastName</option>
+                                            }
+                                        }
+                                    </InputSelect>
+                                    <ValidationMessage For="@(() => task.AssignedToUserId)" />
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="plannedStartDate" class="form-label">Planned Start Date *</label>
+                                    <InputDate id="plannedStartDate" class="form-control" @bind-Value="task.PlannedStartDate" />
+                                    <ValidationMessage For="@(() => task.PlannedStartDate)" />
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="plannedEndDate" class="form-label">Planned End Date</label>
+                                    <InputDate id="plannedEndDate" class="form-control" @bind-Value="task.PlannedEndDate" />
+                                    <ValidationMessage For="@(() => task.PlannedEndDate)" />
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="actualStartDate" class="form-label">Actual Start Date</label>
+                                    <InputDate id="actualStartDate" class="form-control" @bind-Value="task.ActualStartDate" />
+                                    <ValidationMessage For="@(() => task.ActualStartDate)" />
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="actualEndDate" class="form-label">Actual End Date</label>
+                                    <InputDate id="actualEndDate" class="form-control" @bind-Value="task.ActualEndDate" />
+                                    <ValidationMessage For="@(() => task.ActualEndDate)" />
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="taskStatus" class="form-label">Task Status</label>
+                                    <InputSelect id="taskStatus" class="form-select" @bind-Value="task.TaskStatus">
+                                        <option value="To Do">To Do</option>
+                                        <option value="In Progress">In Progress</option>
+                                        <option value="Completed">Completed</option>
+                                        <option value="On Hold">On Hold</option>
+                                        <option value="Cancelled">Cancelled</option>
+                                    </InputSelect>
+                                    <ValidationMessage For="@(() => task.TaskStatus)" />
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="priority" class="form-label">Priority</label>
+                                    <InputSelect id="priority" class="form-select" @bind-Value="task.Priority">
+                                        <option value="Low">Low</option>
+                                        <option value="Medium">Medium</option>
+                                        <option value="High">High</option>
+                                        <option value="Urgent">Urgent</option>
+                                    </InputSelect>
+                                    <ValidationMessage For="@(() => task.Priority)" />
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="plannedEffort" class="form-label">Planned Effort (Hours)</label>
+                                    <InputNumber id="plannedEffort" class="form-control" @bind-Value="task.PlannedEffort" />
+                                    <ValidationMessage For="@(() => task.PlannedEffort)" />
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="actualEffort" class="form-label">Actual Effort (Hours)</label>
+                                    <InputNumber id="actualEffort" class="form-control" @bind-Value="task.ActualEffort" />
+                                    <ValidationMessage For="@(() => task.ActualEffort)" />
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="progressPercentage" class="form-label">Progress Percentage</label>
+                            <InputNumber id="progressPercentage" class="form-control" @bind-Value="task.ProgressPercentage" />
+                            <ValidationMessage For="@(() => task.ProgressPercentage)" />
+                            <div class="form-text">Enter a value between 0 and 100</div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="notes" class="form-label">Notes</label>
+                            <InputTextArea id="notes" class="form-control" rows="3" @bind-Value="task.Notes" />
+                            <ValidationMessage For="@(() => task.Notes)" />
+                        </div>
+
+                        <div class="d-flex gap-2">
+                            <button type="submit" class="btn btn-primary" disabled="@isSubmitting">
+                                @if (isSubmitting)
+                                {
+                                    <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                                    <span class="ms-1">Adding...</span>
+                                }
+                                else
+                                {
+                                    <i class="bi bi-check-circle"></i>
+                                    <span class="ms-1">Add Task</span>
+                                }
+                            </button>
+                            <a href="/tasks" class="btn btn-secondary">
+                                <i class="bi bi-x-circle"></i>
+                                <span class="ms-1">Cancel</span>
+                            </a>
+                        </div>
+                    </EditForm>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5>Task Information</h5>
+                </div>
+                <div class="card-body">
+                    <p class="text-muted">
+                        Tasks represent work items that need to be completed. 
+                        Each task belongs to a project and can be assigned to team members.
+                    </p>
+                    
+                    <h6>Required Fields:</h6>
+                    <ul class="small text-muted">
+                        <li><strong>Task Name:</strong> A clear, descriptive name for the task</li>
+                        <li><strong>Project:</strong> The project this task belongs to</li>
+                        <li><strong>Planned Start Date:</strong> When work should begin</li>
+                    </ul>
+
+                    <h6>Task Status:</h6>
+                    <ul class="small text-muted">
+                        <li><span class="badge bg-secondary">To Do</span> - Not yet started</li>
+                        <li><span class="badge bg-warning">In Progress</span> - Currently being worked on</li>
+                        <li><span class="badge bg-success">Completed</span> - Finished successfully</li>
+                        <li><span class="badge bg-info">On Hold</span> - Temporarily paused</li>
+                        <li><span class="badge bg-danger">Cancelled</span> - No longer needed</li>
+                    </ul>
+
+                    <h6>Priority Levels:</h6>
+                    <ul class="small text-muted">
+                        <li><span class="badge bg-success">Low</span> - Can be done when convenient</li>
+                        <li><span class="badge bg-warning">Medium</span> - Normal priority</li>
+                        <li><span class="badge bg-danger">High</span> - Important, needs attention</li>
+                        <li><span class="badge bg-dark">Urgent</span> - Critical, immediate attention required</li>
+                    </ul>
+
+                    <h6>Notes:</h6>
+                    <ul class="small text-muted">
+                        <li>Tasks can be hierarchical (parent-child relationships)</li>
+                        <li>Progress percentage helps track completion</li>
+                        <li>Effort tracking helps with resource planning</li>
+                        <li>Milestones help organize tasks into phases</li>
+                        <li>Actual dates are updated as work progresses</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    private CreateTaskDto task = new();
+    private List<ProjectDto>? projects;
+    private List<UserDto>? users;
+    private List<MilestoneDto>? milestones;
+    private List<TaskDto>? parentTasks;
+    private bool isLoading = true;
+    private bool isSubmitting = false;
+    private string? errorMessage;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadData();
+    }
+
+    private async Task LoadData()
+    {
+        try
+        {
+            isLoading = true;
+            errorMessage = null;
+            
+            // Load data in parallel
+            var projectTask = ProjectService.GetProjectsAsync();
+            var userTask = UserService.GetUsersAsync();
+            var milestoneTask = MilestoneService.GetMilestonesAsync();
+            var taskTask = TaskService.GetTasksAsync();
+            
+            await Task.WhenAll(projectTask, userTask, milestoneTask, taskTask);
+            
+            projects = await projectTask;
+            users = await userTask;
+            milestones = await milestoneTask;
+            parentTasks = await taskTask;
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Error loading data: {ex.Message}";
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private async Task HandleValidSubmit()
+    {
+        try
+        {
+            isSubmitting = true;
+            errorMessage = null;
+
+            var createdTask = await TaskService.CreateTaskAsync(task);
+            Navigation.NavigateTo($"/tasks/{createdTask.TaskId}");
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Error adding task: {ex.Message}";
+        }
+        finally
+        {
+            isSubmitting = false;
+        }
+    }
+} 

@@ -58,6 +58,7 @@ namespace MyProject.Persistence.Entities
         public string? Location { get; set; }
 
         [Column("employment_status")]
+        [Required]
         [MaxLength(50)]
         public string EmploymentStatus { get; set; } = "Active";
 
@@ -72,6 +73,18 @@ namespace MyProject.Persistence.Entities
 
         [Column("updated_at")]
         public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
+
+        [Column("user_id")]
+        [Required]
+        public Guid UserId { get; set; }
+
+        [Column("tenant_id")]
+        [Required]
+        public Guid TenantId { get; set; }
+
+        // Navigation properties
+        public User? User { get; set; }
+        public Organization? Tenant { get; set; }
 
         // Computed property for full name
         public string FullName => $"{FirstName} {LastName}".Trim();

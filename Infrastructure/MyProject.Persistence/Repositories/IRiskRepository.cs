@@ -15,5 +15,12 @@ namespace MyProject.Persistence.Repositories
         Task<bool> DeleteAsync(Guid id);
         Task<bool> ExistsAsync(Guid id);
         Task<IEnumerable<Risk>> GetHighRiskRisksAsync();
+        Task<IEnumerable<Risk>> GetByTenantIdAsync(Guid tenantId);
+        Task<IEnumerable<Risk>> GetByTenantAndStatusAsync(Guid tenantId, string status);
+        Task<IEnumerable<Risk>> GetByTenantAndCategoryAsync(Guid tenantId, string category);
+        Task<IEnumerable<Risk>> GetByProjectAndStatusAsync(Guid projectId, string status);
+        Task<IEnumerable<Risk>> GetByTenantAndOwnerAsync(Guid tenantId, Guid ownerId);
+        Task<IEnumerable<Risk>> GetOverdueRisksAsync();
+        Task<IEnumerable<Risk>> GetByExposureRangeAsync(int minExposure, int maxExposure);
     }
 } 
