@@ -1,0 +1,92 @@
+@using MyProject.UI.ProjectManagementConsole.Services
+@inject IAuthenticationService AuthService
+@inject NavigationManager Navigation
+@inject IJSRuntime JSRuntime
+@implements IDisposable
+
+@if (isLoading)
+{
+    <div class="d-flex justify-content-center align-items-center" style="height: 100vh;">
+        <div class="text-center">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+            <div class="mt-2">
+                <small class="text-muted">Checking authentication...</small>
+            </div>
+        </div>
+    </div>
+}
+else if (isAuthenticated)
+{
+    @ChildContent
+}
+else
+{
+    <!-- This will be handled by navigation to login -->
+}
+
+@code {
+    [Parameter] public RenderFragment? ChildContent { get; set; }
+    
+    private bool isLoading = true;
+    private bool isAuthenticated = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        AuthService.AuthenticationStateChanged += OnAuthenticationStateChanged;
+        await CheckAuthenticationStatus();
+    }
+
+    private async Task CheckAuthenticationStatus()
+    {
+        isLoading = true;
+        StateHasChanged();
+
+        try
+        {
+            isAuthenticated = await AuthService.IsAuthenticatedAsync();
+            
+            if (!isAuthenticated && !Navigation.Uri.Contains("/login"))
+            {
+                Navigation.NavigateTo("/login", forceLoad: true);
+                return;
+            }
+        }
+        catch (Exception)
+        {
+            isAuthenticated = false;
+            if (!Navigation.Uri.Contains("/login"))
+            {
+                Navigation.NavigateTo("/login", forceLoad: true);
+                return;
+            }
+        }
+        finally
+        {
+            isLoading = false;
+            StateHasChanged();
+        }
+    }
+
+    private async void OnAuthenticationStateChanged(bool authenticated)
+    {
+        isAuthenticated = authenticated;
+        
+        if (!authenticated && !Navigation.Uri.Contains("/login"))
+        {
+            Navigation.NavigateTo("/login", forceLoad: true);
+        }
+        else if (authenticated && Navigation.Uri.Contains("/login"))
+        {
+            Navigation.NavigateTo("/", forceLoad: true);
+        }
+        
+        await InvokeAsync(StateHasChanged);
+    }
+
+    public void Dispose()
+    {
+        AuthService.AuthenticationStateChanged -= OnAuthenticationStateChanged;
+    }
+}

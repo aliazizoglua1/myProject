@@ -1,0 +1,82 @@
+@using MyProject.UI.ProjectManagementConsole.Services
+@using MyProject.UI.ProjectManagementConsole.Models
+@inject IAuthenticationService AuthService
+@inject NavigationManager Navigation
+@implements IDisposable
+
+<div class="d-flex align-items-center">
+    @if (currentUser != null)
+    {
+        <div class="dropdown">
+            <button class="btn btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                <i class="fas fa-user me-2"></i>
+                @currentUser.FirstName @currentUser.LastName
+            </button>
+            <ul class="dropdown-menu dropdown-menu-end">
+                <li>
+                    <h6 class="dropdown-header">
+                        @currentUser.Email
+                    </h6>
+                </li>
+                <li><hr class="dropdown-divider"></li>
+                <li>
+                    <button class="dropdown-item" @onclick="HandleLogout">
+                        <i class="fas fa-sign-out-alt me-2"></i>
+                        Logout
+                    </button>
+                </li>
+            </ul>
+        </div>
+    }
+    else
+    {
+        <button class="btn btn-primary" @onclick="GoToLogin">
+            <i class="fas fa-sign-in-alt me-2"></i>
+            Login
+        </button>
+    }
+</div>
+
+@code {
+    private UserDto? currentUser;
+
+    protected override async Task OnInitializedAsync()
+    {
+        AuthService.AuthenticationStateChanged += OnAuthenticationStateChanged;
+        await LoadCurrentUser();
+    }
+
+    private async Task LoadCurrentUser()
+    {
+        if (await AuthService.IsAuthenticatedAsync())
+        {
+            currentUser = await AuthService.GetCurrentUserAsync();
+        }
+        else
+        {
+            currentUser = null;
+        }
+        StateHasChanged();
+    }
+
+    private async void OnAuthenticationStateChanged(bool authenticated)
+    {
+        await LoadCurrentUser();
+    }
+
+    private async Task HandleLogout()
+    {
+        await AuthService.LogoutAsync();
+        Navigation.NavigateTo("/login", forceLoad: true);
+    }
+
+    private void GoToLogin()
+    {
+        Navigation.NavigateTo("/login");
+    }
+
+    public void Dispose()
+    {
+        AuthService.AuthenticationStateChanged -= OnAuthenticationStateChanged;
+    }
+}

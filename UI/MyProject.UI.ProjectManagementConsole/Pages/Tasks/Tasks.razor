@@ -60,6 +60,7 @@
                                     <th>Assigned To</th>
                                     <th>Progress</th>
                                     <th>Due Date</th>
+                                    <th>Issue</th>
                                     <th>Actions</th>
                                 </tr>
                             </thead>
@@ -146,6 +147,16 @@
                                             else
                                             {
                                                 <span class="text-muted">Not set</span>
+                                            }
+                                        </td>
+                                        <td>
+                                            @if (task.Issue != null)
+                                            {
+                                                <span class="badge bg-warning">@task.Issue.IssueName</span>
+                                            }
+                                            else
+                                            {
+                                                <span class="text-muted">No Issue</span>
                                             }
                                         </td>
                                         <td>

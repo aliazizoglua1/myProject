@@ -1,0 +1,323 @@
+@page "/lineup"
+@inject ITaskService TaskService
+@inject IJSRuntime JSRuntime
+@inject NavigationManager Navigation
+@using MyProject.UI.ProjectManagementConsole.Models
+@using MyProject.UI.ProjectManagementConsole.Services
+
+<PageTitle>Task Lineup - Project Management Console</PageTitle>
+
+<div class="lineup-container">
+    <div class="lineup-header">
+        <h2>Task Lineup Timeline</h2>
+        <div class="timeline-controls">
+            <div class="date-range-selector">
+                <label for="start-date">From:</label>
+                <input type="date" id="start-date" value="@startDate.ToString("yyyy-MM-dd")" @onchange="OnStartDateChanged" />
+                <label for="end-date">To:</label>
+                <input type="date" id="end-date" value="@endDate.ToString("yyyy-MM-dd")" @onchange="OnEndDateChanged" />
+                <button class="btn btn-sm btn-outline-primary" @onclick="SetToCurrentMonth">Current Month</button>
+                <button class="btn btn-sm btn-outline-secondary" @onclick="SetToCurrentQuarter">Current Quarter</button>
+            </div>
+            <div class="filter-controls">
+                <select class="form-select form-select-sm" value="selectedStatus" @onchange="OnStatusChanged">
+                    <option value="">All Statuses</option>
+                    <option value="To Do">To Do</option>
+                    <option value="In Progress">In Progress</option>
+                    <option value="Completed">Completed</option>
+                    <option value="Blocked">Blocked</option>
+                    <option value="Testing">Testing</option>
+                </select>
+                <select class="form-select form-select-sm" value="selectedPriority" @onchange="OnPriorityChanged">
+                    <option value="">All Priorities</option>
+                    <option value="High">High</option>
+                    <option value="Medium">Medium</option>
+                    <option value="Low">Low</option>
+                </select>
+                <button class="btn btn-sm btn-outline-info" @onclick="ClearFilters">Clear Filters</button>
+            </div>
+        </div>
+    </div>
+
+    @if (isLoading)
+    {
+        <div class="loading-container">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+            <p>Loading tasks...</p>
+        </div>
+    }
+    else if (filteredTasks.Any())
+    {
+        <div class="timeline-container">
+            <!-- Week Headers -->
+            <div class="timeline-header">
+                <div class="task-name-column">Task Name</div>
+                <div class="timeline-grid-header">
+                    @foreach (var week in weekColumns)
+                    {
+                        <div class="week-column" style="width: @(weekColumnWidth)px;">
+                            <div class="week-label">Week of</div>
+                            <div class="week-date">@week.ToString("MMM dd")</div>
+                        </div>
+                    }
+                </div>
+            </div>
+
+            <!-- Task Rows -->
+            <div class="timeline-body">
+                @foreach (var task in filteredTasks)
+                {
+                    <div class="task-row">
+                        <div class="task-name-column">
+                            <div class="task-info">
+                                <div class="task-name">@task.TaskName</div>
+                                <div class="task-details">
+                                    <span class="task-status status-@GetStatusClass(task.TaskStatus)">@task.TaskStatus</span>
+                                    <span class="task-priority priority-@GetPriorityClass(task.Priority)">@task.Priority</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="timeline-grid">
+                            @{
+                                var taskBar = CalculateTaskBar(task);
+                            }
+                            @if (taskBar != null)
+                            {
+                                <div class="task-bar @GetTaskBarClass(task.TaskStatus)"
+                                     style="left: @(taskBar.Left)px; width: @(taskBar.Width)px;"
+                                     @onclick="@(() => NavigateToTask(task.TaskId))">
+                                    <div class="task-bar-content">
+                                        <span class="task-owner">@GetTaskOwnerName(task)</span>
+                                    </div>
+                                    <div class="task-bar-tooltip">
+                                        <strong>@task.TaskName</strong><br />
+                                        Owner: @GetTaskOwnerName(task)<br />
+                                        Status: @task.TaskStatus<br />
+                                        Start: @(task.ActualStartDate?.ToString("MMM dd, yyyy") ?? "Not started")<br />
+                                        End: @(task.ActualEndDate?.ToString("MMM dd, yyyy") ?? "Not completed")<br />
+                                        <small><em>Click to view task details</em></small>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+    }
+    else
+    {
+        <div class="no-tasks-message">
+            <div class="alert alert-info">
+                <h4>No tasks found</h4>
+                <p>There are no tasks with actual dates in the selected time period.</p>
+                <button class="btn btn-primary" @onclick="@(() => Navigation.NavigateTo("/tasks/create"))">
+                    Create New Task
+                </button>
+            </div>
+        </div>
+    }
+</div>
+
+@code {
+    private List<TaskDto> allTasks = new();
+    private List<TaskDto> filteredTasks = new();
+    private List<DateTime> weekColumns = new();
+    private bool isLoading = true;
+
+    private DateTime startDate = DateTime.Today.AddDays(-(int)DateTime.Today.DayOfWeek).AddDays(-14); // 2 weeks ago
+    private DateTime endDate = DateTime.Today.AddDays(6 - (int)DateTime.Today.DayOfWeek).AddDays(28); // 4 weeks from now
+
+    private string selectedStatus = "";
+    private string selectedPriority = "";
+
+    private const int weekColumnWidth = 120; // pixels
+    private const int timelineStartOffset = 20; // pixels
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadTasks();
+        GenerateWeekColumns();
+        FilterTasks();
+    }
+    private void OnStatusChanged(ChangeEventArgs e)
+    {
+        selectedStatus = e.Value?.ToString() ?? "";
+        RefreshTimeline();
+    }
+
+    private void OnPriorityChanged(ChangeEventArgs e)
+    {
+        selectedPriority = e.Value?.ToString() ?? "";
+        RefreshTimeline();
+    }
+
+    private void OnStartDateChanged(ChangeEventArgs e)
+    {
+        if (DateTime.TryParse(e.Value?.ToString(), out var newStartDate))
+        {
+            startDate = newStartDate;
+            RefreshTimeline();
+        }
+    }
+
+    private void OnEndDateChanged(ChangeEventArgs e)
+    {
+        if (DateTime.TryParse(e.Value?.ToString(), out var newEndDate))
+        {
+            endDate = newEndDate;
+            RefreshTimeline();
+        }
+    }
+    private async Task LoadTasks()
+    {
+        try
+        {
+            isLoading = true;
+            allTasks = await TaskService.GetTasksAsync();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error loading tasks: {ex.Message}");
+            allTasks = new List<TaskDto>();
+        }
+        finally
+        {
+            isLoading = false;
+            StateHasChanged();
+        }
+    }
+
+    private void GenerateWeekColumns()
+    {
+        weekColumns.Clear();
+        var current = GetStartOfWeek(startDate);
+        var end = GetStartOfWeek(endDate).AddDays(7); // Include the week containing end date
+
+        while (current < end)
+        {
+            weekColumns.Add(current);
+            current = current.AddDays(7);
+        }
+    }
+
+    private DateTime GetStartOfWeek(DateTime date)
+    {
+        var diff = (7 + (date.DayOfWeek - DayOfWeek.Monday)) % 7;
+        return date.AddDays(-1 * diff).Date;
+    }
+
+    private void FilterTasks()
+    {
+        filteredTasks = allTasks.Where(task =>
+            task.ActualStartDate.HasValue &&
+            (task.ActualEndDate.HasValue || task.ActualStartDate.Value.ToDateTime(TimeOnly.MinValue) <= endDate) &&
+            (string.IsNullOrEmpty(selectedStatus) || task.TaskStatus.Equals(selectedStatus, StringComparison.OrdinalIgnoreCase)) &&
+            (string.IsNullOrEmpty(selectedPriority) || task.Priority.Equals(selectedPriority, StringComparison.OrdinalIgnoreCase))
+        ).OrderBy(t => t.ActualStartDate).ToList();
+    }
+
+    private TaskBarInfo? CalculateTaskBar(TaskDto task)
+    {
+        if (!task.ActualStartDate.HasValue) return null;
+
+        var taskStart = task.ActualStartDate.Value.ToDateTime(TimeOnly.MinValue);
+        var taskEnd = task.ActualEndDate?.ToDateTime(TimeOnly.MinValue) ?? DateTime.Today;
+
+        // Ensure task is within visible range
+        if (taskEnd < startDate || taskStart > endDate) return null;
+
+        // Calculate position
+        var timelineStart = GetStartOfWeek(startDate);
+        var totalDays = (endDate - timelineStart).TotalDays;
+        var pixelsPerDay = (weekColumns.Count * weekColumnWidth) / totalDays;
+
+        var startDays = (taskStart - timelineStart).TotalDays;
+        var endDays = (taskEnd - timelineStart).TotalDays;
+
+        var left = Math.Max(0, startDays * pixelsPerDay) + timelineStartOffset;
+        var right = Math.Min(weekColumns.Count * weekColumnWidth, endDays * pixelsPerDay) + timelineStartOffset;
+        var width = Math.Max(2, right - left); // Minimum width of 2px
+
+        return new TaskBarInfo
+        {
+            Left = left,
+            Width = width
+        };
+    }
+
+    private string GetTaskOwnerName(TaskDto task)
+    {
+        if (task.AssignedToUser != null)
+        {
+            return $"{task.AssignedToUser.FirstName} {task.AssignedToUser.LastName}".Trim();
+        }
+        return "Unassigned";
+    }
+
+    private string GetStatusClass(string status)
+    {
+        return status.ToLower().Replace(" ", "-");
+    }
+
+    private string GetPriorityClass(string priority)
+    {
+        return priority.ToLower();
+    }
+
+    private string GetTaskBarClass(string status)
+    {
+        return status.ToLower() switch
+        {
+            "completed" => "task-bar-completed",
+            "in progress" => "task-bar-in-progress",
+            "blocked" => "task-bar-blocked",
+            "testing" => "task-bar-testing",
+            _ => "task-bar-todo"
+        };
+    }
+
+    private void RefreshTimeline()
+    {
+        GenerateWeekColumns();
+        FilterTasks();
+        StateHasChanged();
+    }
+
+    private void SetToCurrentMonth()
+    {
+        var today = DateTime.Today;
+        startDate = new DateTime(today.Year, today.Month, 1);
+        endDate = startDate.AddMonths(1).AddDays(-1);
+        RefreshTimeline();
+    }
+
+    private void SetToCurrentQuarter()
+    {
+        var today = DateTime.Today;
+        var quarter = (today.Month - 1) / 3 + 1;
+        startDate = new DateTime(today.Year, (quarter - 1) * 3 + 1, 1);
+        endDate = startDate.AddMonths(3).AddDays(-1);
+        RefreshTimeline();
+    }
+
+    private void ClearFilters()
+    {
+        selectedStatus = "";
+        selectedPriority = "";
+        RefreshTimeline();
+    }
+
+    private void NavigateToTask(Guid taskId)
+    {
+        Navigation.NavigateTo($"/tasks/view/{taskId}");
+    }
+
+    private class TaskBarInfo
+    {
+        public double Left { get; set; }
+        public double Width { get; set; }
+    }
+}

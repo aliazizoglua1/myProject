@@ -123,5 +123,7 @@ namespace MyProject.UI.ProjectManagementConsole.Models
 
         [StringLength(100, ErrorMessage = "Current phase cannot exceed 100 characters")]
         public string? CurrentPhase { get; set; }
+
+        public Guid? OrganizationId { get; set; }
     }
 } 

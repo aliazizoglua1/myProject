@@ -1,0 +1,325 @@
+@page "/tasks/board"
+@using MyProject.UI.ProjectManagementConsole.Models
+@using MyProject.UI.ProjectManagementConsole.Services
+@inject ITaskService TaskService
+@inject IMilestoneService MilestoneService
+@inject NavigationManager Navigation
+
+<PageTitle>Task Board</PageTitle>
+
+<div class="container-fluid">
+    <div class="row mb-3">
+        <div class="col">
+            <h1>Task Board</h1>
+            <p class="text-muted">Visual project management with tasks grouped by milestones and status</p>
+        </div>
+        <div class="col-auto">
+            <a href="/tasks/create" class="btn btn-primary">
+                <i class="bi bi-plus-circle"></i> Add Task
+            </a>
+        </div>
+    </div>
+
+    @if (isLoading)
+    {
+        <div class="text-center">
+            <div class="spinner-border" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+        </div>
+    }
+    else if (errorMessage != null)
+    {
+        <div class="alert alert-danger" role="alert">
+            @errorMessage
+        </div>
+    }
+    else
+    {
+        <div class="task-board">
+            @foreach (var milestone in milestones)
+            {
+                <div class="milestone-section mb-4">
+                    <div class="milestone-header">
+                        <h3 class="milestone-title">
+                            <i class="bi bi-flag"></i>
+                            @milestone.MilestoneName
+                        </h3>
+                        <div class="milestone-info">
+                            <span class="badge bg-info">@milestone.TargetDate?.ToString("MMM dd, yyyy")</span>
+                            @if (milestone.Project != null)
+                            {
+                                <span class="badge bg-secondary">@milestone.Project.ProjectName</span>
+                            }
+                        </div>
+                    </div>
+                    
+                    <div class="status-columns">
+                        @foreach (var status in taskStatuses)
+                        {
+                            var milestoneTasks = tasks.Where(t => t.MilestoneId == milestone.MilestoneId && t.TaskStatus == status);
+                            
+                            <div class="status-column @(IsDropTarget(status) ? "drop-target" : "")" 
+                                 @ondragover="() => HandleDragOver(status)"
+                                 @ondragleave="() => HandleDragLeave(status)"
+                                 @ondrop="() => HandleDrop(status)">
+                                <div class="status-header @GetStatusHeaderClass(status)">
+                                    <h5>@status</h5>
+                                    <span class="task-count">@milestoneTasks.Count()</span>
+                                </div>
+                                <div class="task-list">
+                                    @foreach (var task in milestoneTasks)
+                                    {
+                                        <div class="task-card @GetTaskCardClass(task.Priority) @(IsDragging(task.TaskId) ? "dragging" : "")" 
+                                             draggable="true"
+                                             @key="task.TaskId"
+                                             @ondragstart="() => HandleDragStart(task.TaskId)"
+                                             @ondragend="() => HandleDragEnd()"
+                                             @onclick="() => NavigateToTask(task.TaskId)">
+                                            <div class="task-header">
+                                                <h6 class="task-title">@task.TaskName</h6>
+                                                <span class="badge @GetPriorityBadgeClass(task.Priority)">@task.Priority</span>
+                                            </div>
+                                            @if (!string.IsNullOrEmpty(task.Description))
+                                            {
+                                                <p class="task-description">@(task.Description.Length > 100 ? task.Description.Substring(0, 100) + "..." : task.Description)</p>
+                                            }
+                                            <div class="task-meta">
+                                                @if (task.AssignedToUser != null)
+                                                {
+                                                    <div class="assigned-user">
+                                                        <i class="bi bi-person"></i>
+                                                        @task.AssignedToUser.FirstName @task.AssignedToUser.LastName
+                                                    </div>
+                                                }
+                                                @if (task.PlannedEndDate.HasValue)
+                                                {
+                                                    var isOverdue = task.PlannedEndDate.Value < DateOnly.FromDateTime(DateTime.Today) && task.TaskStatus != "Completed";
+                                                    <div class="due-date @(isOverdue ? "overdue" : "")">
+                                                        <i class="bi bi-calendar"></i>
+                                                        @task.PlannedEndDate.Value.ToString("MMM dd")
+                                                        @if (isOverdue)
+                                                        {
+                                                            <i class="bi bi-exclamation-triangle text-danger"></i>
+                                                        }
+                                                    </div>
+                                                }
+                                            </div>
+                                            @if (task.ProgressPercentage.HasValue)
+                                            {
+                                                <div class="progress mt-2" style="height: 4px;">
+                                                    <div class="progress-bar @GetProgressBarClass(task.ProgressPercentage.Value)" 
+                                                         style="width: @task.ProgressPercentage.Value%">
+                                                    </div>
+                                                </div>
+                                            }
+                                            @if (task.Issue != null)
+                                            {
+                                                <div class="task-issue mt-2">
+                                                    <i class="bi bi-exclamation-circle text-warning"></i>
+                                                    <small>@task.Issue.IssueName</small>
+                                                </div>
+                                            }
+                                            @if (IsUpdatingTask(task.TaskId))
+                                            {
+                                                <div class="task-updating">
+                                                    <div class="spinner-border spinner-border-sm" role="status">
+                                                        <span class="visually-hidden">Updating...</span>
+                                                    </div>
+                                                </div>
+                                            }
+                                        </div>
+                                    }
+                                </div>
+                            </div>
+                        }
+                    </div>
+                </div>
+            }
+            
+            @if (!milestones.Any())
+            {
+                <div class="text-center py-5">
+                    <i class="bi bi-kanban display-1 text-muted"></i>
+                    <h3 class="mt-3">No Milestones Found</h3>
+                    <p class="text-muted">Create milestones to organize your tasks on the board.</p>
+                    <a href="/milestones/create" class="btn btn-primary">
+                        <i class="bi bi-plus-circle"></i> Add Milestone
+                    </a>
+                </div>
+            }
+        </div>
+    }
+</div>
+
+@code {
+    private List<TaskDto> tasks = new();
+    private List<MilestoneDto> milestones = new();
+    private bool isLoading = true;
+    private string? errorMessage;
+    
+    private readonly string[] taskStatuses = { "To Do", "In Progress", "Completed", "On Hold", "Cancelled" };
+    
+    // Drag and drop state
+    private Guid? draggingTaskId;
+    private string? dropTargetStatus;
+    private HashSet<Guid> updatingTasks = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadData();
+    }
+
+    private async Task LoadData()
+    {
+        try
+        {
+            isLoading = true;
+            errorMessage = null;
+            
+            // Load tasks and milestones in parallel
+            var taskTask = TaskService.GetTasksAsync();
+            var milestoneTask = MilestoneService.GetMilestonesAsync();
+            
+            await Task.WhenAll(taskTask, milestoneTask);
+            
+            tasks = await taskTask;
+            milestones = await milestoneTask;
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Error loading data: {ex.Message}";
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private void NavigateToTask(Guid taskId)
+    {
+        if (draggingTaskId.HasValue) return; // Don't navigate if dragging
+        Navigation.NavigateTo($"/tasks/{taskId}");
+    }
+
+    private void HandleDragStart(Guid taskId)
+    {
+        draggingTaskId = taskId;
+        StateHasChanged();
+    }
+
+    private void HandleDragEnd()
+    {
+        draggingTaskId = null;
+        dropTargetStatus = null;
+        StateHasChanged();
+    }
+
+    private void HandleDragOver(string status)
+    {
+        dropTargetStatus = status;
+        StateHasChanged();
+    }
+
+    private void HandleDragLeave(string status)
+    {
+        if (dropTargetStatus == status)
+        {
+            dropTargetStatus = null;
+            StateHasChanged();
+        }
+    }
+
+    private async Task HandleDrop(string newStatus)
+    {
+        if (!draggingTaskId.HasValue) return;
+
+        var task = tasks.FirstOrDefault(t => t.TaskId == draggingTaskId.Value);
+        if (task == null || task.TaskStatus == newStatus) return;
+
+        try
+        {
+            updatingTasks.Add(draggingTaskId.Value);
+            StateHasChanged();
+
+            // Update task status
+            var updateDto = new UpdateTaskDto
+            {
+                TaskStatus = newStatus
+            };
+
+            await TaskService.UpdateTaskAsync(draggingTaskId.Value, updateDto);
+
+            // Update local state
+            task.TaskStatus = newStatus;
+            
+            // Force a complete re-render to ensure the task appears in the correct column
+            await InvokeAsync(StateHasChanged);
+            
+            // Optional: Reload the task data to ensure consistency
+            // await LoadData();
+            
+            // Show success feedback
+            // You could add a toast notification here
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Error updating task status: {ex.Message}";
+        }
+        finally
+        {
+            updatingTasks.Remove(draggingTaskId.Value);
+            draggingTaskId = null;
+            dropTargetStatus = null;
+            await InvokeAsync(StateHasChanged);
+        }
+    }
+
+    private bool IsDragging(Guid taskId)
+    {
+        return draggingTaskId == taskId;
+    }
+
+    private bool IsDropTarget(string status)
+    {
+        return dropTargetStatus == status;
+    }
+
+    private bool IsUpdatingTask(Guid taskId)
+    {
+        return updatingTasks.Contains(taskId);
+    }
+
+    private string GetStatusHeaderClass(string status)
+    {
+        return status.ToLower().Replace(" ", "-");
+    }
+
+    private string GetTaskCardClass(string priority)
+    {
+        return priority.ToLower().Replace(" ", "-") + "-priority";
+    }
+
+    private string GetPriorityBadgeClass(string priority)
+    {
+        return priority.ToLower() switch
+        {
+            "low" => "bg-success",
+            "medium" => "bg-warning",
+            "high" => "bg-danger",
+            "urgent" => "bg-dark",
+            _ => "bg-secondary"
+        };
+    }
+
+    private string GetProgressBarClass(decimal progress)
+    {
+        return progress switch
+        {
+            >= 80 => "bg-success",
+            >= 50 => "bg-warning",
+            >= 20 => "bg-info",
+            _ => "bg-secondary"
+        };
+    }
+} 

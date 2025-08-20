@@ -1,0 +1,119 @@
+@using Microsoft.JSInterop
+@inject IJSRuntime JSRuntime
+@implements IAsyncDisposable
+
+<div @ref="quillElement" id="@editorId" style="height: 200px;"></div>
+
+@code {
+    private ElementReference quillElement;
+    private IJSObjectReference? quillInstance;
+    private string editorId = Guid.NewGuid().ToString();
+
+    [Parameter] public string? Placeholder { get; set; } = "Enter text here...";
+    [Parameter] public string? InitialContent { get; set; }
+    [Parameter] public bool ReadOnly { get; set; } = false;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            try
+            {
+                // Initialize Quill editor
+                quillInstance = await JSRuntime.InvokeAsync<IJSObjectReference>("initQuillEditor", quillElement, new
+                {
+                    placeholder = Placeholder,
+                    readOnly = ReadOnly,
+                    theme = "snow"
+                });
+
+                // Set initial content if provided
+                if (!string.IsNullOrEmpty(InitialContent))
+                {
+                    await SetHTMLAsync(InitialContent);
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error initializing Quill editor: {ex.Message}");
+            }
+        }
+    }
+
+    public async Task<string> GetHTMLAsync()
+    {
+        try
+        {
+            if (quillInstance != null)
+            {
+                return await quillInstance.InvokeAsync<string>("getHTML");
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error getting HTML: {ex.Message}");
+        }
+        return string.Empty;
+    }
+
+    public async Task SetHTMLAsync(string html)
+    {
+        try
+        {
+            if (quillInstance != null)
+            {
+                await quillInstance.InvokeVoidAsync("setHTML", html);
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error setting HTML: {ex.Message}");
+        }
+    }
+
+    public async Task<string> GetTextAsync()
+    {
+        try
+        {
+            if (quillInstance != null)
+            {
+                return await quillInstance.InvokeAsync<string>("getText");
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error getting text: {ex.Message}");
+        }
+        return string.Empty;
+    }
+
+    public async Task ClearAsync()
+    {
+        try
+        {
+            if (quillInstance != null)
+            {
+                await quillInstance.InvokeVoidAsync("clear");
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error clearing editor: {ex.Message}");
+        }
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        try
+        {
+            if (quillInstance != null)
+            {
+                await quillInstance.DisposeAsync();
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error disposing Quill instance: {ex.Message}");
+        }
+    }
+} 

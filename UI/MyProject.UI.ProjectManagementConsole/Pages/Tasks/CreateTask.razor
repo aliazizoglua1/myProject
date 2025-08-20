@@ -6,6 +6,7 @@
 @inject IUserService UserService
 @inject IMilestoneService MilestoneService
 @inject NavigationManager Navigation
+@inject IIssueService IssueService
 
 <PageTitle>Add Task</PageTitle>
 
@@ -42,6 +43,21 @@
                             <label for="taskName" class="form-label">Task Name *</label>
                             <InputText id="taskName" class="form-control" @bind-Value="task.TaskName" />
                             <ValidationMessage For="@(() => task.TaskName)" />
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="taskType" class="form-label">Task Type *</label>
+                            <InputSelect id="taskType" class="form-select" @bind-Value="task.TaskType">
+                                <option value="">Select Task Type</option>
+                                <option value="Development">Development</option>
+                                <option value="Testing">Testing</option>
+                                <option value="Design">Design</option>
+                                <option value="Bug">Bug</option>
+                                <option value="Feature">Feature</option>
+                                <option value="Meeting">Meeting</option>
+                                <option value="Documentation">Documentation</option>
+                            </InputSelect>
+                            <ValidationMessage For="@(() => task.TaskType)" />
                         </div>
 
                         <div class="mb-3">
@@ -212,6 +228,21 @@
                             <ValidationMessage For="@(() => task.Notes)" />
                         </div>
 
+                        <div class="mb-3">
+                            <label for="issueId" class="form-label">Issue</label>
+                            <InputSelect id="issueId" class="form-select" @bind-Value="task.IssueId">
+                                <option value="">Select Issue (Optional)</option>
+                                @if (issues != null)
+                                {
+                                    @foreach (var issue in issues)
+                                    {
+                                        <option value="@issue.IssueId">@issue.IssueName</option>
+                                    }
+                                }
+                            </InputSelect>
+                            <ValidationMessage For="@(() => task.IssueId)" />
+                        </div>
+
                         <div class="d-flex gap-2">
                             <button type="submit" class="btn btn-primary" disabled="@isSubmitting">
                                 @if (isSubmitting)
@@ -290,6 +321,7 @@
     private List<UserDto>? users;
     private List<MilestoneDto>? milestones;
     private List<TaskDto>? parentTasks;
+    private List<IssueDto>? issues;
     private bool isLoading = true;
     private bool isSubmitting = false;
     private string? errorMessage;
@@ -311,13 +343,15 @@
             var userTask = UserService.GetUsersAsync();
             var milestoneTask = MilestoneService.GetMilestonesAsync();
             var taskTask = TaskService.GetTasksAsync();
+            var issueTask = IssueService.GetIssuesAsync();
             
-            await Task.WhenAll(projectTask, userTask, milestoneTask, taskTask);
+            await Task.WhenAll(projectTask, userTask, milestoneTask, taskTask, issueTask);
             
             projects = await projectTask;
             users = await userTask;
             milestones = await milestoneTask;
             parentTasks = await taskTask;
+            issues = await issueTask;
         }
         catch (Exception ex)
         {

@@ -1,7 +1,10 @@
 @page "/tasks/{Id:guid}"
+@using Blazored.TextEditor
+@using MyProject.UI.ProjectManagementConsole.Components
 @using MyProject.UI.ProjectManagementConsole.Models
 @using MyProject.UI.ProjectManagementConsole.Services
 @inject ITaskService TaskService
+@inject ITaskHistoryService TaskHistoryService
 @inject NavigationManager Navigation
 
 <PageTitle>Task Details</PageTitle>
@@ -119,6 +122,18 @@
                                         else
                                         {
                                             <span class="text-muted">No milestone</span>
+                                        }
+                                    </dd>
+
+                                    <dt class="col-sm-4">Issue</dt>
+                                    <dd class="col-sm-8">
+                                        @if (task.Issue != null)
+                                        {
+                                            <a href="/issues/@task.Issue.IssueId">@task.Issue.IssueName</a>
+                                        }
+                                        else
+                                        {
+                                            <span class="text-muted">No issue</span>
                                         }
                                     </dd>
                                 </dl>
@@ -283,6 +298,101 @@
                         </div>
                     </div>
                 </div>
+
+                <!-- Comments Section -->
+                <div class="card mt-4">
+                    <div class="card-header">
+                        <h5><i class="bi bi-chat-dots"></i> Comments & History</h5>
+                    </div>
+                    <div class="card-body">
+                        @if (isLoadingComments)
+                        {
+                            <div class="text-center">
+                                <div class="spinner-border spinner-border-sm" role="status">
+                                    <span class="visually-hidden">Loading comments...</span>
+                                </div>
+                            </div>
+                        }
+                        else
+                        {
+                            <!-- Historical Comments -->
+                            @if (taskHistories.Any())
+                            {
+                                <div class="mb-4">
+                                    <h6>Comment History</h6>
+                                    <div class="comment-history">
+                                        @foreach (var history in taskHistories.OrderByDescending(h => h.CreatedAt))
+                                        {
+                                            <div class="comment-item border-bottom pb-3 mb-3">
+                                                <div class="d-flex justify-content-between align-items-start">
+                                                    <div class="flex-grow-1">
+                                                        <div class="d-flex align-items-center mb-2">
+                                                            <i class="bi bi-person-circle text-primary me-2"></i>
+                                                            <strong>@(history.User?.FirstName) @(history.User?.LastName)</strong>
+                                                            <small class="text-muted ms-2">@history.CreatedAt.ToString("MMM dd, yyyy 'at' HH:mm")</small>
+                                                        </div>
+                                                        <div class="comment-content" @onclick="() => ToggleComment(history.TaskHistoryId)">
+                                                            <div class="comment-preview @(expandedComments.Contains(history.TaskHistoryId) ? "d-none" : "")">
+                                                                @GetCommentPreview(history.Comment)
+                                                            </div>
+                                                            <div class="comment-full @(expandedComments.Contains(history.TaskHistoryId) ? "" : "d-none")">
+                                                                @((MarkupString)history.Comment)
+                                                            </div>
+                                                        </div>
+                                                        @if (history.Comment.Length > 200)
+                                                        {
+                                                            <button class="btn btn-link btn-sm p-0 mt-1" @onclick="() => ToggleComment(history.TaskHistoryId)">
+                                                                <small>@(expandedComments.Contains(history.TaskHistoryId) ? "Show less" : "Show more")</small>
+                                                            </button>
+                                                        }
+                                                    </div>
+                                                    <div class="ms-2">
+                                                        <button class="btn btn-outline-danger btn-sm" @onclick="() => DeleteComment(history.TaskHistoryId)" title="Delete comment">
+                                                            <i class="bi bi-trash"></i>
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        }
+                                    </div>
+                                </div>
+                            }
+                            else
+                            {
+                                <div class="text-center text-muted mb-4">
+                                    <i class="bi bi-chat-dots display-4"></i>
+                                    <p>No comments yet. Be the first to add a comment!</p>
+                                </div>
+                            }
+
+                            <!-- Add New Comment -->
+                            <div class="add-comment-section">
+                                <h6>Add New Comment</h6>
+                                <div class="mb-3">
+                                    <RichTextEditor @ref="@richTextEditor" Placeholder="Write your comment here..." />
+                                </div>
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div class="text-muted small">
+                                        <i class="bi bi-info-circle"></i>
+                                        You can use rich text formatting and insert images
+                                    </div>
+                                    <button class="btn btn-primary" @onclick="AddComment" disabled="@isAddingComment">
+                                        @if (isAddingComment)
+                                        {
+                                            <span class="spinner-border spinner-border-sm me-2" role="status"></span>
+                                            <span>Adding...</span>
+                                        }
+                                        else
+                                        {
+                                            <i class="bi bi-plus-circle me-2"></i>
+                                            <span>Add Comment</span>
+                                        }
+                                    </button>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                </div>
             </div>
 
             <div class="col-lg-4">
@@ -367,17 +477,49 @@
     }
 </div>
 
+<style>
+    .comment-history {
+        max-height: 400px;
+        overflow-y: auto;
+    }
+    
+    .comment-content {
+        cursor: pointer;
+    }
+    
+    .comment-preview {
+        color: #6c757d;
+    }
+    
+    .comment-full {
+        color: #212529;
+    }
+    
+    .add-comment-section {
+        border-top: 1px solid #dee2e6;
+        padding-top: 1rem;
+    }
+</style>
+
 @code {
     [Parameter]
     public Guid Id { get; set; }
 
     private TaskDto? task;
+    private List<TaskHistoryDto> taskHistories = new();
     private bool isLoading = true;
+    private bool isLoadingComments = true;
+    private bool isAddingComment = false;
     private string? errorMessage;
+    private HashSet<Guid> expandedComments = new();
+    
+    // Rich text editor
+    private RichTextEditor? richTextEditor;
 
     protected override async Task OnInitializedAsync()
     {
         await LoadTask();
+        await LoadComments();
     }
 
     private async Task LoadTask()
@@ -396,6 +538,92 @@
         {
             isLoading = false;
         }
+    }
+
+    private async Task LoadComments()
+    {
+        try
+        {
+            isLoadingComments = true;
+            taskHistories = (await TaskHistoryService.GetByTaskIdAsync(Id)).ToList();
+        }
+        catch (Exception ex)
+        {
+            // Don't show error for comments, just log it
+            Console.WriteLine($"Error loading comments: {ex.Message}");
+        }
+        finally
+        {
+            isLoadingComments = false;
+        }
+    }
+
+    private async Task AddComment()
+    {
+        if (richTextEditor == null || task == null) return;
+
+        try
+        {
+            isAddingComment = true;
+            var htmlContent = await richTextEditor.GetHTMLAsync();
+            
+            if (string.IsNullOrWhiteSpace(htmlContent) || htmlContent == "<p><br></p>")
+            {
+                return; // Don't add empty comments
+            }
+
+            var createDto = new CreateTaskHistoryDto
+            {
+                TaskId = task.TaskId,
+                UserId = Guid.NewGuid(), // TODO: Get current user ID
+               Comment = htmlContent,
+                OrganizationId = task.TenantId
+            };
+
+            await TaskHistoryService.CreateTaskHistoryAsync(createDto);
+            
+            // Clear the editor
+            await richTextEditor.ClearAsync();
+            
+            // Reload comments
+            await LoadComments();
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Error adding comment: {ex.Message}";
+        }
+        finally
+        {
+            isAddingComment = false;
+        }
+    }
+
+    private async Task DeleteComment(Guid commentId)
+    {
+        try
+        {
+            await TaskHistoryService.DeleteTaskHistoryAsync(commentId);
+            await LoadComments();
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Error deleting comment: {ex.Message}";
+        }
+    }
+
+    private void ToggleComment(Guid commentId)
+    {
+        if (expandedComments.Contains(commentId))
+            expandedComments.Remove(commentId);
+        else
+            expandedComments.Add(commentId);
+    }
+
+    private string GetCommentPreview(string htmlContent)
+    {
+        // Simple HTML to text conversion for preview
+        var textContent = System.Text.RegularExpressions.Regex.Replace(htmlContent, "<[^>]*>", "");
+        return textContent.Length > 200 ? textContent.Substring(0, 200) + "..." : textContent;
     }
 
     private async Task DeleteTask()

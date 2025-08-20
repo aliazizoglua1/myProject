@@ -25,7 +25,7 @@ namespace MyProject.UI.ProjectManagementConsole.Services
     public class ChangeRequestService : IChangeRequestService
     {
         private readonly HttpClient _httpClient;
-        private readonly string _baseUrl = "https://localhost:7001"; // Update this to match your API URL
+        private readonly string _baseUrl = "https://localhost:7294"; // Update this to match your API URL
 
         public ChangeRequestService(HttpClient httpClient)
         {

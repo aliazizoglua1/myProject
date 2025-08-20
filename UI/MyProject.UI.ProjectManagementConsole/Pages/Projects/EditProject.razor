@@ -2,6 +2,7 @@
 @using MyProject.UI.ProjectManagementConsole.Models
 @using MyProject.UI.ProjectManagementConsole.Services
 @inject IProjectService ProjectService
+@inject IOrganizationService OrganizationService
 @inject NavigationManager Navigation
 
 <PageTitle>Edit Project</PageTitle>
@@ -221,6 +222,22 @@
                             </div>
 
                             <div class="mb-3">
+                                <label for="organizationId" class="form-label">Organization</label>
+                                <InputSelect id="organizationId" class="form-select" @bind-Value="updateDto.OrganizationId">
+                                    <option value="">Select Organization (Optional)</option>
+                                    @if (organizations != null)
+                                    {
+                                        @foreach (var organization in organizations)
+                                        {
+                                            <option value="@organization.OrganizationId">@organization.OrganizationName</option>
+                                        }
+                                    }
+                                </InputSelect>
+                                <ValidationMessage For="@(() => updateDto.OrganizationId)" />
+                                <div class="form-text">Current: @(project.Organization?.OrganizationName ?? "No organization")</div>
+                            </div>
+
+                            <div class="mb-3">
                                 <label for="notes" class="form-label">Notes</label>
                                 <InputTextArea id="notes" class="form-control" rows="3" @bind-Value="updateDto.Notes" />
                                 <ValidationMessage For="@(() => updateDto.Notes)" />
@@ -320,26 +337,35 @@
 
     private ProjectDto? project;
     private UpdateProjectDto updateDto = new();
+    private List<OrganizationDto>? organizations;
     private bool isLoading = true;
     private bool isSubmitting = false;
     private string? errorMessage;
 
     protected override async Task OnInitializedAsync()
     {
-        await LoadProject();
+        await LoadData();
     }
 
-    private async Task LoadProject()
+    private async Task LoadData()
     {
         try
         {
             isLoading = true;
             errorMessage = null;
-            project = await ProjectService.GetProjectAsync(Id);
+            
+            // Load project and organizations in parallel
+            var projectTask = ProjectService.GetProjectAsync(Id);
+            var organizationsTask = OrganizationService.GetOrganizationsAsync();
+            
+            await Task.WhenAll(projectTask, organizationsTask);
+            
+            project = await projectTask;
+            organizations = await organizationsTask;
         }
         catch (Exception ex)
         {
-            errorMessage = $"Error loading project: {ex.Message}";
+            errorMessage = $"Error loading data: {ex.Message}";
         }
         finally
         {
@@ -386,6 +412,8 @@
                 updateData.ActualBudget = updateDto.ActualBudget;
             if (updateDto.TeamSize.HasValue)
                 updateData.TeamSize = updateDto.TeamSize;
+            if (updateDto.OrganizationId.HasValue)
+                updateData.OrganizationId = updateDto.OrganizationId;
 
             var updatedProject = await ProjectService.UpdateProjectAsync(Id, updateData);
             Navigation.NavigateTo($"/projects/{updatedProject.ProjectId}");

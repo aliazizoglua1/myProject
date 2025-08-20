@@ -6,6 +6,7 @@ namespace MyProject.UI.ProjectManagementConsole.Models
     {
         public Guid TaskId { get; set; }
         public string TaskName { get; set; } = string.Empty;
+        public string TaskType { get; set; } = string.Empty;
         public string? Description { get; set; }
         public Guid ProjectId { get; set; }
         public Guid? ParentTaskId { get; set; }
@@ -30,6 +31,9 @@ namespace MyProject.UI.ProjectManagementConsole.Models
         public UserDto? AssignedToUser { get; set; }
         public OrganizationDto? Tenant { get; set; }
         public MilestoneDto? Milestone { get; set; }
+        public Guid? IssueId { get; set; }
+        public IssueDto? Issue { get; set; }
+        public string? Comments { get; set; }
     }
 
     public class CreateTaskDto
@@ -37,6 +41,10 @@ namespace MyProject.UI.ProjectManagementConsole.Models
         [Required(ErrorMessage = "Task name is required")]
         [StringLength(255, ErrorMessage = "Task name cannot exceed 255 characters")]
         public string TaskName { get; set; } = string.Empty;
+
+        [Required(ErrorMessage = "Task type is required")]
+        [StringLength(100, ErrorMessage = "Task type cannot exceed 100 characters")]
+        public string TaskType { get; set; } = string.Empty;
 
         [StringLength(1000, ErrorMessage = "Description cannot exceed 1000 characters")]
         public string? Description { get; set; }
@@ -81,12 +89,16 @@ namespace MyProject.UI.ProjectManagementConsole.Models
         public Guid TenantId { get; set; }
 
         public Guid? MilestoneId { get; set; }
+        public Guid? IssueId { get; set; }
     }
 
     public class UpdateTaskDto
     {
         [StringLength(255, ErrorMessage = "Task name cannot exceed 255 characters")]
         public string? TaskName { get; set; }
+
+        [StringLength(100, ErrorMessage = "Task type cannot exceed 100 characters")]
+        public string? TaskType { get; set; }
 
         [StringLength(1000, ErrorMessage = "Description cannot exceed 1000 characters")]
         public string? Description { get; set; }
@@ -122,5 +134,6 @@ namespace MyProject.UI.ProjectManagementConsole.Models
         public string? Notes { get; set; }
 
         public Guid? MilestoneId { get; set; }
+        public Guid? IssueId { get; set; }
     }
-} 
+}

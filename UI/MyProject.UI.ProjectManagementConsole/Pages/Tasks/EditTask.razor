@@ -6,6 +6,7 @@
 @inject IUserService UserService
 @inject IMilestoneService MilestoneService
 @inject NavigationManager Navigation
+@inject IIssueService IssueService
 
 <PageTitle>Edit Task</PageTitle>
 
@@ -66,6 +67,22 @@
                                 <InputText id="taskName" class="form-control" @bind-Value="updateDto.TaskName" />
                                 <ValidationMessage For="@(() => updateDto.TaskName)" />
                                 <div class="form-text">Current value: <strong>@task.TaskName</strong></div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="taskType" class="form-label">Task Type</label>
+                                <InputSelect id="taskType" class="form-select" @bind-Value="updateDto.TaskType">
+                                    <option value="">Keep Current Task Type</option>
+                                    <option value="Development">Development</option>
+                                    <option value="Testing">Testing</option>
+                                    <option value="Design">Design</option>
+                                    <option value="Bug">Bug</option>
+                                    <option value="Feature">Feature</option>
+                                    <option value="Meeting">Meeting</option>
+                                    <option value="Documentation">Documentation</option>
+                                </InputSelect>
+                                <ValidationMessage For="@(() => updateDto.TaskType)" />
+                                <div class="form-text">Current value: <strong>@task.TaskType</strong></div>
                             </div>
 
                             <div class="mb-3">
@@ -215,6 +232,22 @@
                                 <div class="form-text">Current value: <strong>@(task.Notes ?? "Not set")</strong></div>
                             </div>
 
+                            <div class="mb-3">
+                                <label for="issueId" class="form-label">Issue</label>
+                                <InputSelect id="issueId" class="form-select" @bind-Value="updateDto.IssueId">
+                                    <option value="">Select Issue (Optional)</option>
+                                    @if (issues != null)
+                                    {
+                                        @foreach (var issue in issues)
+                                        {
+                                            <option value="@issue.IssueId">@issue.IssueName</option>
+                                        }
+                                    }
+                                </InputSelect>
+                                <ValidationMessage For="@(() => updateDto.IssueId)" />
+                                <div class="form-text">Current value: <strong>@(task.Issue?.IssueName ?? "No issue")</strong></div>
+                            </div>
+
                             <div class="d-flex gap-2">
                                 <button type="submit" class="btn btn-primary" disabled="@isSubmitting">
                                     @if (isSubmitting)
@@ -247,6 +280,11 @@
                         <dl class="row">
                             <dt class="col-sm-4">Name</dt>
                             <dd class="col-sm-8">@task.TaskName</dd>
+
+                            <dt class="col-sm-4">Type</dt>
+                            <dd class="col-sm-8">
+                                <span class="badge bg-info">@task.TaskType</span>
+                            </dd>
 
                             <dt class="col-sm-4">Project</dt>
                             <dd class="col-sm-8">
@@ -342,6 +380,7 @@
     private UpdateTaskDto updateDto = new();
     private List<TaskDto>? parentTasks;
     private List<UserDto>? users;
+    private List<IssueDto>? issues;
     private bool isLoading = true;
     private bool isSubmitting = false;
     private string? errorMessage;
@@ -362,12 +401,14 @@
             var taskTask = TaskService.GetTaskAsync(Id);
             var parentTaskTask = TaskService.GetTasksAsync();
             var userTask = UserService.GetUsersAsync();
+            var issueTask = IssueService.GetIssuesAsync();
             
-            await Task.WhenAll(taskTask, parentTaskTask, userTask);
+            await Task.WhenAll(taskTask, parentTaskTask, userTask, issueTask);
             
             task = await taskTask;
             parentTasks = await parentTaskTask;
             users = await userTask;
+            issues = await issueTask;
         }
         catch (Exception ex)
         {
@@ -390,6 +431,8 @@
             var updateData = new UpdateTaskDto();
             if (!string.IsNullOrWhiteSpace(updateDto.TaskName))
                 updateData.TaskName = updateDto.TaskName;
+            if (!string.IsNullOrWhiteSpace(updateDto.TaskType))
+                updateData.TaskType = updateDto.TaskType;
             if (!string.IsNullOrWhiteSpace(updateDto.Description))
                 updateData.Description = updateDto.Description;
             if (updateDto.ParentTaskId.HasValue)
@@ -414,6 +457,8 @@
                 updateData.ActualEffort = updateDto.ActualEffort;
             if (updateDto.ProgressPercentage.HasValue)
                 updateData.ProgressPercentage = updateDto.ProgressPercentage;
+            if (updateDto.IssueId.HasValue)
+                updateData.IssueId = updateDto.IssueId;
             if (!string.IsNullOrWhiteSpace(updateDto.Notes))
                 updateData.Notes = updateDto.Notes;
 

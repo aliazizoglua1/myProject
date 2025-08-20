@@ -97,6 +97,18 @@
 
                                     <dt class="col-sm-4">Current Phase</dt>
                                     <dd class="col-sm-8">@(project.CurrentPhase ?? "Not set")</dd>
+
+                                    <dt class="col-sm-4">Organization</dt>
+                                    <dd class="col-sm-8">
+                                        @if (project.Organization != null)
+                                        {
+                                            <a href="/organizations/@project.Organization.OrganizationId">@project.Organization.OrganizationName</a>
+                                        }
+                                        else
+                                        {
+                                            <span class="text-muted">No organization</span>
+                                        }
+                                    </dd>
                                 </dl>
                             </div>
                             <div class="col-md-6">

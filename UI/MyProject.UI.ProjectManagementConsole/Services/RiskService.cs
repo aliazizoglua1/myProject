@@ -22,7 +22,7 @@ namespace MyProject.UI.ProjectManagementConsole.Services
     public class RiskService : IRiskService
     {
         private readonly HttpClient _httpClient;
-        private readonly string _baseUrl = "https://localhost:7001"; // Update this to match your API URL
+        private readonly string _baseUrl = "https://localhost:7294"; // Update this to match your API URL
 
         public RiskService(HttpClient httpClient)
         {

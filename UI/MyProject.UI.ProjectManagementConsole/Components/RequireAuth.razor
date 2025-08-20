@@ -1,0 +1,43 @@
+@using MyProject.UI.ProjectManagementConsole.Services
+@inject IAuthenticationService AuthService
+@inject NavigationManager Navigation
+@implements IDisposable
+
+@if (isAuthenticated)
+{
+    @ChildContent
+}
+
+@code {
+    [Parameter] public RenderFragment? ChildContent { get; set; }
+    
+    private bool isAuthenticated = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        AuthService.AuthenticationStateChanged += OnAuthenticationStateChanged;
+        isAuthenticated = await AuthService.IsAuthenticatedAsync();
+        
+        if (!isAuthenticated)
+        {
+            Navigation.NavigateTo("/login");
+        }
+    }
+
+    private async void OnAuthenticationStateChanged(bool authenticated)
+    {
+        isAuthenticated = authenticated;
+        
+        if (!authenticated)
+        {
+            Navigation.NavigateTo("/login");
+        }
+        
+        await InvokeAsync(StateHasChanged);
+    }
+
+    public void Dispose()
+    {
+        AuthService.AuthenticationStateChanged -= OnAuthenticationStateChanged;
+    }
+}

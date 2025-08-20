@@ -1,0 +1,232 @@
+@page "/reports/task-status"
+@using MyProject.UI.ProjectManagementConsole.Models
+@using MyProject.UI.ProjectManagementConsole.Services
+@using MudBlazor
+@inject ITaskService TaskService
+@inject NavigationManager Navigation
+
+<PageTitle>Task Status Report</PageTitle>
+
+<MudContainer MaxWidth="MaxWidth.Large" Class="mt-4">
+    <MudPaper Class="pa-4" Elevation="3">
+        <MudText Typo="Typo.h4" Class="mb-4">
+            <MudIcon Icon="@Icons.Material.Filled.Assessment" Class="mr-2" />
+            Task Status Distribution
+        </MudText>
+        
+        <MudText Typo="Typo.body1" Class="mb-4 text-muted">
+            Visual representation of tasks grouped by their current status
+        </MudText>
+
+        @if (isLoading)
+        {
+            <MudProgressCircular Color="Color.Primary" Indeterminate="true" />
+        }
+        else if (errorMessage != null)
+        {
+            <MudAlert Severity="Severity.Error" Variant="Variant.Filled">
+                @errorMessage
+            </MudAlert>
+        }
+        else
+        {
+            <MudGrid>
+                <MudItem xs="12" md="6">
+                    <MudPaper Class="pa-4" Elevation="1">
+                        <MudText Typo="Typo.h6" Class="mb-3">Task Status Distribution</MudText>
+                        
+                        <MudText Typo="Typo.h4" Class="text-center mb-3">
+                            @totalTasks
+                        </MudText>
+                        <MudText Typo="Typo.body2" Class="text-center text-muted mb-4">
+                            Total Tasks
+                        </MudText>
+                        
+                        @if (chartData.Any())
+                        {
+                            <MudText Typo="Typo.body2" Class="text-muted mb-2">
+                                Chart data points: @chartData.Count
+                            </MudText>
+                            <MudChart ChartType="ChartType.Donut" LegendPosition="@LegendPosition" InputData="@data" InputLabels="@labels" Width="100%" Height="400px">
+                                <ChartOptions>
+                                    <ChartOptions DisableLegend="false" />
+                                </ChartOptions>
+                            </MudChart>
+                            
+                            @* Fallback display if chart doesn't render *@
+                            <MudDivider Class="my-3" />
+                            <MudText Typo="Typo.body2" Class="text-muted">
+                                Data breakdown: @string.Join(", ", chartData.Select(c => $"{c.Name}: {c.Data[0]}"))
+                            </MudText>
+                        }
+                        else
+                        {
+                            <MudText Typo="Typo.body1" Class="text-center text-muted">
+                                No tasks found to display
+                            </MudText>
+                        }
+                    </MudPaper>
+                </MudItem>
+                
+                <MudItem xs="12" md="6">
+                    <MudPaper Class="pa-4" Elevation="1">
+                        <MudText Typo="Typo.h6" Class="mb-3">Status Breakdown</MudText>
+                        
+                        <MudList Dense="true" T="StatusBreakdown">
+                            @foreach (var status in statusBreakdown)
+                            {
+                                <MudListItem T="StatusBreakdown" Value="@status">
+                                    <div class="d-flex align-center justify-space-between w-100">
+                                        <div class="d-flex align-center">
+                                            <MudIcon Icon="@GetStatusIcon(status.Status)" 
+                                                     Color="@GetStatusColor(status.Status)" 
+                                                     Class="mr-2" />
+                                            <MudText Typo="Typo.body1">@status.Status</MudText>
+                                        </div>
+                                        <div class="d-flex align-center">
+                                            <MudText Typo="Typo.body1" Class="font-weight-bold">@status.Count</MudText>
+                                            <MudText Typo="Typo.body2" Class="text-muted ml-1">
+                                                (@status.Percentage.ToString("F1")%)
+                                            </MudText>
+                                        </div>
+                                    </div>
+                                </MudListItem>
+                            }
+                        </MudList>
+                        
+                        <MudDivider Class="my-3" />
+                        
+                        <MudText Typo="Typo.body2" Class="text-muted">
+                            <MudIcon Icon="@Icons.Material.Filled.Info" Size="Size.Small" Class="mr-1" />
+                            Last updated: @DateTime.Now.ToString("MMM dd, yyyy HH:mm")
+                        </MudText>
+                    </MudPaper>
+                </MudItem>
+            </MudGrid>
+            
+            <MudDivider Class="my-4" />
+            
+            <MudPaper Class="pa-4" Elevation="1">
+                <MudText Typo="Typo.h6" Class="mb-3">Quick Actions</MudText>
+                <MudStack Row="true" Spacing="2">
+                    <MudButton Variant="Variant.Filled" 
+                               Color="Color.Primary" 
+                               StartIcon="@Icons.Material.Filled.Add"
+                               Href="/tasks/create">
+                        Add New Task
+                    </MudButton>
+                    <MudButton Variant="Variant.Outlined" 
+                               Color="Color.Secondary" 
+                               StartIcon="@Icons.Material.Filled.List"
+                               Href="/tasks">
+                        View All Tasks
+                    </MudButton>
+                    <MudButton Variant="Variant.Outlined" 
+                               Color="Color.Info" 
+                               StartIcon="@Icons.Material.Filled.Dashboard"
+                               Href="/tasks/board">
+                        Task Board
+                    </MudButton>
+                </MudStack>
+            </MudPaper>
+        }
+    </MudPaper>
+</MudContainer>
+
+@code {
+    private List<TaskDto> tasks = new();
+    private bool isLoading = true;
+    private string? errorMessage;
+    private List<ChartSeries> chartData = new();
+    private List<StatusBreakdown> statusBreakdown = new();
+    private int totalTasks = 0;
+    public double[] data = { 0, 0, 0, 0 };
+    public string[] labels = { "Cancelled","Completed","In Progress",  "On Hold" };
+    public Position LegendPosition { get; set; } = Position.Bottom;
+
+
+    Random random = new Random();
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadData();
+    }
+
+    private async Task LoadData()
+    {
+        try
+        { 
+            isLoading = true;
+            errorMessage = null;
+
+            tasks = await TaskService.GetTasksAsync();
+
+            // Group tasks by status
+            var statusGroups = tasks.GroupBy(t => t.TaskStatus)
+                                  .Select(g => new { Status = g.Key, Count = g.Count() })
+                                  .OrderBy(x => x.Status)
+                                  .ToList();
+
+            data[0] = tasks.Where(_ => _.TaskStatus == "Cancelled").Count();
+            data[1] = tasks.Where(_ => _.TaskStatus == "Completed").Count();
+            data[2] = tasks.Where(_ => _.TaskStatus == "In Progress").Count();
+            data[3] = tasks.Where(_ => _.TaskStatus == "On Hold").Count();
+            totalTasks = tasks.Count;
+            
+            // Prepare chart data
+            chartData = statusGroups.Select((group, index) => new ChartSeries
+            {
+                Name = group.Status,
+                Data = new double[] { group.Count }
+            }).ToList();
+            
+            // Prepare status breakdown
+            statusBreakdown = statusGroups.Select(group => new StatusBreakdown
+            {
+                Status = group.Status,
+                Count = group.Count,
+                Percentage = totalTasks > 0 ? (double)group.Count / totalTasks * 100 : 0
+            }).ToList();
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Error loading data: {ex.Message}";
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private string GetStatusIcon(string status)
+    {
+        return status.ToLower() switch
+        {
+            "to do" => Icons.Material.Filled.Schedule,
+            "in progress" => Icons.Material.Filled.PlayArrow,
+            "completed" => Icons.Material.Filled.CheckCircle,
+            "on hold" => Icons.Material.Filled.Pause,
+            "cancelled" => Icons.Material.Filled.Cancel,
+            _ => Icons.Material.Filled.Help
+        };
+    }
+
+    private Color GetStatusColor(string status)
+    {
+        return status.ToLower() switch
+        {
+            "to do" => Color.Default,
+            "in progress" => Color.Info,
+            "completed" => Color.Success,
+            "on hold" => Color.Warning,
+            "cancelled" => Color.Error,
+            _ => Color.Secondary
+        };
+    }
+
+    public class StatusBreakdown
+    {
+        public string Status { get; set; } = string.Empty;
+        public int Count { get; set; }
+        public double Percentage { get; set; }
+    }
+} 
