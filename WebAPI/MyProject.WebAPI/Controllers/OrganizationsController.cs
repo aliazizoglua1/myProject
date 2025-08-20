@@ -10,10 +10,12 @@ namespace MyProject.WebAPI.Controllers
     public class OrganizationsController : ControllerBase
     {
         private readonly IOrganizationRepository _organizationRepository;
+        private readonly IOrganizationUserRepository _organizationUserRepository;
 
-        public OrganizationsController(IOrganizationRepository organizationRepository)
+        public OrganizationsController(IOrganizationRepository organizationRepository, IOrganizationUserRepository organizationUserRepository)
         {
             _organizationRepository = organizationRepository;
+            _organizationUserRepository = organizationUserRepository;
         }
 
         [HttpGet]
@@ -52,6 +54,22 @@ namespace MyProject.WebAPI.Controllers
             var organizations = await _organizationRepository.GetByStatusAsync(status);
             var organizationDtos = organizations.Select(MapToDto);
             return Ok(organizationDtos);
+        }
+
+        [HttpGet("{id}/users")]
+        public async Task<ActionResult<IEnumerable<OrganizationUserWithDetailsDto>>> GetOrganizationUsers(Guid id)
+        {
+            // First check if the organization exists
+            var organization = await _organizationRepository.GetByIdAsync(id);
+            if (organization == null)
+            {
+                return NotFound($"Organization with ID {id} not found.");
+            }
+
+            // Get organization users with details
+            var organizationUsers = await _organizationUserRepository.GetOrganizationUsersWithDetailsAsync(id);
+            var userDtos = organizationUsers.Select(MapToOrganizationUserWithDetailsDto);
+            return Ok(userDtos);
         }
 
         [HttpPost]
@@ -152,6 +170,23 @@ namespace MyProject.WebAPI.Controllers
 
             if (dto.ContactEmail != null)
                 organization.ContactEmail = dto.ContactEmail;
+        }
+
+        private static OrganizationUserWithDetailsDto MapToOrganizationUserWithDetailsDto(OrganizationUser organizationUser)
+        {
+            return new OrganizationUserWithDetailsDto
+            {
+                OrganizationId = organizationUser.OrganizationId,
+                OrganizationName = organizationUser.Organization?.OrganizationName ?? "",
+                UserId = organizationUser.UserId,
+                UserEmail = organizationUser.User?.Email ?? "",
+                UserFirstName = organizationUser.User?.FirstName ?? "",
+                UserLastName = organizationUser.User?.LastName ?? "",
+                Role = organizationUser.Role,
+                IsActive = organizationUser.IsActive,
+                CreatedAt = organizationUser.CreatedAt,
+                UpdatedAt = organizationUser.UpdatedAt
+            };
         }
     }
 } 

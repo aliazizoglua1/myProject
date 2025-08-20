@@ -42,20 +42,20 @@ namespace MyProject.Persistence.Entities
         [Range(0, double.MaxValue)]
         public decimal? HourlyRate { get; set; }
 
-        [Column("created_at")]
+        [Column("created_at", TypeName = "timestamp with time zone")]
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
-        [Column("updated_at")]
+        [Column("updated_at", TypeName = "timestamp with time zone")]
         public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
 
-        [Column("tenant_id")]
+        [Column("organization_id")]
         [Required]
-        public Guid TenantId { get; set; }
+        public Guid OrganizationId { get; set; }
 
         // Navigation properties
         public Task? Task { get; set; }
         public Resource? Resource { get; set; }
-        public Organization? Tenant { get; set; }
+        public Organization? Organization { get; set; }
 
         // Computed property for total cost
         public decimal? TotalCost => HourlyRate.HasValue ? HoursWorked * HourlyRate.Value : null;

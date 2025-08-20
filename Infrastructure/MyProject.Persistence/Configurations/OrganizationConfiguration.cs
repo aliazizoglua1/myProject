@@ -36,10 +36,12 @@ namespace MyProject.Persistence.Configurations
 
             builder.Property(o => o.CreatedAt)
                 .HasColumnName("created_at")
+                .HasColumnType("timestamp with time zone")
                 .HasDefaultValueSql("now()");
 
             builder.Property(o => o.UpdatedAt)
                 .HasColumnName("updated_at")
+                .HasColumnType("timestamp with time zone")
                 .HasDefaultValueSql("now()");
 
             // Unique constraint on organization_name
@@ -59,14 +61,11 @@ namespace MyProject.Persistence.Configurations
 
             // Relationships
             builder.HasMany(o => o.Milestones)
-                .WithOne(m => m.Tenant)
-                .HasForeignKey(m => m.TenantId)
+                .WithOne(m => m.Organization)
+                .HasForeignKey(m => m.OrganizationId)
                 .OnDelete(DeleteBehavior.Restrict);
 
-            builder.HasMany(o => o.OrganizationUsers)
-                .WithOne(ou => ou.Organization)
-                .HasForeignKey(ou => ou.OrganizationId)
-                .OnDelete(DeleteBehavior.Cascade);
+
         }
     }
 } 

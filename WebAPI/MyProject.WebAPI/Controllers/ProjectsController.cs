@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
 using MyProject.Persistence.Entities;
 using MyProject.Persistence.Repositories;
 using MyProject.WebAPI.DTOs;
@@ -7,6 +8,7 @@ namespace MyProject.WebAPI.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
+    [Authorize]
     public class ProjectsController : ControllerBase
     {
         private readonly IProjectRepository _projectRepository;

@@ -1,0 +1,142 @@
+@page "/organizations/create"
+@inject IOrganizationService OrganizationService
+@inject NavigationManager Navigation
+@inject ISnackbar Snackbar
+
+<PageTitle>Create Organization - MyProject Admin</PageTitle>
+
+<MudGrid AlignItems="AlignItems.Center" Class="mb-4">
+    <MudItem xs="8">
+        <MudText Typo="Typo.h3">Create New Organization</MudText>
+    </MudItem>
+    <MudItem xs="4" Class="d-flex justify-end">
+        <MudButton Variant="Variant.Text" 
+                  Color="Color.Default" 
+                  StartIcon="Icons.Material.Filled.ArrowBack"
+                  OnClick="@(() => Navigation.NavigateTo("/organizations"))">
+            Back to Organizations
+        </MudButton>
+    </MudItem>
+</MudGrid>
+
+<MudCard>
+    <MudCardContent>
+        <MudForm @ref="form" @bind-IsValid="@isFormValid" Model="createModel">
+            <DataAnnotationsValidator />
+            
+            <MudStack Spacing="3">
+                <MudTextField @bind-Value="createModel.OrganizationName"
+                             For="@(() => createModel.OrganizationName)"
+                             Label="Organization Name"
+                             Variant="Variant.Outlined"
+                             Required="true"
+                             HelperText="Enter the organization name"
+                             MaxLength="255"
+                             Immediate="true" />
+
+                <MudTextField @bind-Value="createModel.ContactEmail"
+                             For="@(() => createModel.ContactEmail)"
+                             Label="Contact Email"
+                             Variant="Variant.Outlined"
+                             Required="true"
+                             HelperText="Enter the primary contact email"
+                             MaxLength="255"
+                             Immediate="true" />
+
+                <MudSelect @bind-Value="createModel.Status"
+                          For="@(() => createModel.Status)"
+                          Label="Status"
+                          Variant="Variant.Outlined"
+                          Required="true"
+                          HelperText="Select the organization status">
+                    <MudSelectItem Value="@("Active")">Active</MudSelectItem>
+                    <MudSelectItem Value="@("Inactive")">Inactive</MudSelectItem>
+                    <MudSelectItem Value="@("Suspended")">Suspended</MudSelectItem>
+                </MudSelect>
+
+                <MudSelect @bind-Value="createModel.BillingPlan"
+                          For="@(() => createModel.BillingPlan)"
+                          Label="Billing Plan"
+                          Variant="Variant.Outlined"
+                          Required="true"
+                          HelperText="Select the billing plan">
+                    <MudSelectItem Value="@("Basic")">Basic</MudSelectItem>
+                    <MudSelectItem Value="@("Professional")">Professional</MudSelectItem>
+                    <MudSelectItem Value="@("Premium")">Premium</MudSelectItem>
+                    <MudSelectItem Value="@("Enterprise")">Enterprise</MudSelectItem>
+                </MudSelect>
+
+                <div class="d-flex justify-end mt-4">
+                    <MudButton Variant="Variant.Text" 
+                              Color="Color.Default" 
+                              OnClick="@(() => Navigation.NavigateTo("/organizations"))"
+                              Class="mr-3">
+                        Cancel
+                    </MudButton>
+                    <MudButton Variant="Variant.Filled" 
+                              Color="Color.Primary" 
+                              OnClick="HandleSubmit"
+                              Disabled="@(!isFormValid || isSubmitting)"
+                              StartIcon="@(isSubmitting ? Icons.Material.Filled.HourglassEmpty : Icons.Material.Filled.Save)">
+                        @(isSubmitting ? "Creating..." : "Create Organization")
+                    </MudButton>
+                </div>
+            </MudStack>
+        </MudForm>
+    </MudCardContent>
+</MudCard>
+
+@code {
+    private MudForm form = new();
+    private CreateOrganizationDto createModel = new();
+    private bool isFormValid;
+    private bool isSubmitting = false;
+
+    protected override void OnInitialized()
+    {
+        createModel = new CreateOrganizationDto()
+        {
+            OrganizationName = "",
+            Status = "Active",
+            BillingPlan = "Basic",
+            ContactEmail = ""
+        };
+    }
+
+    private async Task HandleSubmit()
+    {
+        if (!isFormValid)
+        {
+            Snackbar.Add("Please fill in all required fields correctly", Severity.Warning);
+            return;
+        }
+
+        try
+        {
+            isSubmitting = true;
+            StateHasChanged();
+
+            // Validate the form explicitly
+            await form.Validate();
+            if (!form.IsValid)
+            {
+                Snackbar.Add("Please correct the validation errors", Severity.Warning);
+                return;
+            }
+
+            var result = await OrganizationService.CreateOrganizationAsync(createModel);
+            
+            Snackbar.Add($"Organization '{result.OrganizationName}' created successfully", Severity.Success);
+            Navigation.NavigateTo("/organizations");
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error creating organization: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            isSubmitting = false;
+            StateHasChanged();
+        }
+    }
+}

@@ -33,14 +33,22 @@ namespace MyProject.Persistence.Entities
         [Column("is_active")]
         public bool IsActive { get; set; } = true;
 
-        [Column("created_at")]
+        [Column("created_at", TypeName = "timestamp with time zone")]
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
-        [Column("updated_at")]
+        [Column("updated_at", TypeName = "timestamp with time zone")]
         public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
 
         // Navigation properties
         public ICollection<Project>? ManagedProjects { get; set; }
         public ICollection<OrganizationUser>? OrganizationUsers { get; set; }
+        public ICollection<Task>? AssignedTasks { get; set; }
+        public ICollection<Issue>? AssignedIssues { get; set; }
+        public ICollection<Risk>? OwnedRisks { get; set; }
+        public ICollection<Resource>? Resources { get; set; }
+        public ICollection<ChangeRequest>? RequestedChangeRequests { get; set; }
+        public ICollection<ChangeRequest>? ApprovedChangeRequests { get; set; }
+        public ICollection<QualityAssurance>? ReportedQualityAssurances { get; set; }
+        public ICollection<QualityAssurance>? AssignedQualityAssurances { get; set; }
     }
 } 

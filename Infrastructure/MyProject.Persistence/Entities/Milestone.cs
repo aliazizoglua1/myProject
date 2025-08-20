@@ -32,18 +32,21 @@ namespace MyProject.Persistence.Entities
         [Column("completion_date")]
         public DateOnly? CompletionDate { get; set; }
 
-        [Column("tenant_id")]
+        [Column("organization_id")]
         [Required]
-        public Guid TenantId { get; set; }
+        public Guid OrganizationId { get; set; }
 
-        [Column("created_at")]
+        [Column("created_at", TypeName = "timestamp with time zone")]
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
-        [Column("updated_at")]
+        [Column("updated_at", TypeName = "timestamp with time zone")]
         public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
 
         // Navigation properties
         public Project? Project { get; set; }
-        public Organization? Tenant { get; set; }
+        public Organization? Organization { get; set; }
+        public ICollection<Task>? Tasks { get; set; }
+        public ICollection<Issue>? Issues { get; set; }
+        public ICollection<ChangeRequest>? ChangeRequests { get; set; }
     }
 } 

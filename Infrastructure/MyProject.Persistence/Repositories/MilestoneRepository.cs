@@ -29,10 +29,10 @@ namespace MyProject.Persistence.Repositories
                 .ToListAsync();
         }
 
-        public async Task<IEnumerable<Milestone>> GetByTenantIdAsync(Guid tenantId)
+        public async Task<IEnumerable<Milestone>> GetByTenantIdAsync(Guid organizationId)
         {
             return await _context.Milestones
-                .Where(m => m.TenantId == tenantId)
+                .Where(m => m.OrganizationId == organizationId)
                 .ToListAsync();
         }
 
@@ -60,6 +60,7 @@ namespace MyProject.Persistence.Repositories
 
         public async Task<Milestone> AddAsync(Milestone milestone)
         {
+            milestone.OrganizationId = Guid.Parse("de730e94-c9dd-4b5f-91d3-75c6dd9f2f43");
             _context.Milestones.Add(milestone);
             await _context.SaveChangesAsync();
             return milestone;

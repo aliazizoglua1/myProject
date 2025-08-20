@@ -82,7 +82,7 @@ namespace MyProject.WebAPI.DTOs
         public decimal? ActualImpactOnBudgetUsd { get; set; }
 
         [Required]
-        public Guid TenantId { get; set; }
+        public Guid OrganizationId { get; set; }
 
         public Guid? MilestoneId { get; set; }
     }

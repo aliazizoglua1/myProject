@@ -80,14 +80,16 @@ namespace MyProject.Persistence.Configurations
 
             builder.Property(cr => cr.CreatedAt)
                 .HasColumnName("created_at")
+                .HasColumnType("timestamp with time zone")
                 .HasDefaultValueSql("now()");
 
             builder.Property(cr => cr.UpdatedAt)
                 .HasColumnName("updated_at")
+                .HasColumnType("timestamp with time zone")
                 .HasDefaultValueSql("now()");
 
-            builder.Property(cr => cr.TenantId)
-                .HasColumnName("tenant_id")
+            builder.Property(cr => cr.OrganizationId)
+                .HasColumnName("organization_id")
                 .IsRequired();
 
             builder.Property(cr => cr.MilestoneId)
@@ -95,27 +97,27 @@ namespace MyProject.Persistence.Configurations
 
             // Foreign key relationships
             builder.HasOne(cr => cr.Project)
-                .WithMany()
+                .WithMany(p => p.ChangeRequests)
                 .HasForeignKey(cr => cr.ProjectId)
                 .OnDelete(DeleteBehavior.Cascade);
 
             builder.HasOne(cr => cr.RequestedByUser)
-                .WithMany()
+                .WithMany(u => u.RequestedChangeRequests)
                 .HasForeignKey(cr => cr.RequestedByUserId)
                 .OnDelete(DeleteBehavior.Restrict);
 
             builder.HasOne(cr => cr.ApprovedByUser)
-                .WithMany()
+                .WithMany(u => u.ApprovedChangeRequests)
                 .HasForeignKey(cr => cr.ApprovedByUserId)
                 .OnDelete(DeleteBehavior.Restrict);
 
-            builder.HasOne(cr => cr.Tenant)
-                .WithMany()
-                .HasForeignKey(cr => cr.TenantId)
+            builder.HasOne(cr => cr.Organization)
+                .WithMany(o => o.ChangeRequests)
+                .HasForeignKey(cr => cr.OrganizationId)
                 .OnDelete(DeleteBehavior.Cascade);
 
             builder.HasOne(cr => cr.Milestone)
-                .WithMany()
+                .WithMany(m => m.ChangeRequests)
                 .HasForeignKey(cr => cr.MilestoneId)
                 .OnDelete(DeleteBehavior.SetNull);
 
@@ -132,8 +134,8 @@ namespace MyProject.Persistence.Configurations
             builder.HasIndex(cr => cr.ApprovalStatus)
                 .HasDatabaseName("idx_change_requests_status");
 
-            builder.HasIndex(cr => cr.TenantId)
-                .HasDatabaseName("idx_change_requests_tenant_id");
+            builder.HasIndex(cr => cr.OrganizationId)
+                .HasDatabaseName("idx_change_requests_organization_id");
 
             builder.HasIndex(cr => cr.MilestoneId)
                 .HasDatabaseName("idx_change_requests_milestone_id");

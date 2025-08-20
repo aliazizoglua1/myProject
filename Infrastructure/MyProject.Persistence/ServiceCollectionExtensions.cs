@@ -23,6 +23,7 @@ namespace MyProject.Persistence
             services.AddScoped<IMilestoneRepository, MilestoneRepository>();
             services.AddScoped<IOrganizationUserRepository, OrganizationUserRepository>();
             services.AddScoped<ITaskTimeLogRepository, TaskTimeLogRepository>();
+            services.AddScoped<ITaskHistoryRepository, TaskHistoryRepository>();
 
             return services;
         }

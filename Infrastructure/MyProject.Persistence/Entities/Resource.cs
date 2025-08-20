@@ -68,23 +68,24 @@ namespace MyProject.Persistence.Entities
         [Column("end_date_employment")]
         public DateOnly? EndDateEmployment { get; set; }
 
-        [Column("created_at")]
+        [Column("created_at", TypeName = "timestamp with time zone")]
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
-        [Column("updated_at")]
+        [Column("updated_at", TypeName = "timestamp with time zone")]
         public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
 
         [Column("user_id")]
         [Required]
         public Guid UserId { get; set; }
 
-        [Column("tenant_id")]
+        [Column("organization_id")]
         [Required]
-        public Guid TenantId { get; set; }
+        public Guid OrganizationId { get; set; }
 
         // Navigation properties
         public User? User { get; set; }
-        public Organization? Tenant { get; set; }
+        public Organization? Organization { get; set; }
+        public ICollection<TaskTimeLog>? TaskTimeLogs { get; set; }
 
         // Computed property for full name
         public string FullName => $"{FirstName} {LastName}".Trim();

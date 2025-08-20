@@ -20,7 +20,7 @@ namespace MyProject.Persistence.Entities
         [Column("is_active")]
         public bool IsActive { get; set; } = true;
 
-        [Column("created_at")]
+        [Column("created_at", TypeName = "timestamp with time zone")]
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
         [Column("updated_at")]

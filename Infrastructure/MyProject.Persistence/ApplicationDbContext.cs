@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using MyProject.Persistence.Configurations;
 using MyProject.Persistence.Entities;
 using Task = MyProject.Persistence.Entities.Task;
@@ -8,6 +9,7 @@ namespace MyProject.Persistence
     {
         public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) : base(options)
         {
+           AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
         }
 
         public DbSet<Project> Projects { get; set; }
@@ -22,6 +24,7 @@ namespace MyProject.Persistence
         public DbSet<Milestone> Milestones { get; set; }
         public DbSet<OrganizationUser> OrganizationUsers { get; set; }
         public DbSet<TaskTimeLog> TaskTimeLogs { get; set; }
+        public DbSet<TaskHistory> TaskHistories { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -40,56 +43,38 @@ namespace MyProject.Persistence
             modelBuilder.ApplyConfiguration(new MilestoneConfiguration());
             modelBuilder.ApplyConfiguration(new OrganizationUserConfiguration());
             modelBuilder.ApplyConfiguration(new TaskTimeLogConfiguration());
+            modelBuilder.ApplyConfiguration(new TaskHistoryConfiguration());
 
-            // Configure the update trigger behavior
-            modelBuilder.Entity<Project>()
-                .Property(p => p.UpdatedAt)
-                .HasDefaultValueSql("now()");
+            // Configure timestamp behavior for PostgreSQL
+            AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
 
-            modelBuilder.Entity<Risk>()
-                .Property(r => r.UpdatedAt)
-                .HasDefaultValueSql("now()");
+            // This is the global ValueConverter for all DateTime and DateTime? properties
+            var dateTimeConverter = new ValueConverter<DateTime, DateTime>(
+                v => v.Kind == DateTimeKind.Utc ? v : v.ToUniversalTime(),
+                v => DateTime.SpecifyKind(v, DateTimeKind.Utc));
 
-            modelBuilder.Entity<Task>()
-                .Property(t => t.UpdatedAt)
-                .HasDefaultValueSql("now()");
+            var nullableDateTimeConverter = new ValueConverter<DateTime?, DateTime?>(
+                v => v.HasValue ? (v.Value.Kind == DateTimeKind.Utc ? v : v.Value.ToUniversalTime()) : v,
+                v => v.HasValue ? DateTime.SpecifyKind(v.Value, DateTimeKind.Utc) : v);
 
-            modelBuilder.Entity<Resource>()
-                .Property(r => r.UpdatedAt)
-                .HasDefaultValueSql("now()");
-
-            modelBuilder.Entity<Issue>()
-                .Property(i => i.UpdatedAt)
-                .HasDefaultValueSql("now()");
-
-            modelBuilder.Entity<ChangeRequest>()
-                .Property(cr => cr.UpdatedAt)
-                .HasDefaultValueSql("now()");
-
-            modelBuilder.Entity<QualityAssurance>()
-                .Property(qa => qa.UpdatedAt)
-                .HasDefaultValueSql("now()");
-
-            modelBuilder.Entity<Organization>()
-                .Property(o => o.UpdatedAt)
-                .HasDefaultValueSql("now()");
-
-            modelBuilder.Entity<User>()
-                .Property(u => u.UpdatedAt)
-                .HasDefaultValueSql("now()");
-
-            modelBuilder.Entity<Milestone>()
-                .Property(m => m.UpdatedAt)
-                .HasDefaultValueSql("now()");
-
-            modelBuilder.Entity<OrganizationUser>()
-                .Property(ou => ou.UpdatedAt)
-                .HasDefaultValueSql("now()");
-
-            modelBuilder.Entity<TaskTimeLog>()
-                .Property(t => t.UpdatedAt)
-                .HasDefaultValueSql("now()");
+            // Apply the converter to all DateTime and DateTime? properties in your model
+            foreach (var entityType in modelBuilder.Model.GetEntityTypes())
+            {
+                foreach (var property in entityType.GetProperties())
+                {
+                    if (property.ClrType == typeof(DateTime))
+                    {
+                        property.SetValueConverter(dateTimeConverter);
+                    }
+                    else if (property.ClrType == typeof(DateTime?))
+                    {
+                        property.SetValueConverter(nullableDateTimeConverter);
+                    }
+                }
+            }
         }
+
+       
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
@@ -97,7 +82,7 @@ namespace MyProject.Persistence
             {
                 // This is just for design-time configuration
                 // In production, the connection string should be passed via constructor
-                optionsBuilder.UseNpgsql("Host=localhost;Database=your_database;Username=postgres;Password=your_password");
+                optionsBuilder.UseNpgsql("Host=127.0.0.1;Database=ProjectAI;Username = myproject; Password = myproject;Search Path=ai;");
             }
         }
     }

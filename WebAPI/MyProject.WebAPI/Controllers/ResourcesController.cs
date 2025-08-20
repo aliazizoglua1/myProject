@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
 using MyProject.Persistence.Entities;
 using MyProject.Persistence.Repositories;
 using MyProject.WebAPI.DTOs;
@@ -7,6 +8,7 @@ namespace MyProject.WebAPI.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
+    [Authorize]
     public class ResourcesController : ControllerBase
     {
         private readonly IResourceRepository _resourceRepository;
@@ -247,10 +249,10 @@ namespace MyProject.WebAPI.Controllers
                 CreatedAt = resource.CreatedAt,
                 UpdatedAt = resource.UpdatedAt,
                 UserId = resource.UserId,
-                TenantId = resource.TenantId,
+                OrganizationId = resource.OrganizationId,
                 FullName = resource.FullName,
                 User = resource.User != null ? MapUserToDto(resource.User) : null,
-                Tenant = resource.Tenant != null ? MapOrganizationToDto(resource.Tenant) : null
+                Tenant = resource.Organization != null ? MapOrganizationToDto(resource.Organization) : null
             };
         }
 
@@ -273,7 +275,7 @@ namespace MyProject.WebAPI.Controllers
                 StartDateEmployment = dto.StartDateEmployment,
                 EndDateEmployment = dto.EndDateEmployment,
                 UserId = dto.UserId,
-                TenantId = dto.TenantId
+                OrganizationId = dto.TenantId
             };
         }
 

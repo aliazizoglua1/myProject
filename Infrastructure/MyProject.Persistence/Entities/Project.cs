@@ -81,5 +81,10 @@ namespace MyProject.Persistence.Entities
         public Organization? Organization { get; set; }
         public User? ProjectManager { get; set; }
         public ICollection<Milestone>? Milestones { get; set; }
+        public ICollection<Task>? Tasks { get; set; }
+        public ICollection<Issue>? Issues { get; set; }
+        public ICollection<Risk>? Risks { get; set; }
+        public ICollection<ChangeRequest>? ChangeRequests { get; set; }
+        public ICollection<QualityAssurance>? QualityAssurances { get; set; }
     }
 } 

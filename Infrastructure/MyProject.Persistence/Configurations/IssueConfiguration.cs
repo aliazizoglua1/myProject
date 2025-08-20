@@ -81,14 +81,16 @@ namespace MyProject.Persistence.Configurations
 
             builder.Property(i => i.CreatedAt)
                 .HasColumnName("created_at")
+                .HasColumnType("timestamp with time zone")
                 .HasDefaultValueSql("now()");
 
             builder.Property(i => i.UpdatedAt)
                 .HasColumnName("updated_at")
+                .HasColumnType("timestamp with time zone")
                 .HasDefaultValueSql("now()");
 
-            builder.Property(i => i.TenantId)
-                .HasColumnName("tenant_id")
+            builder.Property(i => i.OrganizationId)
+                .HasColumnName("organization_id")
                 .IsRequired();
 
             builder.Property(i => i.MilestoneId)
@@ -96,27 +98,27 @@ namespace MyProject.Persistence.Configurations
 
             // Foreign key relationships
             builder.HasOne(i => i.Project)
-                .WithMany()
+                .WithMany(p => p.Issues)
                 .HasForeignKey(i => i.ProjectId)
                 .OnDelete(DeleteBehavior.Cascade);
 
             builder.HasOne(i => i.Task)
-                .WithMany()
+                .WithMany(t => t.Issues)
                 .HasForeignKey(i => i.TaskId)
                 .OnDelete(DeleteBehavior.SetNull);
 
             builder.HasOne(i => i.AssignedToUser)
-                .WithMany()
+                .WithMany(u => u.AssignedIssues)
                 .HasForeignKey(i => i.AssignedToUserId)
                 .OnDelete(DeleteBehavior.SetNull);
 
-            builder.HasOne(i => i.Tenant)
-                .WithMany()
-                .HasForeignKey(i => i.TenantId)
+            builder.HasOne(i => i.Organization)
+                .WithMany(o => o.Issues)
+                .HasForeignKey(i => i.OrganizationId)
                 .OnDelete(DeleteBehavior.Cascade);
 
             builder.HasOne(i => i.Milestone)
-                .WithMany()
+                .WithMany(m => m.Issues)
                 .HasForeignKey(i => i.MilestoneId)
                 .OnDelete(DeleteBehavior.SetNull);
 
@@ -142,8 +144,8 @@ namespace MyProject.Persistence.Configurations
             builder.HasIndex(i => i.TaskId)
                 .HasDatabaseName("idx_issues_task_id");
 
-            builder.HasIndex(i => i.TenantId)
-                .HasDatabaseName("idx_issues_tenant_id");
+            builder.HasIndex(i => i.OrganizationId)
+                .HasDatabaseName("idx_issues_organization_id");
 
             builder.HasIndex(i => i.MilestoneId)
                 .HasDatabaseName("idx_issues_milestone_id");

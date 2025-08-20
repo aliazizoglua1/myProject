@@ -1,0 +1,226 @@
+@page "/organizations/{OrganizationId:guid}"
+@inject IOrganizationService OrganizationService
+@inject NavigationManager Navigation
+@inject ISnackbar Snackbar
+@inject IJSRuntime JSRuntime
+
+<PageTitle>Organization Details - MyProject Admin</PageTitle>
+
+<MudGrid AlignItems="AlignItems.Center" Class="mb-4">
+    <MudItem xs="8">
+        <MudText Typo="Typo.h3">Organization Details</MudText>
+    </MudItem>
+    <MudItem xs="4" Class="d-flex justify-end">
+        <MudButton Variant="Variant.Text" 
+                  Color="Color.Default" 
+                  StartIcon="Icons.Material.Filled.ArrowBack"
+                  OnClick="@(() => Navigation.NavigateTo("/organizations"))">
+            Back to Organizations
+        </MudButton>
+    </MudItem>
+</MudGrid>
+
+@if (isLoading)
+{
+    <MudProgressCircular Color="Color.Primary" Indeterminate="true" />
+    <MudText>Loading organization...</MudText>
+}
+else if (organization == null)
+{
+    <MudAlert Severity="Severity.Error">Organization not found.</MudAlert>
+}
+else
+{
+    <MudGrid>
+        <MudItem xs="12" md="8">
+            <MudCard>
+                <MudCardHeader>
+                    <CardHeaderContent>
+                        <MudText Typo="Typo.h5">@organization.OrganizationName</MudText>
+                    </CardHeaderContent>
+                    <CardHeaderActions>
+                        <MudIconButton Icon="Icons.Material.Filled.Edit" 
+                                     Color="Color.Primary" 
+                                     OnClick="@(() => Navigation.NavigateTo($"/organizations/{organization.OrganizationId}/edit"))" />
+                        <MudIconButton Icon="Icons.Material.Filled.Delete" 
+                                     Color="Color.Error" 
+                                     OnClick="@(() => DeleteOrganization())" />
+                    </CardHeaderActions>
+                </MudCardHeader>
+                <MudCardContent>
+                    <MudStack Spacing="3">
+                        <div>
+                            <MudText Typo="Typo.subtitle2" Color="Color.Secondary">Organization ID</MudText>
+                            <MudText Typo="Typo.body1">@organization.OrganizationId</MudText>
+                        </div>
+
+                        <div>
+                            <MudText Typo="Typo.subtitle2" Color="Color.Secondary">Contact Email</MudText>
+                            <MudText Typo="Typo.body1">@organization.ContactEmail</MudText>
+                        </div>
+
+                        <div>
+                            <MudText Typo="Typo.subtitle2" Color="Color.Secondary">Status</MudText>
+                            <MudChip T="string" 
+                                    Color="@(organization.Status == "Active" ? Color.Success : Color.Default)" 
+                                    Size="Size.Small">
+                                @organization.Status
+                            </MudChip>
+                        </div>
+
+                        <div>
+                            <MudText Typo="Typo.subtitle2" Color="Color.Secondary">Billing Plan</MudText>
+                            <MudChip T="string" 
+                                    Color="@GetBillingPlanColor(organization.BillingPlan)" 
+                                    Size="Size.Small">
+                                @organization.BillingPlan
+                            </MudChip>
+                        </div>
+
+                        <div>
+                            <MudText Typo="Typo.subtitle2" Color="Color.Secondary">Created Date</MudText>
+                            <MudText Typo="Typo.body1">@organization.CreatedAt.ToString("yyyy-MM-dd HH:mm:ss")</MudText>
+                        </div>
+
+                        <div>
+                            <MudText Typo="Typo.subtitle2" Color="Color.Secondary">Last Updated</MudText>
+                            <MudText Typo="Typo.body1">@organization.UpdatedAt.ToString("yyyy-MM-dd HH:mm:ss")</MudText>
+                        </div>
+                    </MudStack>
+                </MudCardContent>
+            </MudCard>
+        </MudItem>
+
+        <MudItem xs="12" md="4">
+            <MudCard>
+                <MudCardHeader>
+                    <CardHeaderContent>
+                        <MudText Typo="Typo.h6">Actions</MudText>
+                    </CardHeaderContent>
+                </MudCardHeader>
+                <MudCardContent>
+                    <MudStack>
+                        <MudButton Variant="Variant.Filled" 
+                                  Color="Color.Primary" 
+                                  StartIcon="Icons.Material.Filled.Edit"
+                                  FullWidth="true"
+                                  OnClick="@(() => Navigation.NavigateTo($"/organizations/{organization.OrganizationId}/edit"))">
+                            Edit Organization
+                        </MudButton>
+                        
+                        <MudButton Variant="Variant.Outlined" 
+                                  Color="Color.Info" 
+                                  StartIcon="Icons.Material.Filled.People"
+                                  FullWidth="true">
+                            Manage Users
+                        </MudButton>
+                        
+                        <MudButton Variant="Variant.Outlined" 
+                                  Color="Color.Secondary" 
+                                  StartIcon="Icons.Material.Filled.Work"
+                                  FullWidth="true">
+                            View Projects
+                        </MudButton>
+                        
+                        <MudDivider />
+                        
+                        <MudButton Variant="Variant.Outlined" 
+                                  Color="Color.Error" 
+                                  StartIcon="Icons.Material.Filled.Delete"
+                                  FullWidth="true"
+                                  OnClick="@(() => DeleteOrganization())">
+                            Delete Organization
+                        </MudButton>
+                    </MudStack>
+                </MudCardContent>
+            </MudCard>
+
+            <MudCard Class="mt-4">
+                <MudCardHeader>
+                    <CardHeaderContent>
+                        <MudText Typo="Typo.h6">Statistics</MudText>
+                    </CardHeaderContent>
+                </MudCardHeader>
+                <MudCardContent>
+                    <MudStack>
+                        <div class="d-flex justify-space-between">
+                            <MudText>Total Users:</MudText>
+                            <MudText Typo="Typo.subtitle2">23</MudText>
+                        </div>
+                        <div class="d-flex justify-space-between">
+                            <MudText>Active Projects:</MudText>
+                            <MudText Typo="Typo.subtitle2">7</MudText>
+                        </div>
+                        <div class="d-flex justify-space-between">
+                            <MudText>Completed Tasks:</MudText>
+                            <MudText Typo="Typo.subtitle2">156</MudText>
+                        </div>
+                    </MudStack>
+                </MudCardContent>
+            </MudCard>
+        </MudItem>
+    </MudGrid>
+}
+
+@code {
+    [Parameter] public Guid OrganizationId { get; set; }
+
+    private OrganizationDto? organization;
+    private bool isLoading = true;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadOrganization();
+    }
+
+    private async Task LoadOrganization()
+    {
+        try
+        {
+            isLoading = true;
+            organization = await OrganizationService.GetOrganizationAsync(OrganizationId);
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error loading organization: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            isLoading = false;
+            StateHasChanged();
+        }
+    }
+
+    private async Task DeleteOrganization()
+    {
+        if (organization == null) return;
+
+        bool confirmed = await JSRuntime.InvokeAsync<bool>("confirm", 
+            $"Are you sure you want to delete '{organization.OrganizationName}'? This action cannot be undone.");
+        
+        if (confirmed)
+        {
+            try
+            {
+                await OrganizationService.DeleteOrganizationAsync(organization.OrganizationId);
+                Snackbar.Add($"Organization '{organization.OrganizationName}' deleted successfully", Severity.Success);
+                Navigation.NavigateTo("/organizations");
+            }
+            catch (Exception ex)
+            {
+                Snackbar.Add($"Error deleting organization: {ex.Message}", Severity.Error);
+            }
+        }
+    }
+
+    private Color GetBillingPlanColor(string plan)
+    {
+        return plan switch
+        {
+            "Premium" => Color.Success,
+            "Professional" => Color.Info,
+            "Basic" => Color.Warning,
+            _ => Color.Default
+        };
+    }
+}

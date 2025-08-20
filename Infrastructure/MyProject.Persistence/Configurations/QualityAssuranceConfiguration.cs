@@ -73,21 +73,33 @@ namespace MyProject.Persistence.Configurations
 
             builder.Property(qa => qa.CreatedAt)
                 .HasColumnName("created_at")
+                .HasColumnType("timestamp with time zone")
                 .HasDefaultValueSql("now()");
 
             builder.Property(qa => qa.UpdatedAt)
                 .HasColumnName("updated_at")
+                .HasColumnType("timestamp with time zone")
                 .HasDefaultValueSql("now()");
 
             // Foreign key relationships
             builder.HasOne(qa => qa.Project)
-                .WithMany()
+                .WithMany(p => p.QualityAssurances)
                 .HasForeignKey(qa => qa.ProjectId)
                 .OnDelete(DeleteBehavior.Cascade);
 
             builder.HasOne(qa => qa.Task)
-                .WithMany()
+                .WithMany(t => t.QualityAssurances)
                 .HasForeignKey(qa => qa.TaskId)
+                .OnDelete(DeleteBehavior.SetNull);
+
+            builder.HasOne(qa => qa.ReportedByUser)
+                .WithMany(u => u.ReportedQualityAssurances)
+                .HasForeignKey(qa => qa.ReportedByUserId)
+                .OnDelete(DeleteBehavior.SetNull);
+
+            builder.HasOne(qa => qa.AssignedToUser)
+                .WithMany(u => u.AssignedQualityAssurances)
+                .HasForeignKey(qa => qa.AssignedToUserId)
                 .OnDelete(DeleteBehavior.SetNull);
 
             // Indexes

@@ -239,12 +239,12 @@ namespace MyProject.WebAPI.Controllers
                 ClosedDate = issue.ClosedDate,
                 CreatedAt = issue.CreatedAt,
                 UpdatedAt = issue.UpdatedAt,
-                TenantId = issue.TenantId,
+                OrganizationId = issue.OrganizationId,
                 MilestoneId = issue.MilestoneId,
                 Project = issue.Project != null ? MapProjectToDto(issue.Project) : null,
                 Task = issue.Task != null ? MapTaskToDto(issue.Task) : null,
                 AssignedToUser = issue.AssignedToUser != null ? MapUserToDto(issue.AssignedToUser) : null,
-                Tenant = issue.Tenant != null ? MapOrganizationToDto(issue.Tenant) : null,
+                Tenant = issue.Organization != null ? MapOrganizationToDto(issue.Organization) : null,
                 Milestone = issue.Milestone != null ? MapMilestoneToDto(issue.Milestone) : null
             };
         }
@@ -342,7 +342,7 @@ namespace MyProject.WebAPI.Controllers
                 DueDate = milestone.DueDate,
                 IsAchieved = milestone.IsAchieved,
                 CompletionDate = milestone.CompletionDate,
-                TenantId = milestone.TenantId,
+                OrganizationId = milestone.OrganizationId,
                 CreatedAt = milestone.CreatedAt,
                 UpdatedAt = milestone.UpdatedAt
             };
@@ -369,7 +369,7 @@ namespace MyProject.WebAPI.Controllers
                 Status = dto.Status,
                 OpenedDate = dto.OpenedDate,
                 ClosedDate = dto.ClosedDate,
-                TenantId = dto.TenantId,
+                OrganizationId = dto.OrganizationId,
                 MilestoneId = dto.MilestoneId
             };
         }

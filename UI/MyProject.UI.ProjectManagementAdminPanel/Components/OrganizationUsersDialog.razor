@@ -1,0 +1,262 @@
+@inject IUserService UserService
+@inject ISnackbar Snackbar
+@inject IJSRuntime JSRuntime
+
+<MudDialog>
+    <TitleContent>
+        <MudText Typo="Typo.h6">
+            <MudIcon Icon="Icons.Material.Filled.People" Class="mr-3 mb-n1" />
+            Users in @OrganizationName
+        </MudText>
+    </TitleContent>
+    <DialogContent>
+        <div style="min-height: 400px; min-width: 600px;">
+            @if (isLoading)
+            {
+                <MudProgressCircular Color="Color.Primary" Indeterminate="true" />
+                <MudText>Loading users...</MudText>
+            }
+            else
+            {
+                <MudTabs Elevation="2" Rounded="true" ApplyEffectsToContainer="true" Class="mb-4">
+                    <MudTabPanel Text="Current Users">
+                        @if (organizationUsers.Any())
+                        {
+                            <MudDataGrid T="OrganizationUserWithDetailsDto" 
+                                        Items="@organizationUsers" 
+                                        Hover="true"
+                                        Dense="true"
+                                        Height="300px">
+                                <Columns>
+                                    <PropertyColumn Property="x => x.UserFullName" Title="Name" />
+                                    <PropertyColumn Property="x => x.UserEmail" Title="Email" />
+                                    <TemplateColumn Title="Role">
+                                        <CellTemplate>
+                                            <MudChip T="string" Color="@GetRoleColor(context.Item.Role)" Size="Size.Small">
+                                                @context.Item.Role
+                                            </MudChip>
+                                        </CellTemplate>
+                                    </TemplateColumn>
+                                    <TemplateColumn Title="Status">
+                                        <CellTemplate>
+                                            <MudChip T="string" 
+                                                    Color="@(context.Item.IsActive ? Color.Success : Color.Default)" 
+                                                    Size="Size.Small">
+                                                @(context.Item.IsActive ? "Active" : "Inactive")
+                                            </MudChip>
+                                        </CellTemplate>
+                                    </TemplateColumn>
+                                    <PropertyColumn Property="x => x.CreatedAt" Title="Added" Format="yyyy-MM-dd" />
+                                    <TemplateColumn Title="Actions">
+                                        <CellTemplate>
+                                            <MudIconButton Icon="Icons.Material.Filled.Delete" 
+                                                         Color="Color.Error" 
+                                                         Size="Size.Small"
+                                                         OnClick="@(() => RemoveUser(context.Item))" />
+                                        </CellTemplate>
+                                    </TemplateColumn>
+                                </Columns>
+                            </MudDataGrid>
+                        }
+                        else
+                        {
+                            <MudAlert Severity="Severity.Info">No users found in this organization.</MudAlert>
+                        }
+                    </MudTabPanel>
+                    
+                    <MudTabPanel Text="Add New User">
+                        <MudForm @ref="addUserForm" @bind-IsValid="@isAddUserFormValid" Model="addUserModel">
+                            <DataAnnotationsValidator />
+                            
+                            <MudStack Spacing="3">
+                                <MudTextField @bind-Value="addUserModel.FirstName"
+                                             For="@(() => addUserModel.FirstName)"
+                                             Label="First Name"
+                                             Variant="Variant.Outlined"
+                                             Required="true"
+                                             Immediate="true" />
+
+                                <MudTextField @bind-Value="addUserModel.LastName"
+                                             For="@(() => addUserModel.LastName)"
+                                             Label="Last Name"
+                                             Variant="Variant.Outlined"
+                                             Required="true"
+                                             Immediate="true" />
+
+                                <MudTextField @bind-Value="addUserModel.Email"
+                                             For="@(() => addUserModel.Email)"
+                                             Label="Email"
+                                             Variant="Variant.Outlined"
+                                             Required="true"
+                                             Immediate="true" />
+
+                                <MudTextField @bind-Value="addUserModel.Password"
+                                             For="@(() => addUserModel.Password)"
+                                             Label="Password"
+                                             Variant="Variant.Outlined"
+                                             InputType="InputType.Password"
+                                             Required="true"
+                                             Immediate="true" />
+
+                                <MudSelect @bind-Value="addUserModel.Role"
+                                          For="@(() => addUserModel.Role)"
+                                          Label="Role"
+                                          Variant="Variant.Outlined"
+                                          Required="true">
+                                    <MudSelectItem Value="@("Admin")">Admin</MudSelectItem>
+                                    <MudSelectItem Value="@("Manager")">Manager</MudSelectItem>
+                                    <MudSelectItem Value="@("Member")">Member</MudSelectItem>
+                                    <MudSelectItem Value="@("Viewer")">Viewer</MudSelectItem>
+                                </MudSelect>
+
+                                <MudSwitch @bind-Value="addUserModel.IsActive" 
+                                          Label="Active User" 
+                                          Color="Color.Primary" />
+
+                                <div class="d-flex justify-end mt-4">
+                                    <MudButton Variant="Variant.Filled" 
+                                              Color="Color.Primary" 
+                                              OnClick="AddNewUser"
+                                              Disabled="@(!isAddUserFormValid || isAddingUser)"
+                                              StartIcon="@(isAddingUser ? Icons.Material.Filled.HourglassEmpty : Icons.Material.Filled.PersonAdd)">
+                                        @(isAddingUser ? "Adding..." : "Add User")
+                                    </MudButton>
+                                </div>
+                            </MudStack>
+                        </MudForm>
+                    </MudTabPanel>
+                </MudTabs>
+            }
+        </div>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Cancel" Color="Color.Primary">Close</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter] IMudDialogInstance MudDialog { get; set; } = null!;
+    
+    [Parameter] public Guid OrganizationId { get; set; }
+    [Parameter] public string OrganizationName { get; set; } = string.Empty;
+
+    private List<OrganizationUserWithDetailsDto> organizationUsers = new();
+    private MudForm addUserForm = new();
+    private AddUserToOrganizationDto addUserModel = new();
+    private bool isAddUserFormValid;
+    private bool isLoading = true;
+    private bool isAddingUser = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadOrganizationUsers();
+        InitializeAddUserModel();
+    }
+
+    private void InitializeAddUserModel()
+    {
+        addUserModel = new AddUserToOrganizationDto
+        {
+            Email = "",
+            FirstName = "",
+            LastName = "",
+            Password = "",
+            Role = "Member",
+            IsActive = true
+        };
+    }
+
+    private async Task LoadOrganizationUsers()
+    {
+        try
+        {
+            isLoading = true;
+            organizationUsers = await UserService.GetOrganizationUsersAsync(OrganizationId);
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error loading organization users: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            isLoading = false;
+            StateHasChanged();
+        }
+    }
+
+    private async Task AddNewUser()
+    {
+        if (!isAddUserFormValid)
+        {
+            Snackbar.Add("Please fill in all required fields correctly", Severity.Warning);
+            return;
+        }
+
+        try
+        {
+            isAddingUser = true;
+            StateHasChanged();
+
+            await addUserForm.Validate();
+            if (!addUserForm.IsValid)
+            {
+                Snackbar.Add("Please correct the validation errors", Severity.Warning);
+                return;
+            }
+
+            var newUser = await UserService.CreateUserAndAddToOrganizationAsync(OrganizationId, addUserModel);
+            
+            Snackbar.Add($"User '{newUser.FullName}' added successfully", Severity.Success);
+            
+            // Refresh the users list
+            await LoadOrganizationUsers();
+            
+            // Reset the form
+            InitializeAddUserModel();
+            StateHasChanged();
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error adding user: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            isAddingUser = false;
+            StateHasChanged();
+        }
+    }
+
+    private async Task RemoveUser(OrganizationUserWithDetailsDto user)
+    {
+        bool confirmed = await JSRuntime.InvokeAsync<bool>("confirm", 
+            $"Are you sure you want to remove '{user.UserFullName}' from this organization?");
+        
+        if (confirmed)
+        {
+            try
+            {
+                await UserService.RemoveUserFromOrganizationAsync(OrganizationId, user.UserId);
+                Snackbar.Add($"User '{user.UserFullName}' removed from organization", Severity.Success);
+                await LoadOrganizationUsers();
+            }
+            catch (Exception ex)
+            {
+                Snackbar.Add($"Error removing user: {ex.Message}", Severity.Error);
+            }
+        }
+    }
+
+    private Color GetRoleColor(string role)
+    {
+        return role switch
+        {
+            "Admin" => Color.Error,
+            "Manager" => Color.Warning,
+            "Member" => Color.Info,
+            "Viewer" => Color.Default,
+            _ => Color.Default
+        };
+    }
+
+    void Cancel() => MudDialog.Cancel();
+}

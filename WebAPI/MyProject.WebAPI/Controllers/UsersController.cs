@@ -1,7 +1,10 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
 using MyProject.Persistence.Entities;
 using MyProject.Persistence.Repositories;
 using MyProject.WebAPI.DTOs;
+using MyProject.WebAPI.Services;
+using BCrypt.Net;
 using System.Security.Cryptography;
 using System.Text;
 
@@ -12,13 +15,16 @@ namespace MyProject.WebAPI.Controllers
     public class UsersController : ControllerBase
     {
         private readonly IUserRepository _userRepository;
+        private readonly IJwtTokenService _jwtTokenService;
 
-        public UsersController(IUserRepository userRepository)
+        public UsersController(IUserRepository userRepository, IJwtTokenService jwtTokenService)
         {
             _userRepository = userRepository;
+            _jwtTokenService = jwtTokenService;
         }
 
         [HttpGet]
+        [Authorize]
         public async Task<ActionResult<IEnumerable<UserDto>>> GetUsers()
         {
             var users = await _userRepository.GetAllAsync();
@@ -27,6 +33,7 @@ namespace MyProject.WebAPI.Controllers
         }
 
         [HttpGet("{id}")]
+        [Authorize]
         public async Task<ActionResult<UserDto>> GetUser(Guid id)
         {
             var user = await _userRepository.GetByIdAsync(id);
@@ -84,7 +91,7 @@ namespace MyProject.WebAPI.Controllers
         }
 
         [HttpPost("login")]
-        public async Task<ActionResult<UserDto>> Login(UserLoginDto loginDto)
+        public async Task<ActionResult<LoginResponseDto>> Login(UserLoginDto loginDto)
         {
             if (!ModelState.IsValid)
             {
@@ -102,16 +109,31 @@ namespace MyProject.WebAPI.Controllers
                 return Unauthorized("Account is deactivated.");
             }
 
-            var passwordHash = HashPassword(loginDto.Password);
-            if (user.PasswordHash != passwordHash)
+            if (!VerifyPassword(loginDto.Password, user.PasswordHash))
             {
                 return Unauthorized("Invalid email or password.");
             }
 
-            return Ok(MapToDto(user));
+            // If password was verified with old SHA256 method, update to BCrypt
+            if (IsLegacyPasswordHash(user.PasswordHash))
+            {
+                user.PasswordHash = HashPassword(loginDto.Password);
+                await _userRepository.UpdateAsync(user);
+            }
+
+            var token = _jwtTokenService.GenerateToken(user);
+            var expiresAt = DateTime.UtcNow.AddMinutes(60); // Should match JWT configuration
+
+            return Ok(new LoginResponseDto
+            {
+                Token = token,
+                User = MapToDto(user),
+                ExpiresAt = expiresAt
+            });
         }
 
         [HttpPut("{id}")]
+        [Authorize]
         public async Task<IActionResult> UpdateUser(Guid id, UpdateUserDto updateDto)
         {
             if (!ModelState.IsValid)
@@ -141,6 +163,7 @@ namespace MyProject.WebAPI.Controllers
         }
 
         [HttpDelete("{id}")]
+        [Authorize]
         public async Task<IActionResult> DeleteUser(Guid id)
         {
             var deleted = await _userRepository.DeleteAsync(id);
@@ -198,9 +221,43 @@ namespace MyProject.WebAPI.Controllers
 
         private static string HashPassword(string password)
         {
-            using var sha256 = SHA256.Create();
-            var hashedBytes = sha256.ComputeHash(Encoding.UTF8.GetBytes(password));
-            return Convert.ToBase64String(hashedBytes);
+            return BCrypt.Net.BCrypt.HashPassword(password);
+        }
+
+        private static bool VerifyPassword(string password, string passwordHash)
+        {
+            // Try BCrypt first (new method)
+            try
+            {
+                return BCrypt.Net.BCrypt.Verify(password, passwordHash);
+            }
+            catch (BCrypt.Net.SaltParseException)
+            {
+                // If BCrypt fails, try legacy SHA256 method
+                return VerifyLegacyPassword(password, passwordHash);
+            }
+        }
+
+        private static bool VerifyLegacyPassword(string password, string passwordHash)
+        {
+            try
+            {
+                using var sha256 = SHA256.Create();
+                var hashedBytes = sha256.ComputeHash(Encoding.UTF8.GetBytes(password));
+                var legacyHash = Convert.ToBase64String(hashedBytes);
+                return legacyHash == passwordHash;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
+        private static bool IsLegacyPasswordHash(string passwordHash)
+        {
+            // BCrypt hashes always start with $2a$, $2b$, or $2y$
+            // Legacy SHA256 hashes are base64 strings that don't start with $
+            return !passwordHash.StartsWith("$2");
         }
     }
 } 

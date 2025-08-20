@@ -76,29 +76,31 @@ namespace MyProject.Persistence.Configurations
 
             builder.Property(r => r.CreatedAt)
                 .HasColumnName("created_at")
+                .HasColumnType("timestamp with time zone")
                 .HasDefaultValueSql("now()");
 
             builder.Property(r => r.UpdatedAt)
                 .HasColumnName("updated_at")
+                .HasColumnType("timestamp with time zone")
                 .HasDefaultValueSql("now()");
 
             builder.Property(r => r.UserId)
                 .HasColumnName("user_id")
                 .IsRequired();
 
-            builder.Property(r => r.TenantId)
-                .HasColumnName("tenant_id")
+            builder.Property(r => r.OrganizationId)
+                .HasColumnName("organization_id")
                 .IsRequired();
 
             // Foreign key relationships
             builder.HasOne(r => r.User)
-                .WithMany()
+                .WithMany(u => u.Resources)
                 .HasForeignKey(r => r.UserId)
                 .OnDelete(DeleteBehavior.Cascade);
 
-            builder.HasOne(r => r.Tenant)
-                .WithMany()
-                .HasForeignKey(r => r.TenantId)
+            builder.HasOne(r => r.Organization)
+                .WithMany(o => o.Resources)
+                .HasForeignKey(r => r.OrganizationId)
                 .OnDelete(DeleteBehavior.Cascade);
 
             // Unique constraints
@@ -106,7 +108,7 @@ namespace MyProject.Persistence.Configurations
                 .IsUnique()
                 .HasDatabaseName("resource_email_key");
 
-            builder.HasIndex(r => new { r.UserId, r.TenantId })
+            builder.HasIndex(r => new { r.UserId, r.OrganizationId })
                 .IsUnique()
                 .HasDatabaseName("uq_user_tenant");
 
@@ -133,8 +135,8 @@ namespace MyProject.Persistence.Configurations
             builder.HasIndex(r => r.UserId)
                 .HasDatabaseName("idx_resources_user_id");
 
-            builder.HasIndex(r => r.TenantId)
-                .HasDatabaseName("idx_resources_tenant_id");
+            builder.HasIndex(r => r.OrganizationId)
+                .HasDatabaseName("idx_resources_organization_id");
 
             // Check constraints (these will be handled by the database)
             // The actual constraints are defined in the PostgreSQL table

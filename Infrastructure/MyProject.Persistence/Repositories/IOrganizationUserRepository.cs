@@ -17,5 +17,6 @@ namespace MyProject.Persistence.Repositories
         Task<bool> DeleteAsync(Guid organizationId, Guid userId);
         Task<bool> ExistsAsync(Guid organizationId, Guid userId);
         Task<bool> IsUserActiveInOrganizationAsync(Guid organizationId, Guid userId);
+        Task<IEnumerable<OrganizationUser>> GetOrganizationUsersWithDetailsAsync(Guid organizationId);
     }
 } 

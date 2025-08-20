@@ -11,7 +11,7 @@ namespace MyProject.WebAPI.DTOs
         public DateOnly DueDate { get; set; }
         public bool IsAchieved { get; set; }
         public DateOnly? CompletionDate { get; set; }
-        public Guid TenantId { get; set; }
+        public Guid OrganizationId { get; set; }
         public DateTime CreatedAt { get; set; }
         public DateTime UpdatedAt { get; set; }
     }
@@ -35,7 +35,7 @@ namespace MyProject.WebAPI.DTOs
         public DateOnly? CompletionDate { get; set; }
 
         [Required]
-        public Guid TenantId { get; set; }
+        public Guid OrganizationId { get; set; }
     }
 
     public class UpdateMilestoneDto

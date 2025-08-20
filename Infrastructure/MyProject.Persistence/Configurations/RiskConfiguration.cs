@@ -88,30 +88,32 @@ namespace MyProject.Persistence.Configurations
 
             builder.Property(r => r.CreatedAt)
                 .HasColumnName("created_at")
+                .HasColumnType("timestamp with time zone")
                 .HasDefaultValueSql("now()");
 
             builder.Property(r => r.UpdatedAt)
                 .HasColumnName("updated_at")
+                .HasColumnType("timestamp with time zone")
                 .HasDefaultValueSql("now()");
 
-            builder.Property(r => r.TenantId)
-                .HasColumnName("tenant_id")
+            builder.Property(r => r.OrganizationId)
+                .HasColumnName("organization_id")
                 .IsRequired();
 
             // Foreign key relationships
             builder.HasOne(r => r.Project)
-                .WithMany()
+                .WithMany(p => p.Risks)
                 .HasForeignKey(r => r.ProjectId)
                 .OnDelete(DeleteBehavior.Cascade);
 
             builder.HasOne(r => r.RiskOwner)
-                .WithMany()
+                .WithMany(u => u.OwnedRisks)
                 .HasForeignKey(r => r.RiskOwnerId)
                 .OnDelete(DeleteBehavior.SetNull);
 
-            builder.HasOne(r => r.Tenant)
-                .WithMany()
-                .HasForeignKey(r => r.TenantId)
+            builder.HasOne(r => r.Organization)
+                .WithMany(o => o.Risks)
+                .HasForeignKey(r => r.OrganizationId)
                 .OnDelete(DeleteBehavior.Cascade);
 
             // Indexes
@@ -130,8 +132,8 @@ namespace MyProject.Persistence.Configurations
             builder.HasIndex(r => r.RiskStatus)
                 .HasDatabaseName("idx_risks_status");
 
-            builder.HasIndex(r => r.TenantId)
-                .HasDatabaseName("idx_risks_tenant_id");
+            builder.HasIndex(r => r.OrganizationId)
+                .HasDatabaseName("idx_risks_organization_id");
 
             // Check constraints (these will be handled by the database)
             // The actual constraints are defined in the PostgreSQL table

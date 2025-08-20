@@ -4,13 +4,18 @@
     "Projects": [
       {
         "Path": "WebAPI\\MyProject.WebAPI\\MyProject.WebAPI.csproj",
-        "Action": "StartWithoutDebugging",
-        "DebugTarget": "IIS Express"
+        "Action": "Start",
+        "DebugTarget": "https"
       },
       {
         "Path": "UI\\MyProject.UI.ProjectManagementConsole\\MyProject.UI.ProjectManagementConsole.csproj",
         "Action": "Start",
-        "DebugTarget": "IIS Express"
+        "DebugTarget": "https"
+      },
+      {
+        "Path": "UI\\MyProject.UI.ProjectManagementAdminPanel\\MyProject.UI.ProjectManagementAdminPanel.csproj",
+        "Action": "Start",
+        "DebugTarget": "https"
       }
     ]
   }

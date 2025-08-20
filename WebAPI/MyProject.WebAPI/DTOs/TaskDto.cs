@@ -1,11 +1,13 @@
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace MyProject.WebAPI.DTOs
 {
     public class TaskDto
     {
         public Guid TaskId { get; set; }
-        public Guid ProjectId { get; set; }
+        public Guid ProjectId { get; set; } 
+        public Guid? IssueId { get; set; }
         public string TaskName { get; set; } = string.Empty;
         public string TaskType { get; set; } = string.Empty;
         public Guid? AssignedToUserId { get; set; }
@@ -23,14 +25,16 @@ namespace MyProject.WebAPI.DTOs
         public string? Comments { get; set; }
         public DateTime CreatedAt { get; set; }
         public DateTime UpdatedAt { get; set; }
-        public Guid TenantId { get; set; }
+        public Guid OrganizationId { get; set; }
         public Guid? MilestoneId { get; set; }
         public ProjectDto? Project { get; set; }
         public TaskDto? ParentTask { get; set; }
         public ICollection<TaskDto>? Subtasks { get; set; }
         public UserDto? AssignedToUser { get; set; }
         public OrganizationDto? Tenant { get; set; }
+        public IssueDto? Issue { get; set; }
         public MilestoneDto? Milestone { get; set; }
+
     }
 
     public class CreateTaskDto

@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
 using MyProject.Persistence.Entities;
 using MyProject.Persistence.Repositories;
 using MyProject.WebAPI.DTOs;
@@ -7,6 +8,7 @@ namespace MyProject.WebAPI.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
+    [Authorize]
     public class TasksController : ControllerBase
     {
         private readonly ITaskRepository _taskRepository;
@@ -230,13 +232,13 @@ namespace MyProject.WebAPI.Controllers
                 Comments = task.Comments,
                 CreatedAt = task.CreatedAt,
                 UpdatedAt = task.UpdatedAt,
-                TenantId = task.TenantId,
+                OrganizationId = task.OrganizationId,
                 MilestoneId = task.MilestoneId,
                 Project = task.Project != null ? MapProjectToDto(task.Project) : null,
                 ParentTask = task.ParentTask != null ? MapToDto(task.ParentTask) : null,
                 Subtasks = task.Subtasks?.Select(MapToDto).ToList(),
                 AssignedToUser = task.AssignedToUser != null ? MapUserToDto(task.AssignedToUser) : null,
-                Tenant = task.Tenant != null ? MapOrganizationToDto(task.Tenant) : null,
+                Tenant = task.Organization != null ? MapOrganizationToDto(task.Organization) : null,
                 Milestone = task.Milestone != null ? MapMilestoneToDto(task.Milestone) : null
             };
         }
@@ -308,7 +310,7 @@ namespace MyProject.WebAPI.Controllers
                 IsAchieved = milestone.IsAchieved,
                 CreatedAt = milestone.CreatedAt,
                 UpdatedAt = milestone.UpdatedAt,
-                TenantId = milestone.TenantId
+                OrganizationId = milestone.OrganizationId
             };
         }
 
@@ -332,7 +334,7 @@ namespace MyProject.WebAPI.Controllers
                 IsMilestone = dto.IsMilestone,
                 Description = dto.Description,
                 Comments = dto.Comments,
-                TenantId = dto.TenantId,
+                OrganizationId = dto.TenantId,
                 MilestoneId = dto.MilestoneId
             };
         }

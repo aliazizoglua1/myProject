@@ -106,5 +106,14 @@ namespace MyProject.Persistence.Repositories
                                ou.UserId == userId && 
                                ou.IsActive);
         }
+
+        public async Task<IEnumerable<OrganizationUser>> GetOrganizationUsersWithDetailsAsync(Guid organizationId)
+        {
+            return await _context.OrganizationUsers
+                .Include(ou => ou.User)
+                .Include(ou => ou.Organization)
+                .Where(ou => ou.OrganizationId == organizationId)
+                .ToListAsync();
+        }
     }
 } 

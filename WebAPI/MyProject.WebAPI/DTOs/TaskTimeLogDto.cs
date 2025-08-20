@@ -15,7 +15,7 @@ namespace MyProject.WebAPI.DTOs
         public decimal? HourlyRate { get; set; }
         public DateTime CreatedAt { get; set; }
         public DateTime UpdatedAt { get; set; }
-        public Guid TenantId { get; set; }
+        public Guid OrganizationId { get; set; }
         public decimal? TotalCost { get; set; }
         
         // Navigation properties
@@ -50,8 +50,8 @@ namespace MyProject.WebAPI.DTOs
         [Range(0, double.MaxValue, ErrorMessage = "Hourly rate must be positive")]
         public decimal? HourlyRate { get; set; }
 
-        [Required(ErrorMessage = "Tenant ID is required")]
-        public Guid TenantId { get; set; }
+        [Required(ErrorMessage = "Organization ID is required")]
+        public Guid OrganizationId { get; set; }
     }
 
     public class UpdateTaskTimeLogDto

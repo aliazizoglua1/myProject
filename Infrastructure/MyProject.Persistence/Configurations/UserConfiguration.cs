@@ -41,10 +41,12 @@ namespace MyProject.Persistence.Configurations
 
             builder.Property(u => u.CreatedAt)
                 .HasColumnName("created_at")
+                .HasColumnType("timestamp with time zone")
                 .HasDefaultValueSql("now()");
 
             builder.Property(u => u.UpdatedAt)
                 .HasColumnName("updated_at")
+                .HasColumnType("timestamp with time zone")
                 .HasDefaultValueSql("now()");
 
             // Unique constraint on email

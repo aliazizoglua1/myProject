@@ -1,0 +1,197 @@
+@page "/organizations"
+@using MyProject.UI.ProjectManagementAdminPanel.Components
+@inject IOrganizationService OrganizationService
+@inject IUserService UserService
+@inject IJSRuntime JSRuntime
+@inject ISnackbar Snackbar
+@inject IDialogService DialogService
+
+<PageTitle>Organizations - MyProject Admin</PageTitle>
+
+<MudGrid AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween" Class="mb-4">
+    <MudItem xs="8">
+        <MudText Typo="Typo.h3">Organizations</MudText>
+    </MudItem>
+    <MudItem xs="4" Class="d-flex justify-end">
+        <MudButton Variant="Variant.Filled" 
+                  Color="Color.Primary" 
+                  StartIcon="Icons.Material.Filled.Add"
+                  Href="/organizations/create">
+            Create Organization
+        </MudButton>
+    </MudItem>
+</MudGrid>
+
+@if (isLoading)
+{
+    <MudProgressCircular Color="Color.Primary" Indeterminate="true" />
+    <MudText>Loading organizations...</MudText>
+}
+else
+{
+    <MudCard>
+        <MudCardContent>
+            <MudDataGrid T="OrganizationDto" 
+                        Items="@organizations" 
+                        Filterable="true" 
+                        SortMode="SortMode.Multiple" 
+                        Hover="true"
+                        Dense="true">
+                <Columns>
+                    <PropertyColumn Property="x => x.OrganizationName" Title="Organization Name" Sortable="true" Filterable="true" />
+                    <PropertyColumn Property="x => x.ContactEmail" Title="Contact Email" Sortable="true" Filterable="true" />
+                    <TemplateColumn Title="Status" Sortable="false">
+                        <CellTemplate>
+                            <MudChip T="string" 
+                                    Color="@(context.Item.Status == "Active" ? Color.Success : Color.Default)" 
+                                    Size="Size.Small">
+                                @context.Item.Status
+                            </MudChip>
+                        </CellTemplate>
+                    </TemplateColumn>
+                    <TemplateColumn Title="Billing Plan" Sortable="false">
+                        <CellTemplate>
+                            <MudChip T="string" 
+                                    Color="@GetBillingPlanColor(context.Item.BillingPlan)" 
+                                    Size="Size.Small">
+                                @context.Item.BillingPlan
+                            </MudChip>
+                        </CellTemplate>
+                    </TemplateColumn>
+                    <PropertyColumn Property="x => x.CreatedAt" Title="Created" Format="yyyy-MM-dd" Sortable="true" />
+                    <TemplateColumn Title="Actions" Sortable="false" Filterable="false">
+                        <CellTemplate>
+                            <MudStack Row="true" Spacing="1">
+                                <MudButton Variant="Variant.Text" 
+                                          Color="Color.Info" 
+                                          Size="Size.Small"
+                                          StartIcon="Icons.Material.Filled.Visibility"
+                                          OnClick="@(() => ViewOrganization(context.Item.OrganizationId))">
+                                    View
+                                </MudButton>
+                                <MudButton Variant="Variant.Text" 
+                                          Color="Color.Secondary" 
+                                          Size="Size.Small"
+                                          StartIcon="Icons.Material.Filled.People"
+                                          OnClick="@(() => ManageUsers(context.Item))">
+                                    Users
+                                </MudButton>
+                                <MudButton Variant="Variant.Text" 
+                                          Color="Color.Primary" 
+                                          Size="Size.Small"
+                                          StartIcon="Icons.Material.Filled.Edit"
+                                          OnClick="@(() => EditOrganization(context.Item.OrganizationId))">
+                                    Edit
+                                </MudButton>
+                                <MudButton Variant="Variant.Text" 
+                                          Color="Color.Error" 
+                                          Size="Size.Small"
+                                          StartIcon="Icons.Material.Filled.Delete"
+                                          OnClick="@(() => DeleteOrganization(context.Item))">
+                                    Delete
+                                </MudButton>
+                            </MudStack>
+                        </CellTemplate>
+                    </TemplateColumn>
+                </Columns>
+                <PagerContent>
+                    <MudDataGridPager T="OrganizationDto" />
+                </PagerContent>
+            </MudDataGrid>
+        </MudCardContent>
+    </MudCard>
+}
+
+@code {
+    private List<OrganizationDto> organizations = new();
+    private bool isLoading = true;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadOrganizations();
+    }
+
+    private async Task LoadOrganizations()
+    {
+        try
+        {
+            isLoading = true;
+            organizations = await OrganizationService.GetOrganizationsAsync();
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error loading organizations: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            isLoading = false;
+            StateHasChanged();
+        }
+    }
+
+    private void ViewOrganization(Guid organizationId)
+    {
+        JSRuntime.InvokeVoidAsync("open", $"/organizations/{organizationId}", "_self");
+    }
+
+    private void EditOrganization(Guid organizationId)
+    {
+        JSRuntime.InvokeVoidAsync("open", $"/organizations/{organizationId}/edit", "_self");
+    }
+
+    private async Task ManageUsers(OrganizationDto organization)
+    {
+        var parameters = new DialogParameters
+        {
+            ["OrganizationId"] = organization.OrganizationId,
+            ["OrganizationName"] = organization.OrganizationName
+        };
+
+        var options = new DialogOptions 
+        { 
+            MaxWidth = MaxWidth.Large,
+            FullWidth = true,
+            CloseOnEscapeKey = true
+        };
+
+        var dialog = await DialogService.ShowAsync<OrganizationUsersDialog>("Manage Users", parameters, options);
+        var result = await dialog.Result;
+
+        if (!result.Canceled)
+        {
+            // Optionally refresh the organizations list if needed
+            // await LoadOrganizations();
+        }
+    }
+
+    private async Task DeleteOrganization(OrganizationDto organization)
+    {
+        bool confirmed = await JSRuntime.InvokeAsync<bool>("confirm", 
+            $"Are you sure you want to delete '{organization.OrganizationName}'? This action cannot be undone.");
+        
+        if (confirmed)
+        {
+            try
+            {
+                await OrganizationService.DeleteOrganizationAsync(organization.OrganizationId);
+                Snackbar.Add($"Organization '{organization.OrganizationName}' deleted successfully", Severity.Success);
+                await LoadOrganizations();
+            }
+            catch (Exception ex)
+            {
+                Snackbar.Add($"Error deleting organization: {ex.Message}", Severity.Error);
+            }
+        }
+    }
+
+    private Color GetBillingPlanColor(string plan)
+    {
+        return plan switch
+        {
+            "Premium" => Color.Success,
+            "Professional" => Color.Info,
+            "Basic" => Color.Warning,
+            _ => Color.Default
+        };
+    }
+}

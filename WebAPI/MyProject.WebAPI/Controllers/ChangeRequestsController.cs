@@ -216,12 +216,12 @@ namespace MyProject.WebAPI.Controllers
                 ActualImpactOnBudgetUsd = changeRequest.ActualImpactOnBudgetUsd,
                 CreatedAt = changeRequest.CreatedAt,
                 UpdatedAt = changeRequest.UpdatedAt,
-                TenantId = changeRequest.TenantId,
+                TenantId = changeRequest.OrganizationId,
                 MilestoneId = changeRequest.MilestoneId,
                 Project = changeRequest.Project != null ? MapProjectToDto(changeRequest.Project) : null,
                 RequestedByUser = changeRequest.RequestedByUser != null ? MapUserToDto(changeRequest.RequestedByUser) : null,
                 ApprovedByUser = changeRequest.ApprovedByUser != null ? MapUserToDto(changeRequest.ApprovedByUser) : null,
-                Tenant = changeRequest.Tenant != null ? MapOrganizationToDto(changeRequest.Tenant) : null,
+                Tenant = changeRequest.Organization != null ? MapOrganizationToDto(changeRequest.Organization) : null,
                 Milestone = changeRequest.Milestone != null ? MapMilestoneToDto(changeRequest.Milestone) : null
             };
         }
@@ -293,7 +293,7 @@ namespace MyProject.WebAPI.Controllers
                 DueDate = milestone.DueDate,
                 IsAchieved = milestone.IsAchieved,
                 CompletionDate = milestone.CompletionDate,
-                TenantId = milestone.TenantId,
+                OrganizationId = milestone.OrganizationId,
                 CreatedAt = milestone.CreatedAt,
                 UpdatedAt = milestone.UpdatedAt
             };
@@ -320,7 +320,7 @@ namespace MyProject.WebAPI.Controllers
                 VersionAffected = dto.VersionAffected,
                 ActualImpactOnScheduleDays = dto.ActualImpactOnScheduleDays,
                 ActualImpactOnBudgetUsd = dto.ActualImpactOnBudgetUsd,
-                TenantId = dto.TenantId,
+                OrganizationId = dto.OrganizationId,
                 MilestoneId = dto.MilestoneId
             };
         }

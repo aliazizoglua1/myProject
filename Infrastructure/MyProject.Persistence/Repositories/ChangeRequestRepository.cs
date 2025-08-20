@@ -18,7 +18,7 @@ namespace MyProject.Persistence.Repositories
                 .Include(cr => cr.Project)
                 .Include(cr => cr.RequestedByUser)
                 .Include(cr => cr.ApprovedByUser)
-                .Include(cr => cr.Tenant)
+                .Include(cr => cr.Organization)
                 .Include(cr => cr.Milestone)
                 .ToListAsync();
         }
@@ -29,7 +29,7 @@ namespace MyProject.Persistence.Repositories
                 .Include(cr => cr.Project)
                 .Include(cr => cr.RequestedByUser)
                 .Include(cr => cr.ApprovedByUser)
-                .Include(cr => cr.Tenant)
+                .Include(cr => cr.Organization)
                 .Include(cr => cr.Milestone)
                 .FirstOrDefaultAsync(cr => cr.ChangeRequestId == id);
         }
@@ -40,7 +40,7 @@ namespace MyProject.Persistence.Repositories
                 .Include(cr => cr.Project)
                 .Include(cr => cr.RequestedByUser)
                 .Include(cr => cr.ApprovedByUser)
-                .Include(cr => cr.Tenant)
+                .Include(cr => cr.Organization)
                 .Include(cr => cr.Milestone)
                 .Where(cr => cr.ProjectId == projectId)
                 .ToListAsync();
@@ -52,7 +52,7 @@ namespace MyProject.Persistence.Repositories
                 .Include(cr => cr.Project)
                 .Include(cr => cr.RequestedByUser)
                 .Include(cr => cr.ApprovedByUser)
-                .Include(cr => cr.Tenant)
+                .Include(cr => cr.Organization)
                 .Include(cr => cr.Milestone)
                 .Where(cr => cr.ApprovalStatus == status)
                 .ToListAsync();
@@ -64,7 +64,7 @@ namespace MyProject.Persistence.Repositories
                 .Include(cr => cr.Project)
                 .Include(cr => cr.RequestedByUser)
                 .Include(cr => cr.ApprovedByUser)
-                .Include(cr => cr.Tenant)
+                .Include(cr => cr.Organization)
                 .Include(cr => cr.Milestone)
                 .Where(cr => cr.RequestedByUserId == userId)
                 .ToListAsync();
@@ -76,7 +76,7 @@ namespace MyProject.Persistence.Repositories
                 .Include(cr => cr.Project)
                 .Include(cr => cr.RequestedByUser)
                 .Include(cr => cr.ApprovedByUser)
-                .Include(cr => cr.Tenant)
+                .Include(cr => cr.Organization)
                 .Include(cr => cr.Milestone)
                 .Where(cr => cr.ApprovedByUserId == userId)
                 .ToListAsync();
@@ -88,7 +88,7 @@ namespace MyProject.Persistence.Repositories
                 .Include(cr => cr.Project)
                 .Include(cr => cr.RequestedByUser)
                 .Include(cr => cr.ApprovedByUser)
-                .Include(cr => cr.Tenant)
+                .Include(cr => cr.Organization)
                 .Include(cr => cr.Milestone)
                 .Where(cr => cr.ApprovalStatus == "Pending")
                 .ToListAsync();
@@ -100,7 +100,7 @@ namespace MyProject.Persistence.Repositories
                 .Include(cr => cr.Project)
                 .Include(cr => cr.RequestedByUser)
                 .Include(cr => cr.ApprovedByUser)
-                .Include(cr => cr.Tenant)
+                .Include(cr => cr.Organization)
                 .Include(cr => cr.Milestone)
                 .Where(cr => cr.ApprovalStatus == "Approved")
                 .ToListAsync();
@@ -112,7 +112,7 @@ namespace MyProject.Persistence.Repositories
                 .Include(cr => cr.Project)
                 .Include(cr => cr.RequestedByUser)
                 .Include(cr => cr.ApprovedByUser)
-                .Include(cr => cr.Tenant)
+                .Include(cr => cr.Organization)
                 .Include(cr => cr.Milestone)
                 .Where(cr => cr.ApprovalStatus == "Rejected")
                 .ToListAsync();
@@ -124,7 +124,7 @@ namespace MyProject.Persistence.Repositories
                 .Include(cr => cr.Project)
                 .Include(cr => cr.RequestedByUser)
                 .Include(cr => cr.ApprovedByUser)
-                .Include(cr => cr.Tenant)
+                .Include(cr => cr.Organization)
                 .Include(cr => cr.Milestone)
                 .Where(cr => cr.RequestDate >= startDate && cr.RequestDate <= endDate)
                 .ToListAsync();
@@ -136,7 +136,7 @@ namespace MyProject.Persistence.Repositories
                 .Include(cr => cr.Project)
                 .Include(cr => cr.RequestedByUser)
                 .Include(cr => cr.ApprovedByUser)
-                .Include(cr => cr.Tenant)
+                .Include(cr => cr.Organization)
                 .Include(cr => cr.Milestone)
                 .Where(cr => cr.VersionAffected == version)
                 .ToListAsync();
@@ -148,9 +148,9 @@ namespace MyProject.Persistence.Repositories
                 .Include(cr => cr.Project)
                 .Include(cr => cr.RequestedByUser)
                 .Include(cr => cr.ApprovedByUser)
-                .Include(cr => cr.Tenant)
+                .Include(cr => cr.Organization)
                 .Include(cr => cr.Milestone)
-                .Where(cr => cr.TenantId == tenantId)
+                .Where(cr => cr.OrganizationId == tenantId)
                 .ToListAsync();
         }
 
@@ -160,7 +160,7 @@ namespace MyProject.Persistence.Repositories
                 .Include(cr => cr.Project)
                 .Include(cr => cr.RequestedByUser)
                 .Include(cr => cr.ApprovedByUser)
-                .Include(cr => cr.Tenant)
+                .Include(cr => cr.Organization)
                 .Include(cr => cr.Milestone)
                 .Where(cr => cr.MilestoneId == milestoneId)
                 .ToListAsync();
@@ -172,9 +172,9 @@ namespace MyProject.Persistence.Repositories
                 .Include(cr => cr.Project)
                 .Include(cr => cr.RequestedByUser)
                 .Include(cr => cr.ApprovedByUser)
-                .Include(cr => cr.Tenant)
+                .Include(cr => cr.Organization)
                 .Include(cr => cr.Milestone)
-                .Where(cr => cr.TenantId == tenantId && cr.ApprovalStatus == status)
+                .Where(cr => cr.OrganizationId == tenantId && cr.ApprovalStatus == status)
                 .ToListAsync();
         }
 
@@ -184,7 +184,7 @@ namespace MyProject.Persistence.Repositories
                 .Include(cr => cr.Project)
                 .Include(cr => cr.RequestedByUser)
                 .Include(cr => cr.ApprovedByUser)
-                .Include(cr => cr.Tenant)
+                .Include(cr => cr.Organization)
                 .Include(cr => cr.Milestone)
                 .Where(cr => cr.ProjectId == projectId && cr.ApprovalStatus == status)
                 .ToListAsync();
@@ -241,7 +241,7 @@ namespace MyProject.Persistence.Repositories
                 .Include(cr => cr.Project)
                 .Include(cr => cr.RequestedByUser)
                 .Include(cr => cr.ApprovedByUser)
-                .Include(cr => cr.Tenant)
+                .Include(cr => cr.Organization)
                 .Include(cr => cr.Milestone)
                 .Where(cr => cr.RequestTitle.Contains(searchTerm) || 
                            cr.RequestDescription.Contains(searchTerm) ||

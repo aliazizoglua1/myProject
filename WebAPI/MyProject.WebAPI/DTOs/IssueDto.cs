@@ -24,7 +24,7 @@ namespace MyProject.WebAPI.DTOs
         public DateOnly? ClosedDate { get; set; }
         public DateTime CreatedAt { get; set; }
         public DateTime UpdatedAt { get; set; }
-        public Guid TenantId { get; set; }
+        public Guid OrganizationId { get; set; }
         public Guid? MilestoneId { get; set; }
         public ProjectDto? Project { get; set; }
         public TaskDto? Task { get; set; }
@@ -80,7 +80,7 @@ namespace MyProject.WebAPI.DTOs
         public DateOnly? ClosedDate { get; set; }
 
         [Required]
-        public Guid TenantId { get; set; }
+        public Guid OrganizationId { get; set; }
 
         public Guid? MilestoneId { get; set; }
     }

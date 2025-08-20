@@ -1,0 +1,139 @@
+﻿@page "/"
+
+<PageTitle>Dashboard - MyProject Admin</PageTitle>
+
+<MudText Typo="Typo.h3" GutterBottom="true">Dashboard</MudText>
+
+<MudGrid>
+    <MudItem xs="12" sm="6" md="3">
+        <MudCard>
+            <MudCardContent>
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <div>
+                        <MudText Typo="Typo.h6">Organizations</MudText>
+                        <MudText Typo="Typo.h4">12</MudText>
+                    </div>
+                    <MudIcon Icon="Icons.Material.Filled.Business" Size="Size.Large" Color="Color.Primary" />
+                </div>
+            </MudCardContent>
+        </MudCard>
+    </MudItem>
+    
+    <MudItem xs="12" sm="6" md="3">
+        <MudCard>
+            <MudCardContent>
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <div>
+                        <MudText Typo="Typo.h6">Active Users</MudText>
+                        <MudText Typo="Typo.h4">156</MudText>
+                    </div>
+                    <MudIcon Icon="Icons.Material.Filled.People" Size="Size.Large" Color="Color.Success" />
+                </div>
+            </MudCardContent>
+        </MudCard>
+    </MudItem>
+    
+    <MudItem xs="12" sm="6" md="3">
+        <MudCard>
+            <MudCardContent>
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <div>
+                        <MudText Typo="Typo.h6">Projects</MudText>
+                        <MudText Typo="Typo.h4">43</MudText>
+                    </div>
+                    <MudIcon Icon="Icons.Material.Filled.Work" Size="Size.Large" Color="Color.Info" />
+                </div>
+            </MudCardContent>
+        </MudCard>
+    </MudItem>
+    
+    <MudItem xs="12" sm="6" md="3">
+        <MudCard>
+            <MudCardContent>
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <div>
+                        <MudText Typo="Typo.h6">Tasks</MudText>
+                        <MudText Typo="Typo.h4">287</MudText>
+                    </div>
+                    <MudIcon Icon="Icons.Material.Filled.Task" Size="Size.Large" Color="Color.Warning" />
+                </div>
+            </MudCardContent>
+        </MudCard>
+    </MudItem>
+</MudGrid>
+
+<MudSpacer />
+
+<MudGrid Class="mt-4">
+    <MudItem xs="12" md="8">
+        <MudCard>
+            <MudCardHeader>
+                <CardHeaderContent>
+                    <MudText Typo="Typo.h6">Recent Organizations</MudText>
+                </CardHeaderContent>
+                <CardHeaderActions>
+                    <MudButton Variant="Variant.Text" Color="Color.Primary" Size="Size.Small" Href="/organizations">
+                        View All
+                    </MudButton>
+                </CardHeaderActions>
+            </MudCardHeader>
+            <MudCardContent>
+                <MudTable T="string" Items="@recentOrganizations" Hover="true" Dense="true">
+                    <HeaderContent>
+                        <MudTh>Organization</MudTh>
+                        <MudTh>Status</MudTh>
+                        <MudTh>Created</MudTh>
+                    </HeaderContent>
+                    <RowTemplate>
+                        <MudTd DataLabel="Organization">@context</MudTd>
+                        <MudTd DataLabel="Status">
+                            <MudChip T="string" Color="Color.Success" Size="Size.Small">Active</MudChip>
+                        </MudTd>
+                        <MudTd DataLabel="Created">2 days ago</MudTd>
+                    </RowTemplate>
+                </MudTable>
+            </MudCardContent>
+        </MudCard>
+    </MudItem>
+    
+    <MudItem xs="12" md="4">
+        <MudCard>
+            <MudCardHeader>
+                <CardHeaderContent>
+                    <MudText Typo="Typo.h6">Quick Actions</MudText>
+                </CardHeaderContent>
+            </MudCardHeader>
+            <MudCardContent>
+                <MudStack>
+                    <MudButton Variant="Variant.Filled" Color="Color.Primary" 
+                              StartIcon="Icons.Material.Filled.Add" 
+                              FullWidth="true"
+                              Href="/organizations/create">
+                        Create Organization
+                    </MudButton>
+                    <MudButton Variant="Variant.Outlined" Color="Color.Secondary" 
+                              StartIcon="Icons.Material.Filled.PersonAdd" 
+                              FullWidth="true">
+                        Add User
+                    </MudButton>
+                    <MudButton Variant="Variant.Outlined" Color="Color.Info" 
+                              StartIcon="Icons.Material.Filled.WorkOutline" 
+                              FullWidth="true">
+                        Create Project
+                    </MudButton>
+                </MudStack>
+            </MudCardContent>
+        </MudCard>
+    </MudItem>
+</MudGrid>
+
+@code {
+    private List<string> recentOrganizations = new()
+    {
+        "Acme Corporation",
+        "TechStart Inc.",
+        "Global Solutions Ltd.",
+        "Innovation Labs",
+        "Digital Dynamics"
+    };
+}

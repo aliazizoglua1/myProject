@@ -39,16 +39,18 @@ namespace MyProject.Persistence.Configurations
             builder.Property(m => m.CompletionDate)
                 .HasColumnName("completion_date");
 
-            builder.Property(m => m.TenantId)
-                .HasColumnName("tenant_id")
+            builder.Property(m => m.OrganizationId)
+                .HasColumnName("organization_id")
                 .IsRequired();
 
             builder.Property(m => m.CreatedAt)
                 .HasColumnName("created_at")
+                .HasColumnType("timestamp with time zone")
                 .HasDefaultValueSql("now()");
 
             builder.Property(m => m.UpdatedAt)
                 .HasColumnName("updated_at")
+                .HasColumnType("timestamp with time zone")
                 .HasDefaultValueSql("now()");
 
             // Unique constraint on project_id and milestone_name
@@ -58,21 +60,21 @@ namespace MyProject.Persistence.Configurations
 
             // Relationships
             builder.HasOne(m => m.Project)
-                .WithMany()
+                .WithMany(p => p.Milestones)
                 .HasForeignKey(m => m.ProjectId)
                 .OnDelete(DeleteBehavior.Cascade);
 
-            builder.HasOne(m => m.Tenant)
-                .WithMany()
-                .HasForeignKey(m => m.TenantId)
+            builder.HasOne(m => m.Organization)
+                .WithMany(o => o.Milestones)
+                .HasForeignKey(m => m.OrganizationId)
                 .OnDelete(DeleteBehavior.Restrict);
 
             // Indexes
             builder.HasIndex(m => m.ProjectId)
                 .HasDatabaseName("idx_milestone_project_id");
 
-            builder.HasIndex(m => m.TenantId)
-                .HasDatabaseName("idx_milestone_tenant_id");
+            builder.HasIndex(m => m.OrganizationId)
+                .HasDatabaseName("idx_milestone_organization_id");
 
             builder.HasIndex(m => m.DueDate)
                 .HasDatabaseName("idx_milestone_due_date");

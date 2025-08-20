@@ -50,37 +50,39 @@ namespace MyProject.Persistence.Configurations
 
             builder.Property(t => t.CreatedAt)
                 .HasColumnName("created_at")
+                .HasColumnType("timestamp with time zone")
                 .HasDefaultValueSql("now()");
 
             builder.Property(t => t.UpdatedAt)
                 .HasColumnName("updated_at")
+                .HasColumnType("timestamp with time zone")
                 .HasDefaultValueSql("now()");
 
-            builder.Property(t => t.TenantId)
-                .HasColumnName("tenant_id")
+            builder.Property(t => t.OrganizationId)
+                .HasColumnName("organization_id")
                 .IsRequired();
 
             // Foreign key relationships
             builder.HasOne(t => t.Task)
-                .WithMany()
+                .WithMany(task => task.TaskTimeLogs)
                 .HasForeignKey(t => t.TaskId)
                 .OnDelete(DeleteBehavior.Cascade);
 
             builder.HasOne(t => t.Resource)
-                .WithMany()
+                .WithMany(r => r.TaskTimeLogs)
                 .HasForeignKey(t => t.ResourceId)
                 .OnDelete(DeleteBehavior.Cascade);
 
-            builder.HasOne(t => t.Tenant)
-                .WithMany()
-                .HasForeignKey(t => t.TenantId)
+            builder.HasOne(t => t.Organization)
+                .WithMany(o => o.TaskTimeLogs)
+                .HasForeignKey(t => t.OrganizationId)
                 .OnDelete(DeleteBehavior.Cascade);
 
             // Indexes for better performance
             builder.HasIndex(t => t.TaskId);
             builder.HasIndex(t => t.ResourceId);
             builder.HasIndex(t => t.DateWorked);
-            builder.HasIndex(t => t.TenantId);
+            builder.HasIndex(t => t.OrganizationId);
         }
     }
 } 

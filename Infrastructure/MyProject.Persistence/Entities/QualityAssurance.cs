@@ -64,14 +64,16 @@ namespace MyProject.Persistence.Entities
         [Column("test_environment")]
         public string? TestEnvironment { get; set; }
 
-        [Column("created_at")]
+        [Column("created_at", TypeName = "timestamp with time zone")]
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
-        [Column("updated_at")]
+        [Column("updated_at", TypeName = "timestamp with time zone")]
         public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
 
         // Navigation properties
         public Project? Project { get; set; }
         public Task? Task { get; set; }
+        public User? ReportedByUser { get; set; }
+        public User? AssignedToUser { get; set; }
     }
 } 

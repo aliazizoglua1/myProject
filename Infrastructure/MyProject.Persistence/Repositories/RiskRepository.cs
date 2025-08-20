@@ -17,7 +17,7 @@ namespace MyProject.Persistence.Repositories
             return await _context.Risks
                 .Include(r => r.Project)
                 .Include(r => r.RiskOwner)
-                .Include(r => r.Tenant)
+                .Include(r => r.Organization)
                 .ToListAsync();
         }
 
@@ -26,7 +26,7 @@ namespace MyProject.Persistence.Repositories
             return await _context.Risks
                 .Include(r => r.Project)
                 .Include(r => r.RiskOwner)
-                .Include(r => r.Tenant)
+                .Include(r => r.Organization)
                 .FirstOrDefaultAsync(r => r.RiskId == id);
         }
 
@@ -35,7 +35,7 @@ namespace MyProject.Persistence.Repositories
             return await _context.Risks
                 .Include(r => r.Project)
                 .Include(r => r.RiskOwner)
-                .Include(r => r.Tenant)
+                .Include(r => r.Organization)
                 .Where(r => r.ProjectId == projectId)
                 .ToListAsync();
         }
@@ -45,7 +45,7 @@ namespace MyProject.Persistence.Repositories
             return await _context.Risks
                 .Include(r => r.Project)
                 .Include(r => r.RiskOwner)
-                .Include(r => r.Tenant)
+                .Include(r => r.Organization)
                 .Where(r => r.RiskStatus == status)
                 .ToListAsync();
         }
@@ -55,7 +55,7 @@ namespace MyProject.Persistence.Repositories
             return await _context.Risks
                 .Include(r => r.Project)
                 .Include(r => r.RiskOwner)
-                .Include(r => r.Tenant)
+                .Include(r => r.Organization)
                 .Where(r => r.RiskCategory == category)
                 .ToListAsync();
         }
@@ -65,7 +65,7 @@ namespace MyProject.Persistence.Repositories
             return await _context.Risks
                 .Include(r => r.Project)
                 .Include(r => r.RiskOwner)
-                .Include(r => r.Tenant)
+                .Include(r => r.Organization)
                 .Where(r => r.RiskOwnerId == ownerId)
                 .ToListAsync();
         }
@@ -106,7 +106,7 @@ namespace MyProject.Persistence.Repositories
             return await _context.Risks
                 .Include(r => r.Project)
                 .Include(r => r.RiskOwner)
-                .Include(r => r.Tenant)
+                .Include(r => r.Organization)
                 .Where(r => r.PlannedRiskExposure >= 15 || r.ActualRiskExposure >= 15)
                 .ToListAsync();
         }
@@ -116,8 +116,8 @@ namespace MyProject.Persistence.Repositories
             return await _context.Risks
                 .Include(r => r.Project)
                 .Include(r => r.RiskOwner)
-                .Include(r => r.Tenant)
-                .Where(r => r.TenantId == tenantId)
+                .Include(r => r.Organization)
+                .Where(r => r.OrganizationId == tenantId)
                 .ToListAsync();
         }
 
@@ -126,8 +126,8 @@ namespace MyProject.Persistence.Repositories
             return await _context.Risks
                 .Include(r => r.Project)
                 .Include(r => r.RiskOwner)
-                .Include(r => r.Tenant)
-                .Where(r => r.TenantId == tenantId && r.RiskStatus == status)
+                .Include(r => r.Organization)
+                .Where(r => r.OrganizationId == tenantId && r.RiskStatus == status)
                 .ToListAsync();
         }
 
@@ -136,8 +136,8 @@ namespace MyProject.Persistence.Repositories
             return await _context.Risks
                 .Include(r => r.Project)
                 .Include(r => r.RiskOwner)
-                .Include(r => r.Tenant)
-                .Where(r => r.TenantId == tenantId && r.RiskCategory == category)
+                .Include(r => r.Organization)
+                .Where(r => r.OrganizationId == tenantId && r.RiskCategory == category)
                 .ToListAsync();
         }
 
@@ -146,7 +146,7 @@ namespace MyProject.Persistence.Repositories
             return await _context.Risks
                 .Include(r => r.Project)
                 .Include(r => r.RiskOwner)
-                .Include(r => r.Tenant)
+                .Include(r => r.Organization)
                 .Where(r => r.ProjectId == projectId && r.RiskStatus == status)
                 .ToListAsync();
         }
@@ -156,8 +156,8 @@ namespace MyProject.Persistence.Repositories
             return await _context.Risks
                 .Include(r => r.Project)
                 .Include(r => r.RiskOwner)
-                .Include(r => r.Tenant)
-                .Where(r => r.TenantId == tenantId && r.RiskOwnerId == ownerId)
+                .Include(r => r.Organization)
+                .Where(r => r.OrganizationId == tenantId && r.RiskOwnerId == ownerId)
                 .ToListAsync();
         }
 
@@ -167,7 +167,7 @@ namespace MyProject.Persistence.Repositories
             return await _context.Risks
                 .Include(r => r.Project)
                 .Include(r => r.RiskOwner)
-                .Include(r => r.Tenant)
+                .Include(r => r.Organization)
                 .Where(r => r.RiskStatus == "Open" && r.LastReviewDate < thirtyDaysAgo)
                 .ToListAsync();
         }
@@ -177,7 +177,7 @@ namespace MyProject.Persistence.Repositories
             return await _context.Risks
                 .Include(r => r.Project)
                 .Include(r => r.RiskOwner)
-                .Include(r => r.Tenant)
+                .Include(r => r.Organization)
                 .Where(r => (r.PlannedRiskExposure >= minExposure && r.PlannedRiskExposure <= maxExposure) ||
                            (r.ActualRiskExposure >= minExposure && r.ActualRiskExposure <= maxExposure))
                 .ToListAsync();

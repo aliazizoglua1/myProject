@@ -78,14 +78,16 @@ namespace MyProject.Persistence.Configurations
 
             builder.Property(t => t.CreatedAt)
                 .HasColumnName("created_at")
+                .HasColumnType("timestamp with time zone")
                 .HasDefaultValueSql("now()");
 
             builder.Property(t => t.UpdatedAt)
                 .HasColumnName("updated_at")
+                .HasColumnType("timestamp with time zone")
                 .HasDefaultValueSql("now()");
 
-            builder.Property(t => t.TenantId)
-                .HasColumnName("tenant_id")
+            builder.Property(t => t.OrganizationId)
+                .HasColumnName("organization_id")
                 .IsRequired();
 
             builder.Property(t => t.MilestoneId)
@@ -96,7 +98,7 @@ namespace MyProject.Persistence.Configurations
 
             // Foreign key relationships
             builder.HasOne(t => t.Project)
-                .WithMany()
+                .WithMany(p => p.Tasks)
                 .HasForeignKey(t => t.ProjectId)
                 .OnDelete(DeleteBehavior.Cascade);
 
@@ -106,17 +108,17 @@ namespace MyProject.Persistence.Configurations
                 .OnDelete(DeleteBehavior.Restrict);
 
             builder.HasOne(t => t.AssignedToUser)
-                .WithMany()
+                .WithMany(u => u.AssignedTasks)
                 .HasForeignKey(t => t.AssignedToUserId)
                 .OnDelete(DeleteBehavior.SetNull);
 
-            builder.HasOne(t => t.Tenant)
-                .WithMany()
-                .HasForeignKey(t => t.TenantId)
+            builder.HasOne(t => t.Organization)
+                .WithMany(o => o.Tasks)
+                .HasForeignKey(t => t.OrganizationId)
                 .OnDelete(DeleteBehavior.Cascade);
 
             builder.HasOne(t => t.Milestone)
-                .WithMany()
+                .WithMany(m => m.Tasks)
                 .HasForeignKey(t => t.MilestoneId)
                 .OnDelete(DeleteBehavior.SetNull);
 
@@ -144,8 +146,8 @@ namespace MyProject.Persistence.Configurations
             builder.HasIndex(t => t.TaskStatus)
                 .HasDatabaseName("idx_tasks_status");
 
-            builder.HasIndex(t => t.TenantId)
-                .HasDatabaseName("idx_tasks_tenant_id");
+            builder.HasIndex(t => t.OrganizationId)
+                .HasDatabaseName("idx_tasks_organization_id");
 
             builder.HasIndex(t => t.MilestoneId)
                 .HasDatabaseName("idx_tasks_milestone_id");

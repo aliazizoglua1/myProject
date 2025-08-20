@@ -74,15 +74,15 @@ namespace MyProject.Persistence.Entities
         [Range(0, double.MaxValue)]
         public decimal? ActualImpactOnBudgetUsd { get; set; }
 
-        [Column("created_at")]
+        [Column("created_at", TypeName = "timestamp with time zone")]
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
-        [Column("updated_at")]
+        [Column("updated_at", TypeName = "timestamp with time zone")]
         public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
 
-        [Column("tenant_id")]
+        [Column("organization_id")]
         [Required]
-        public Guid TenantId { get; set; }
+        public Guid OrganizationId { get; set; }
 
         [Column("milestone_id")]
         public Guid? MilestoneId { get; set; }
@@ -91,7 +91,7 @@ namespace MyProject.Persistence.Entities
         public Project? Project { get; set; }
         public User? RequestedByUser { get; set; }
         public User? ApprovedByUser { get; set; }
-        public Organization? Tenant { get; set; }
+        public Organization? Organization { get; set; }
         public Milestone? Milestone { get; set; }
     }
 } 

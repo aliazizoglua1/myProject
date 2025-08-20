@@ -71,15 +71,15 @@ namespace MyProject.Persistence.Entities
         [Column("comments")]
         public string? Comments { get; set; }
 
-        [Column("created_at")]
+        [Column("created_at", TypeName = "timestamp with time zone")]
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
-        [Column("updated_at")]
+        [Column("updated_at", TypeName = "timestamp with time zone")]
         public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
 
-        [Column("tenant_id")]
+        [Column("organization_id")]
         [Required]
-        public Guid TenantId { get; set; }
+        public Guid OrganizationId { get; set; }
 
         [Column("milestone_id")]
         public Guid? MilestoneId { get; set; }
@@ -92,8 +92,11 @@ namespace MyProject.Persistence.Entities
         public Task? ParentTask { get; set; }
         public ICollection<Task>? Subtasks { get; set; }
         public User? AssignedToUser { get; set; }
-        public Organization? Tenant { get; set; }
+        public Organization? Organization { get; set; }
         public Milestone? Milestone { get; set; }
         public Issue? Issue { get; set; }
+        public ICollection<Issue>? Issues { get; set; }
+        public ICollection<QualityAssurance>? QualityAssurances { get; set; }
+        public ICollection<TaskTimeLog>? TaskTimeLogs { get; set; }
     }
 } 

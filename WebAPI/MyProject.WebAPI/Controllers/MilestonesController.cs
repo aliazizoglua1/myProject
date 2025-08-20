@@ -168,7 +168,7 @@ namespace MyProject.WebAPI.Controllers
                 DueDate = milestone.DueDate,
                 IsAchieved = milestone.IsAchieved,
                 CompletionDate = milestone.CompletionDate,
-                TenantId = milestone.TenantId,
+                OrganizationId = milestone.OrganizationId,
                 CreatedAt = milestone.CreatedAt,
                 UpdatedAt = milestone.UpdatedAt
             };
@@ -184,7 +184,7 @@ namespace MyProject.WebAPI.Controllers
                 DueDate = dto.DueDate,
                 IsAchieved = dto.IsAchieved,
                 CompletionDate = dto.CompletionDate,
-                TenantId = dto.TenantId
+                OrganizationId = dto.OrganizationId
             };
         }
 

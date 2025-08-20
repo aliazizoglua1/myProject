@@ -16,7 +16,7 @@ namespace MyProject.Persistence.Repositories
         {
             return await _context.Resources
                 .Include(r => r.User)
-                .Include(r => r.Tenant)
+                .Include(r => r.Organization)
                 .ToListAsync();
         }
 
@@ -24,7 +24,7 @@ namespace MyProject.Persistence.Repositories
         {
             return await _context.Resources
                 .Include(r => r.User)
-                .Include(r => r.Tenant)
+                .Include(r => r.Organization)
                 .FirstOrDefaultAsync(r => r.ResourceId == id);
         }
 
@@ -32,7 +32,7 @@ namespace MyProject.Persistence.Repositories
         {
             return await _context.Resources
                 .Include(r => r.User)
-                .Include(r => r.Tenant)
+                .Include(r => r.Organization)
                 .FirstOrDefaultAsync(r => r.Email == email);
         }
 
@@ -40,7 +40,7 @@ namespace MyProject.Persistence.Repositories
         {
             return await _context.Resources
                 .Include(r => r.User)
-                .Include(r => r.Tenant)
+                .Include(r => r.Organization)
                 .Where(r => r.Department == department)
                 .ToListAsync();
         }
@@ -49,7 +49,7 @@ namespace MyProject.Persistence.Repositories
         {
             return await _context.Resources
                 .Include(r => r.User)
-                .Include(r => r.Tenant)
+                .Include(r => r.Organization)
                 .Where(r => r.RoleTitle == roleTitle)
                 .ToListAsync();
         }
@@ -58,7 +58,7 @@ namespace MyProject.Persistence.Repositories
         {
             return await _context.Resources
                 .Include(r => r.User)
-                .Include(r => r.Tenant)
+                .Include(r => r.Organization)
                 .Where(r => r.EmploymentStatus == status)
                 .ToListAsync();
         }
@@ -67,7 +67,7 @@ namespace MyProject.Persistence.Repositories
         {
             return await _context.Resources
                 .Include(r => r.User)
-                .Include(r => r.Tenant)
+                .Include(r => r.Organization)
                 .Where(r => r.Location == location)
                 .ToListAsync();
         }
@@ -76,7 +76,7 @@ namespace MyProject.Persistence.Repositories
         {
             return await _context.Resources
                 .Include(r => r.User)
-                .Include(r => r.Tenant)
+                .Include(r => r.Organization)
                 .Where(r => r.Skills != null && skills.Any(skill => r.Skills.Contains(skill)))
                 .ToListAsync();
         }
@@ -85,7 +85,7 @@ namespace MyProject.Persistence.Repositories
         {
             return await _context.Resources
                 .Include(r => r.User)
-                .Include(r => r.Tenant)
+                .Include(r => r.Organization)
                 .Where(r => r.EmploymentStatus == "Active")
                 .ToListAsync();
         }
@@ -95,7 +95,7 @@ namespace MyProject.Persistence.Repositories
             var today = DateOnly.FromDateTime(DateTime.Today);
             return await _context.Resources
                 .Include(r => r.User)
-                .Include(r => r.Tenant)
+                .Include(r => r.Organization)
                 .Where(r => r.EmploymentStatus == "Active" &&
                            (!r.EndDateEmployment.HasValue || r.EndDateEmployment > today))
                 .ToListAsync();
@@ -105,8 +105,8 @@ namespace MyProject.Persistence.Repositories
         {
             return await _context.Resources
                 .Include(r => r.User)
-                .Include(r => r.Tenant)
-                .Where(r => r.TenantId == tenantId)
+                .Include(r => r.Organization)
+                .Where(r => r.OrganizationId == tenantId)
                 .ToListAsync();
         }
 
@@ -114,7 +114,7 @@ namespace MyProject.Persistence.Repositories
         {
             return await _context.Resources
                 .Include(r => r.User)
-                .Include(r => r.Tenant)
+                .Include(r => r.Organization)
                 .Where(r => r.UserId == userId)
                 .ToListAsync();
         }
@@ -123,8 +123,8 @@ namespace MyProject.Persistence.Repositories
         {
             return await _context.Resources
                 .Include(r => r.User)
-                .Include(r => r.Tenant)
-                .Where(r => r.TenantId == tenantId && r.EmploymentStatus == status)
+                .Include(r => r.Organization)
+                .Where(r => r.OrganizationId == tenantId && r.EmploymentStatus == status)
                 .ToListAsync();
         }
 
@@ -132,8 +132,8 @@ namespace MyProject.Persistence.Repositories
         {
             return await _context.Resources
                 .Include(r => r.User)
-                .Include(r => r.Tenant)
-                .Where(r => r.TenantId == tenantId && r.Department == department)
+                .Include(r => r.Organization)
+                .Where(r => r.OrganizationId == tenantId && r.Department == department)
                 .ToListAsync();
         }
 
@@ -141,8 +141,8 @@ namespace MyProject.Persistence.Repositories
         {
             return await _context.Resources
                 .Include(r => r.User)
-                .Include(r => r.Tenant)
-                .Where(r => r.TenantId == tenantId && r.RoleTitle == roleTitle)
+                .Include(r => r.Organization)
+                .Where(r => r.OrganizationId == tenantId && r.RoleTitle == roleTitle)
                 .ToListAsync();
         }
 
@@ -150,8 +150,8 @@ namespace MyProject.Persistence.Repositories
         {
             return await _context.Resources
                 .Include(r => r.User)
-                .Include(r => r.Tenant)
-                .FirstOrDefaultAsync(r => r.UserId == userId && r.TenantId == tenantId);
+                .Include(r => r.Organization)
+                .FirstOrDefaultAsync(r => r.UserId == userId && r.OrganizationId == tenantId);
         }
 
         public async Task<Resource> AddAsync(Resource resource)
@@ -196,19 +196,19 @@ namespace MyProject.Persistence.Repositories
             {
                 return await _context.Resources.AnyAsync(r => 
                     r.UserId == userId && 
-                    r.TenantId == tenantId && 
+                    r.OrganizationId == tenantId && 
                     r.ResourceId != excludeResourceId.Value);
             }
             return await _context.Resources.AnyAsync(r => 
                 r.UserId == userId && 
-                r.TenantId == tenantId);
+                r.OrganizationId == tenantId);
         }
 
         public async Task<IEnumerable<Resource>> SearchByNameAsync(string searchTerm)
         {
             return await _context.Resources
                 .Include(r => r.User)
-                .Include(r => r.Tenant)
+                .Include(r => r.Organization)
                 .Where(r => r.FirstName.Contains(searchTerm) || 
                            r.LastName.Contains(searchTerm) ||
                            r.FullName.Contains(searchTerm))

@@ -31,6 +31,7 @@ namespace MyProject.Persistence.Configurations
 
             builder.Property(ou => ou.CreatedAt)
                 .HasColumnName("created_at")
+                .HasColumnType("timestamp with time zone")
                 .HasDefaultValueSql("now()");
 
             builder.Property(ou => ou.UpdatedAt)
@@ -39,13 +40,15 @@ namespace MyProject.Persistence.Configurations
 
             // Relationships
             builder.HasOne(ou => ou.Organization)
-                .WithMany()
+                .WithMany(o => o.OrganizationUsers)
                 .HasForeignKey(ou => ou.OrganizationId)
+                .HasConstraintName("fk_organizationuser_organization")
                 .OnDelete(DeleteBehavior.Cascade);
 
             builder.HasOne(ou => ou.User)
-                .WithMany()
+                .WithMany(u => u.OrganizationUsers)
                 .HasForeignKey(ou => ou.UserId)
+                .HasConstraintName("fk_organizationuser_user")
                 .OnDelete(DeleteBehavior.Cascade);
 
             // Indexes

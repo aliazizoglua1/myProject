@@ -203,10 +203,10 @@ namespace MyProject.WebAPI.Controllers
                 LessonsLearned = risk.LessonsLearned,
                 CreatedAt = risk.CreatedAt,
                 UpdatedAt = risk.UpdatedAt,
-                TenantId = risk.TenantId,
+                OrganizationId = risk.OrganizationId,
                 Project = risk.Project != null ? MapProjectToDto(risk.Project) : null,
                 RiskOwner = risk.RiskOwner != null ? MapUserToDto(risk.RiskOwner) : null,
-                Tenant = risk.Tenant != null ? MapOrganizationToDto(risk.Tenant) : null
+                Tenant = risk.Organization != null ? MapOrganizationToDto(risk.Organization) : null
             };
         }
 
@@ -289,7 +289,7 @@ namespace MyProject.WebAPI.Controllers
                 ActualImpactOnScheduleDays = dto.ActualImpactOnScheduleDays,
                 ActualImpactOnBudgetUsd = dto.ActualImpactOnBudgetUsd,
                 LessonsLearned = dto.LessonsLearned,
-                TenantId = dto.TenantId
+                OrganizationId = dto.TenantId
             };
         }
 

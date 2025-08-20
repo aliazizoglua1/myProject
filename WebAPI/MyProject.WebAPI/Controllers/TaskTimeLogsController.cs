@@ -195,7 +195,7 @@ namespace MyProject.WebAPI.Controllers
                 WorkType = createDto.WorkType,
                 IsBillable = createDto.IsBillable,
                 HourlyRate = createDto.HourlyRate,
-                TenantId = createDto.TenantId
+                OrganizationId = createDto.OrganizationId
             };
 
             var createdTaskTimeLog = await _taskTimeLogRepository.CreateAsync(taskTimeLog);
@@ -260,7 +260,7 @@ namespace MyProject.WebAPI.Controllers
                 HourlyRate = taskTimeLog.HourlyRate,
                 CreatedAt = taskTimeLog.CreatedAt,
                 UpdatedAt = taskTimeLog.UpdatedAt,
-                TenantId = taskTimeLog.TenantId,
+                OrganizationId = taskTimeLog.OrganizationId,
                 TotalCost = taskTimeLog.TotalCost,
                 Task = taskTimeLog.Task != null ? new TaskDto
                 {
@@ -284,17 +284,17 @@ namespace MyProject.WebAPI.Controllers
                     CreatedAt = taskTimeLog.Resource.CreatedAt,
                     UpdatedAt = taskTimeLog.Resource.UpdatedAt,
                     UserId = taskTimeLog.Resource.UserId,
-                    TenantId = taskTimeLog.Resource.TenantId
+                    OrganizationId = taskTimeLog.Resource.OrganizationId
                 } : null,
-                Tenant = taskTimeLog.Tenant != null ? new OrganizationDto
+                Tenant = taskTimeLog.Organization != null ? new OrganizationDto
                 {
-                    OrganizationId = taskTimeLog.Tenant.OrganizationId,
-                    OrganizationName = taskTimeLog.Tenant.OrganizationName,
-                    Status = taskTimeLog.Tenant.Status,
-                    BillingPlan = taskTimeLog.Tenant.BillingPlan,
-                    ContactEmail = taskTimeLog.Tenant.ContactEmail,
-                    CreatedAt = taskTimeLog.Tenant.CreatedAt,
-                    UpdatedAt = taskTimeLog.Tenant.UpdatedAt
+                    OrganizationId = taskTimeLog.Organization.OrganizationId,
+                    OrganizationName = taskTimeLog.Organization.OrganizationName,
+                    Status = taskTimeLog.Organization.Status,
+                    BillingPlan = taskTimeLog.Organization.BillingPlan,
+                    ContactEmail = taskTimeLog.Organization.ContactEmail,
+                    CreatedAt = taskTimeLog.Organization.CreatedAt,
+                    UpdatedAt = taskTimeLog.Organization.UpdatedAt
                 } : null
             };
         }

@@ -1,0 +1,189 @@
+@page "/organizations/{OrganizationId:guid}/edit"
+@inject IOrganizationService OrganizationService
+@inject NavigationManager Navigation
+@inject ISnackbar Snackbar
+
+<PageTitle>Edit Organization - MyProject Admin</PageTitle>
+
+<MudGrid AlignItems="AlignItems.Center" Class="mb-4">
+    <MudItem xs="8">
+        <MudText Typo="Typo.h3">Edit Organization</MudText>
+    </MudItem>
+    <MudItem xs="4" Class="d-flex justify-end">
+        <MudButton Variant="Variant.Text" 
+                  Color="Color.Default" 
+                  StartIcon="Icons.Material.Filled.ArrowBack"
+                  OnClick="@(() => Navigation.NavigateTo("/organizations"))">
+            Back to Organizations
+        </MudButton>
+    </MudItem>
+</MudGrid>
+
+@if (isLoading)
+{
+    <MudProgressCircular Color="Color.Primary" Indeterminate="true" />
+    <MudText>Loading organization...</MudText>
+}
+else if (updateModel == null)
+{
+    <MudAlert Severity="Severity.Error">Organization not found.</MudAlert>
+}
+else
+{
+    <MudCard>
+        <MudCardContent>
+            <MudForm @ref="form" @bind-IsValid="@isFormValid" Model="updateModel">
+                <DataAnnotationsValidator />
+                
+                <MudStack Spacing="3">
+                    <MudTextField @bind-Value="updateModel.OrganizationName"
+                                 For="@(() => updateModel.OrganizationName)"
+                                 Label="Organization Name"
+                                 Variant="Variant.Outlined"
+                                 Required="true"
+                                 HelperText="Enter the organization name"
+                                 MaxLength="255"
+                                 Immediate="true" />
+
+                    <MudTextField @bind-Value="updateModel.ContactEmail"
+                                 For="@(() => updateModel.ContactEmail)"
+                                 Label="Contact Email"
+                                 Variant="Variant.Outlined"
+                                 Required="true"
+                                 HelperText="Enter the primary contact email"
+                                 MaxLength="255"
+                                 Immediate="true" />
+
+                    <MudSelect @bind-Value="updateModel.Status"
+                              For="@(() => updateModel.Status)"
+                              Label="Status"
+                              Variant="Variant.Outlined"
+                              Required="true"
+                              HelperText="Select the organization status">
+                        <MudSelectItem Value="@("Active")">Active</MudSelectItem>
+                        <MudSelectItem Value="@("Inactive")">Inactive</MudSelectItem>
+                        <MudSelectItem Value="@("Suspended")">Suspended</MudSelectItem>
+                    </MudSelect>
+
+                    <MudSelect @bind-Value="updateModel.BillingPlan"
+                              For="@(() => updateModel.BillingPlan)"
+                              Label="Billing Plan"
+                              Variant="Variant.Outlined"
+                              Required="true"
+                              HelperText="Select the billing plan">
+                        <MudSelectItem Value="@("Basic")">Basic</MudSelectItem>
+                        <MudSelectItem Value="@("Professional")">Professional</MudSelectItem>
+                        <MudSelectItem Value="@("Premium")">Premium</MudSelectItem>
+                        <MudSelectItem Value="@("Enterprise")">Enterprise</MudSelectItem>
+                    </MudSelect>
+
+                    <div class="d-flex justify-end mt-4">
+                        <MudButton Variant="Variant.Text" 
+                                  Color="Color.Default" 
+                                  OnClick="@(() => Navigation.NavigateTo("/organizations"))"
+                                  Class="mr-3">
+                            Cancel
+                        </MudButton>
+                        <MudButton Variant="Variant.Filled" 
+                                  Color="Color.Primary" 
+                                  OnClick="HandleSubmit"
+                                  Disabled="@(!isFormValid || isSubmitting)"
+                                  StartIcon="@(isSubmitting ? Icons.Material.Filled.HourglassEmpty : Icons.Material.Filled.Save)">
+                            @(isSubmitting ? "Updating..." : "Update Organization")
+                        </MudButton>
+                    </div>
+                </MudStack>
+            </MudForm>
+        </MudCardContent>
+    </MudCard>
+}
+
+@code {
+    [Parameter] public Guid OrganizationId { get; set; }
+
+    private MudForm form = new();
+    private UpdateOrganizationDto? updateModel;
+    private bool isFormValid;
+    private bool isSubmitting = false;
+    private bool isLoading = true;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadOrganization();
+    }
+
+    private async Task LoadOrganization()
+    {
+        try
+        {
+            isLoading = true;
+            Console.WriteLine($"Loading organization with ID: {OrganizationId}");
+            
+            var organization = await OrganizationService.GetOrganizationAsync(OrganizationId);
+            
+            if (organization != null)
+            {
+                Console.WriteLine($"Organization loaded: {organization.OrganizationName}");
+                updateModel = new UpdateOrganizationDto
+                {
+                    OrganizationName = organization.OrganizationName,
+                    ContactEmail = organization.ContactEmail,
+                    Status = organization.Status,
+                    BillingPlan = organization.BillingPlan
+                };
+            }
+            else
+            {
+                Console.WriteLine("Organization not found - null response");
+                Snackbar.Add("Organization not found", Severity.Error);
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Exception loading organization: {ex}");
+            Snackbar.Add($"Error loading organization: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            isLoading = false;
+            StateHasChanged();
+        }
+    }
+
+    private async Task HandleSubmit()
+    {
+        if (updateModel == null || !isFormValid)
+        {
+            Snackbar.Add("Please fill in all required fields correctly", Severity.Warning);
+            return;
+        }
+
+        try
+        {
+            isSubmitting = true;
+            StateHasChanged();
+
+            // Validate the form explicitly
+            await form.Validate();
+            if (!form.IsValid)
+            {
+                Snackbar.Add("Please correct the validation errors", Severity.Warning);
+                return;
+            }
+
+            var result = await OrganizationService.UpdateOrganizationAsync(OrganizationId, updateModel);
+            
+            Snackbar.Add($"Organization '{result.OrganizationName}' updated successfully", Severity.Success);
+            Navigation.NavigateTo("/organizations");
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error updating organization: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            isSubmitting = false;
+            StateHasChanged();
+        }
+    }
+}

@@ -17,7 +17,7 @@ namespace MyProject.Persistence.Repositories
             return await _context.TaskTimeLogs
                 .Include(t => t.Task)
                 .Include(t => t.Resource)
-                .Include(t => t.Tenant)
+                .Include(t => t.Organization)
                 .FirstOrDefaultAsync(t => t.TaskTimeLogId == id);
         }
 
@@ -26,7 +26,7 @@ namespace MyProject.Persistence.Repositories
             return await _context.TaskTimeLogs
                 .Include(t => t.Task)
                 .Include(t => t.Resource)
-                .Include(t => t.Tenant)
+                .Include(t => t.Organization)
                 .OrderByDescending(t => t.DateWorked)
                 .ThenByDescending(t => t.CreatedAt)
                 .ToListAsync();
@@ -37,7 +37,7 @@ namespace MyProject.Persistence.Repositories
             return await _context.TaskTimeLogs
                 .Include(t => t.Task)
                 .Include(t => t.Resource)
-                .Include(t => t.Tenant)
+                .Include(t => t.Organization)
                 .Where(t => t.TaskId == taskId)
                 .OrderByDescending(t => t.DateWorked)
                 .ThenByDescending(t => t.CreatedAt)
@@ -49,20 +49,20 @@ namespace MyProject.Persistence.Repositories
             return await _context.TaskTimeLogs
                 .Include(t => t.Task)
                 .Include(t => t.Resource)
-                .Include(t => t.Tenant)
+                .Include(t => t.Organization)
                 .Where(t => t.ResourceId == resourceId)
                 .OrderByDescending(t => t.DateWorked)
                 .ThenByDescending(t => t.CreatedAt)
                 .ToListAsync();
         }
 
-        public async Task<IEnumerable<TaskTimeLog>> GetByTenantIdAsync(Guid tenantId)
+        public async Task<IEnumerable<TaskTimeLog>> GetByTenantIdAsync(Guid organizationId)
         {
             return await _context.TaskTimeLogs
                 .Include(t => t.Task)
                 .Include(t => t.Resource)
-                .Include(t => t.Tenant)
-                .Where(t => t.TenantId == tenantId)
+                .Include(t => t.Organization)
+                .Where(t => t.OrganizationId == organizationId)
                 .OrderByDescending(t => t.DateWorked)
                 .ThenByDescending(t => t.CreatedAt)
                 .ToListAsync();
@@ -73,7 +73,7 @@ namespace MyProject.Persistence.Repositories
             return await _context.TaskTimeLogs
                 .Include(t => t.Task)
                 .Include(t => t.Resource)
-                .Include(t => t.Tenant)
+                .Include(t => t.Organization)
                 .Where(t => t.DateWorked >= startDate && t.DateWorked <= endDate)
                 .OrderByDescending(t => t.DateWorked)
                 .ThenByDescending(t => t.CreatedAt)
@@ -85,7 +85,7 @@ namespace MyProject.Persistence.Repositories
             return await _context.TaskTimeLogs
                 .Include(t => t.Task)
                 .Include(t => t.Resource)
-                .Include(t => t.Tenant)
+                .Include(t => t.Organization)
                 .Where(t => t.TaskId == taskId && t.DateWorked >= startDate && t.DateWorked <= endDate)
                 .OrderByDescending(t => t.DateWorked)
                 .ThenByDescending(t => t.CreatedAt)
@@ -97,20 +97,20 @@ namespace MyProject.Persistence.Repositories
             return await _context.TaskTimeLogs
                 .Include(t => t.Task)
                 .Include(t => t.Resource)
-                .Include(t => t.Tenant)
+                .Include(t => t.Organization)
                 .Where(t => t.ResourceId == resourceId && t.DateWorked >= startDate && t.DateWorked <= endDate)
                 .OrderByDescending(t => t.DateWorked)
                 .ThenByDescending(t => t.CreatedAt)
                 .ToListAsync();
         }
 
-        public async Task<IEnumerable<TaskTimeLog>> GetByTenantAndDateRangeAsync(Guid tenantId, DateOnly startDate, DateOnly endDate)
+        public async Task<IEnumerable<TaskTimeLog>> GetByTenantAndDateRangeAsync(Guid organizationId, DateOnly startDate, DateOnly endDate)
         {
             return await _context.TaskTimeLogs
                 .Include(t => t.Task)
                 .Include(t => t.Resource)
-                .Include(t => t.Tenant)
-                .Where(t => t.TenantId == tenantId && t.DateWorked >= startDate && t.DateWorked <= endDate)
+                .Include(t => t.Organization)
+                .Where(t => t.OrganizationId == organizationId && t.DateWorked >= startDate && t.DateWorked <= endDate)
                 .OrderByDescending(t => t.DateWorked)
                 .ThenByDescending(t => t.CreatedAt)
                 .ToListAsync();

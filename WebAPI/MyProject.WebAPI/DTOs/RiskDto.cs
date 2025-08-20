@@ -28,7 +28,7 @@ namespace MyProject.WebAPI.DTOs
         public string? LessonsLearned { get; set; }
         public DateTime CreatedAt { get; set; }
         public DateTime UpdatedAt { get; set; }
-        public Guid TenantId { get; set; }
+        public Guid OrganizationId { get; set; }
         public ProjectDto? Project { get; set; }
         public UserDto? RiskOwner { get; set; }
         public OrganizationDto? Tenant { get; set; }
